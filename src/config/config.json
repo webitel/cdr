@@ -1,0 +1,31 @@
+{
+    "host": "0.0.0.0",
+    "port": 10021,
+    "session": {
+        "secret": "webitelsecret",
+        "key": "webitel",
+        "cookie": {
+            "cookieSecret": "803802A9-438F-4DEC-ADF5-CBE9D0D2370C",
+            "maxAge": 31104000000,
+            "httpOnly": true
+        }
+    },
+    "db": {
+        "uri": "mongodb://mongodb_server/webitel",
+        "collectionCDR": "cdr",
+        "collectionFile": "tmpfile"
+    },
+    "log": {
+        "file": "/logs/cdr.log",
+        "maxSize": 30000,
+        "maxFiles": 5
+    },
+    "recordFile": {
+        "fileRoot": "/recordings",
+        "filePath": "$Y/$M/$D/$H"
+    },
+    "downloadAclList": {
+        "mode": "allow",
+        "ip": "0.0.0.0/0"
+    }
+}
