@@ -2,7 +2,7 @@
     "host": "0.0.0.0",
     "port": 10021,
     "session": {
-        "secret": "webitelsecret",
+        "secret": "885824D9-87EA-4CC5-B696-EF8A433B7230",
         "key": "webitel",
         "cookie": {
             "cookieSecret": "803802A9-438F-4DEC-ADF5-CBE9D0D2370C",
