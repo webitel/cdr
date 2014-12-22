@@ -93,7 +93,7 @@ if (useSSL) {
         key: key,
         cert: cert
     };
-    var httpsServer = https.createServer(https_options, app).listen(app.get('port'), function() {
+    var httpsServer = https.createServer(https_options, app).listen(config.get("session:ssl:port"), function() {
         console.log('Express server (https) listening on port ' + httpsServer.address().port);
     });
 };
