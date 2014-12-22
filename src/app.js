@@ -94,9 +94,9 @@ if (useSSL) {
         cert: cert
     };
     var httpsServer = https.createServer(https_options, app).listen(app.get('port'), function() {
-        console.log('Express server (https) listening on port ' + server.address().port);
+        console.log('Express server (https) listening on port ' + httpsServer.address().port);
     });
 };
 var httpServer = app.listen(app.get('port'), function() {
-    console.log('Express server (http) listening on port ' + server.address().port);
+    console.log('Express server (http) listening on port ' + httpServer.address().port);
 });
