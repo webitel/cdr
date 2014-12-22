@@ -83,20 +83,20 @@ app.use(function(err, req, res, next){
     return;
 });
 
-var useSSL = config.get('ssl:enabled');
+var useSSL = config.get('session:ssl:enabled');
 if (useSSL) {
-    var key = fs.readFileSync(config.get('ssl:ssl_key'));
-    var cert = fs.readFileSync(config.get('ssl:ssl_cert'));
+    console.log('useSSL = true');
+    var key = fs.readFileSync(config.get('session:ssl:ssl_key'));
+    var cert = fs.readFileSync(config.get('session:ssl:ssl_cert'));
     var https = require('https');
     var https_options = {
         key: key,
         cert: cert
     };
-    var server = https.createServer(https_options, app).listen(app.get('port'), function() {
+    var httpsServer = https.createServer(https_options, app).listen(app.get('port'), function() {
         console.log('Express server (https) listening on port ' + server.address().port);
     });
-} else {
-    var server = app.listen(app.get('port'), function() {
-        console.log('Express server (http) listening on port ' + server.address().port);
-    });
 };
+var httpServer = app.listen(app.get('port'), function() {
+    console.log('Express server (http) listening on port ' + server.address().port);
+});
