@@ -21,7 +21,7 @@
         "maxFiles": 5
     },
     "recordFile": {
-        "fileRoot": "/recordings",
+        "fileRoot": "/recordings/",
         "filePath": "$Y/$M/$D/$H"
     },
     "downloadAclList": {
