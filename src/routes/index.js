@@ -87,4 +87,5 @@ module.exports = function (app) {
     app.del('/api/delFile?:id', require('../middleware/deleteFile').DelFile);
     //app.del('/api/delCDR', require('../middleware/deleteFile').DelCDR);
 
+    app.get('/sounds/:id', downloadAcl, require('../middleware/soundsResource').GetFile);
 };

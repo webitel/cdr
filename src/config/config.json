@@ -33,5 +33,8 @@
     "downloadAclList": {
         "mode": "allow",
         "ip": "0.0.0.0/0"
+    },
+    "resource": {
+        "path": "/resource/sounds/"
     }
 }
