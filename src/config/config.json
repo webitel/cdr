@@ -35,6 +35,6 @@
         "ip": "0.0.0.0/0"
     },
     "resource": {
-        "path": "/resource/sounds/"
+        "path": "/cdr/resource/sounds/"
     }
 }
