@@ -8,6 +8,11 @@
             "cookieSecret": "803802A9-438F-4DEC-ADF5-CBE9D0D2370C",
             "maxAge": 31104000000,
             "httpOnly": true
+        },
+        "ssl": {
+            "enabled": false,
+            "ssl_key": "/cdr/cert/wss.pem",
+            "ssl_cert": "/cdr/cert/wss.pem"
         }
     },
     "db": {
@@ -21,7 +26,7 @@
         "maxFiles": 5
     },
     "recordFile": {
-        "fileRoot": "/recordings",
+        "fileRoot": "/recordings/",
         "filePath": "$Y/$M/$D/$H"
     },
     "downloadAclList": {

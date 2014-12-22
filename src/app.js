@@ -6,6 +6,8 @@ var expressSession = require('express-session');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
+var fs = require('fs');
+
 
 var app = express();
 //app.disable('x-powered-by');
@@ -23,18 +25,12 @@ app.use(bodyParser.json());
 //
 app.use(methodOverride());
 
-var RedisStore = require('connect-redis')(expressSession);
-var redisOption = {
-    host: 'localhost',
-    port: 6379
-}
 var sessionOption = {
     secret: config.get("session:secret"),
     key: config.get("session:key"),
 //    store: new RedisStore(redisOption),
     cookie: {
         path     : '/',
-        domain   : '10.10.10.25',
         httpOnly : config.get('session:cookie:httpOnly'),
         maxAge   : config.get('session:cookie:maxAge')
     }
@@ -87,6 +83,20 @@ app.use(function(err, req, res, next){
     return;
 });
 
-var server = app.listen(app.get('port'), function() {
-    log.info('Express server listening on port ' + server.address().port);
-});
+var useSSL = config.get('ssl:enabled');
+if (useSSL) {
+    var key = fs.readFileSync(config.get('ssl:ssl_key'));
+    var cert = fs.readFileSync(config.get('ssl:ssl_cert'));
+    var https = require('https');
+    var https_options = {
+        key: key,
+        cert: cert
+    };
+    var server = https.createServer(https_options, app).listen(app.get('port'), function() {
+        console.log('Express server (https) listening on port ' + server.address().port);
+    });
+} else {
+    var server = app.listen(app.get('port'), function() {
+        console.log('Express server (http) listening on port ' + server.address().port);
+    });
+};
