@@ -8,4 +8,4 @@ VOLUME ["/cdr/config", "/cdr/cert", "/recordings", "/logs"]
 WORKDIR /cdr
 ENTRYPOINT ["node", "app.js"]
 
-EXPOSE 10021
+EXPOSE 10021 10023
