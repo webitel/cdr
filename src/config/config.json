@@ -10,7 +10,7 @@
             "httpOnly": true
         },
         "ssl": {
-            "enabled": false,
+            "enabled": true,
             "ssl_key": "/cdr/cert/wss.pem",
             "ssl_cert": "/cdr/cert/wss.pem"
         }
