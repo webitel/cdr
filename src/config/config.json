@@ -17,12 +17,12 @@
         }
     },
     "db": {
-        "uri": "mongodb://10.10.10.25:27017/webitel",
+        "uri": "mongodb://mongodb:27017/webitel",
         "collectionCDR": "cdr",
         "collectionFile": "cdrFile"
     },
     "log": {
-        "file": "/log/cdr.log",
+        "file": "/logs/cdr.log",
         "maxSize": 30000,
         "maxFiles": 5
     },
@@ -36,6 +36,6 @@
         "ip": "0.0.0.0/0"
     },
     "resource": {
-        "path": "/github/cdr/src/resource/sounds/"
+        "path": "/cdr/src/resource/sounds/"
     }
 }
