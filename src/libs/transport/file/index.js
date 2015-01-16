@@ -104,3 +104,23 @@ module.exports.getMediaStream = function (req, res, file) {
     });
 
 };
+
+module.exports.deleteFile = function (filePath, callback) {
+    var file = filePath;
+    fs.lstat(filePath, function (err, stat) {
+        if (err) {
+            log.error('File not found ', err);
+            callback(err, null);
+        } else {
+            if (!stat.isFile()) return;
+            fs.unlink(file, function (err) {
+                if (err) {
+                    callback(err, null);
+                    return;
+                };
+                log.info('Successfully deleted file %s', file);
+                callback(null, 'Successfully deleted file');
+            });
+        }
+    });
+};

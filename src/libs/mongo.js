@@ -196,5 +196,12 @@ module.exports.aggregate = function (aggr, domain, callback) {
         callback(500);
     }
 
-}
+};
 
+module.exports.RemoveFileDB = function (_id, callback) {
+    try {
+        dbFile.remove({_id: _id}, callback);
+    } catch (e) {
+        callback(e);
+    }
+};

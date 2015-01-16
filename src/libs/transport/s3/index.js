@@ -7,7 +7,7 @@ var aws = require('aws-sdk')
     ,fs = require('fs')
     ,maskPath = config.get("recordFile:maskPath");
 
-aws.config.loadFromPath('src/config/AwsConfig.json');
+aws.config.update(config.get("awsConfig"));
 aws.config.httpOptions = {timeout: 5000};
 
 // Create an S3 client
@@ -92,4 +92,12 @@ module.exports.getMediaStream = function (req, res, file) {
     } catch (e) {
         log.error(e.message);
     }
+};
+
+module.exports.deleteFile = function (file, callback) {
+    var params = {
+        Bucket: file['bucketName'],
+        Key: file['path']
+    };
+    s3.deleteObject(params, callback);
 };

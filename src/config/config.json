@@ -5,7 +5,7 @@
         "secret": "885824D9-87EA-4CC5-B696-EF8A433B7230",
         "key": "webitel",
         "cookie": {
-            "cookieSecret": "803802A9-438F-4DEC-ADF5-CBE9D0D2370C",
+            "cookieSecret": "803803A9-438F-4DEC-ADF5-CBE9D0D2370C",
             "maxAge": 31104000000,
             "httpOnly": true
         },
@@ -30,6 +30,10 @@
         "transport": "file",
         "fileRoot": "/recordings/",
         "maskPath": "$Y/$M/$D/$H"
+    },
+    "awsConfig": {
+        "accessKeyId": "Q3IAJOQ7ZQKF46E2VUEA",
+        "secretAccessKey": "mJ543lPHRo9wV531qz4NvesVYM2362snssW6fZs4"
     },
     "downloadAclList": {
         "mode": "allow",
