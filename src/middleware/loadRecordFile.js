@@ -56,6 +56,7 @@ function getMediaSteram (req, res, file) {
             });
         }
     });
+
 };
 
 module.exports.GetFile = function (req, res, next) {
@@ -65,7 +66,8 @@ module.exports.GetFile = function (req, res, next) {
         var id = query.uuid;
     } catch (e) {
         res.send(400)
-    }
+    };
+
     getRecordFile(id, function (err, data) {
         if (err) next(err);
         if (!data || !data.path) {
@@ -75,4 +77,4 @@ module.exports.GetFile = function (req, res, next) {
             getMediaSteram(req, res, data.path);
         };
     });
-}
+};

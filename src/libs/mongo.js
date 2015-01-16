@@ -23,13 +23,7 @@ MongoClient.connect(config.get('db:uri') ,function(err, db) {
     })
 });
 
-module.exports.InsertFile = function (uuid, path, callback) {
-    var data = {
-        "uuid": uuid,
-        "path": path,
-        "createdOn": new Date(),
-        "requestCount": 0
-    };
+module.exports.InsertFile = function (data, callback) {
     dbFile.save(data, {safe: true}, callback);
 };
 

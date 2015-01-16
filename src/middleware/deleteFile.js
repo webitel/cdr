@@ -7,7 +7,7 @@ var url = require("url")
     ,async = require('async');
 
 
-function deleteFile (filePath, callback) {
+var deleteFile = function (filePath, callback) {
     var file = filePath;
     fs.lstat(filePath, function (err, stat) {
         if (err) {
@@ -26,7 +26,7 @@ function deleteFile (filePath, callback) {
             });
         }
     });
-}
+};
 
 module.exports.DelFile = function (req, res, next) {
     var parts = url.parse(req.url, true, true);

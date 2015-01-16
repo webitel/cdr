@@ -7,6 +7,11 @@ var showLegBList = require('../libs/mongo').showLegBList;
 var showLegACount = require('../libs/mongo').showLegACount;
 var aggregate = require('../libs/mongo').aggregate;
 
+var Transport = require('../libs/transport');
+
+var transport = new Transport();
+var saveTypeFile = require('../config').get('recordFile:transport');
+
 module.exports = function (app) {
     app.post('/login', require('./login').post);
 
@@ -73,18 +78,15 @@ module.exports = function (app) {
         })
     });
 
-    app.get('/forTest', function (req, res) {
-        showLegAList({"_id": 1}, {}, {}, 20, null, null, function(err, result) {
-            // log.info(result);
-            res.json(result);
-        })
+    //app.put('/api/formLoadFile/:id/:type', require('../libs/transport/file/uploadRecordFile').SaveFile);
+    
+    app.put('/api/formLoadFile/:id/:type', function (req, res, next) {
+        transport.SaveFile(req, res, next, saveTypeFile);
     });
 
-    app.put('/api/formLoadFile/:id/:type', require('../middleware/uploadRecordFile').SaveFile);
-
-    app.get('/api/getFile?:id', downloadAcl, require('../middleware/loadRecordFile').GetFile);
-    app.del('/api/delFiles', require('../middleware/deleteFile').DelFiles);
-    app.del('/api/delFile?:id', require('../middleware/deleteFile').DelFile);
+    app.get('/api/getFile?:id', downloadAcl, transport.GetFile);
+    app.delete('/api/delFiles', require('../middleware/deleteFile').DelFiles);
+    app.delete('/api/delFile?:id', require('../middleware/deleteFile').DelFile);
     //app.del('/api/delCDR', require('../middleware/deleteFile').DelCDR);
 
     app.get('/sounds/:id', downloadAcl, require('../middleware/soundsResource').GetFile);

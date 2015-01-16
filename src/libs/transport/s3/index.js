@@ -1,0 +1,95 @@
+var aws = require('aws-sdk')
+    ,log = require('../../log')(module)
+    ,config = require('../../../config')
+    ,rootBucket = config.get('recordFile:fileRoot')
+    ,SAVE_FILE_TYPE = require('../../../const').SAVE_FILE_TYPE
+    ,insertFile = require('../../mongo').InsertFile
+    ,fs = require('fs')
+    ,maskPath = config.get("recordFile:maskPath");
+
+aws.config.loadFromPath('src/config/AwsConfig.json');
+aws.config.httpOptions = {timeout: 5000};
+
+// Create an S3 client
+var s3 = new aws.S3();
+
+var bucketName = (rootBucket)
+        ? rootBucket.replace(/\//g,'')
+        : 'webitel';
+
+function saveToFile(file, query, res) {
+    var uuid = query.id || new Date().getTime();
+    var type = query.type || 'mp3';
+    var keyName = uuid + '.' + type;
+    var date = new Date();
+    var localFileTmp = file['path'];
+
+    var path = maskPath || '';
+
+    path = path.replace(/\$Y/g, date.getFullYear()).replace(/\$M/g, (date.getMonth() + 1)).
+        replace(/\$D/g, date.getDate()).replace(/\$H/g, date.getHours()).
+        replace(/\$m/g, date.getMinutes());
+
+    path += '/' + keyName;
+
+//    s3.createBucket({Bucket: bucketName}, function() {
+        var fileStream = fs.createReadStream(localFileTmp);
+        fileStream.on('error', function (err) {
+            if (err) {
+                log.error(err);
+                res.send(500, err);
+            }
+        });
+        fileStream.on('open', function () {
+            s3.putObject({
+                Bucket: bucketName,
+                Key: path,
+                Body: fileStream
+            }, function (err) {
+                if (err) {
+                    log.error(err);
+                    res.send(500, err);
+                    return;
+                };
+                insertFile({
+                    "uuid": uuid,
+                    "path": path,
+                    "bucketName": bucketName,
+                    "type": SAVE_FILE_TYPE.S3,
+                    "createdOn": new Date(),
+                    "requestCount": 0
+                }, function (err) {
+                    if (err) return log.error(err.message);
+                    res.send(204);
+                    log.info("save file %s - OK", path);
+
+                    fs.unlink(localFileTmp, function (err) {
+                        if (err)
+                            log.error(err);
+                    });
+                });
+            });
+        });
+  //  });
+};
+
+module.exports.SaveFile = function(req, res, file) {
+    var query = req.params;
+    saveToFile(file, query, res);
+};
+
+module.exports.getMediaStream = function (req, res, file) {
+    try {
+        var params = {
+            Bucket: file['bucketName'],
+            Key: file['path']
+        };
+        var url = s3.getSignedUrl('getObject', params);
+        res.writeHead(302, {
+            'Location': url
+        });
+        res.end();
+    } catch (e) {
+        log.error(e.message);
+    }
+};

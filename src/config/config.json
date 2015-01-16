@@ -10,31 +10,32 @@
             "httpOnly": true
         },
         "ssl": {
-            "enabled": true,
+            "enabled": false,
             "ssl_key": "/cdr/cert/wss.pem",
             "ssl_cert": "/cdr/cert/wss.pem",
             "port": 10023
         }
     },
     "db": {
-        "uri": "mongodb://mongodb_server/webitel",
+        "uri": "mongodb://10.10.10.25:27017/webitel",
         "collectionCDR": "cdr",
-        "collectionFile": "tmpfile"
+        "collectionFile": "cdrFile"
     },
     "log": {
-        "file": "/logs/cdr.log",
+        "file": "/log/cdr.log",
         "maxSize": 30000,
         "maxFiles": 5
     },
     "recordFile": {
-        "fileRoot": "/recordings/",
-        "filePath": "$Y/$M/$D/$H"
+        "transport": "s3",
+        "fileRoot": "/webitel/",
+        "maskPath": "$Y/$M/$D/$H"
     },
     "downloadAclList": {
         "mode": "allow",
         "ip": "0.0.0.0/0"
     },
     "resource": {
-        "path": "/cdr/resource/sounds/"
+        "path": "/github/cdr/src/resource/sounds/"
     }
 }

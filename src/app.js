@@ -8,7 +8,6 @@ var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var fs = require('fs');
 
-
 var app = express();
 //app.disable('x-powered-by');
 
@@ -19,7 +18,7 @@ app.use(cookieParser(config.get('session:cookie:cookieSecret')));
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 //
-app.use(bodyParser({ uploadDir: path.join(__dirname, 'files'), keepExtensions: true }));
+app.use(bodyParser({ uploadDir: path.join(__dirname, 'resource'), keepExtensions: true }));
 //parse application/json
 app.use(bodyParser.json());
 //
