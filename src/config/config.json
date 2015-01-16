@@ -27,8 +27,8 @@
         "maxFiles": 5
     },
     "recordFile": {
-        "transport": "s3",
-        "fileRoot": "/webitel/",
+        "transport": "file",
+        "fileRoot": "/recordings/",
         "maskPath": "$Y/$M/$D/$H"
     },
     "downloadAclList": {
@@ -36,6 +36,6 @@
         "ip": "0.0.0.0/0"
     },
     "resource": {
-        "path": "/cdr/src/resource/sounds/"
+        "path": "/cdr/resource/sounds/"
     }
 }
