@@ -5,7 +5,8 @@ var file = require('./file')
     ,formidable = require('formidable')
     ,SAVE_FILE_TYPE = require('../../const').SAVE_FILE_TYPE
     ,getRecordFile = require('../../libs/mongo').GetRecordFile
-    ,removeDbRecordFile = require('../../libs/mongo').RemoveFileDB;
+    ,removeDbRecordFile = require('../../libs/mongo').RemoveFileDB
+    ,log = require('../../libs/log')(module);
 
 var FileController = module.exports = function (option) {
 };
@@ -58,12 +59,11 @@ FileController.prototype.GetFile = function (req, res, next) {
             log.warn('file not found: %s', id);
             res.send(404, "file not found!")
         } else {
-            if (data['type'] == SAVE_FILE_TYPE.FILE) {
+            if (data['type'] == SAVE_FILE_TYPE.S3) {
+                s3.getMediaStream(req, res, data);
+            } else /*if (data['type'] == SAVE_FILE_TYPE.FILE)*/ {
                 file.getMediaStream(req, res, data['path'])
-            } else if (data['type'] == SAVE_FILE_TYPE.S3) {
-                s3.getMediaStream(req, res, data)
             }
-
         };
     });
 };

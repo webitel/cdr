@@ -44,7 +44,8 @@ function saveToFile(file, query, res) {
             s3.putObject({
                 Bucket: bucketName,
                 Key: path,
-                Body: fileStream
+                Body: fileStream,
+                ContentType: 'audio/mpeg'
             }, function (err) {
                 if (err) {
                     log.error(err);
@@ -86,12 +87,13 @@ module.exports.getMediaStream = function (req, res, file) {
         };
         var url = s3.getSignedUrl('getObject', params);
         res.writeHead(302, {
-            'Location': url
+            'Location': url,
+            'Content-Type': 'audio/mpeg'
         });
         res.end();
     } catch (e) {
         log.error(e.message);
-    }
+    };
 };
 
 module.exports.deleteFile = function (file, callback) {
