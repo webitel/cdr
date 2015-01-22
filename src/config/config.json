@@ -1,45 +1,56 @@
 {
-    "host": "0.0.0.0",
-    "port": 10021,
-    "session": {
-        "secret": "885824D9-87EA-4CC5-B696-EF8A433B7230",
-        "key": "webitel",
-        "cookie": {
-            "cookieSecret": "803803A9-438F-4DEC-ADF5-CBE9D0D2370C",
-            "maxAge": 31104000000,
-            "httpOnly": true
-        },
-        "ssl": {
-            "enabled": false,
-            "ssl_key": "/cdr/cert/wss.pem",
-            "ssl_cert": "/cdr/cert/wss.pem",
-            "port": 10023
-        }
+    "ssl": {
+        "enabled": false,
+        "key": "/cdr/cert/wss.pem",
+        "cert": "/cdr/cert/wss.pem",
+        "port": 10023
     },
-    "db": {
+    "server": {
+        "host": "0.0.0.0",
+        "port": 10021
+    },
+    "redis": {
+        "host": "localhost",
+        "port": "6379",
+        "db_index": 15
+    },
+    "cdrDB": {
         "uri": "mongodb://mongodb:27017/webitel",
         "collectionCDR": "cdr",
         "collectionFile": "cdrFile"
     },
-    "log": {
-        "file": "/logs/cdr.log",
-        "maxSize": 30000,
-        "maxFiles": 5
+    "application": {
+        "log": {
+            "loglevel": "trace",
+            "file": "/logs/cdr.log",
+            "maxSize": 30000,
+            "maxFiles": 5,
+            "logstash": {
+                "enabled": true,
+                "host": "it-sfera.com.ua",
+                "port": 28777,
+                "node_name": "cdr"
+            }
+        },
+        "auth": {
+            "tokenSecretKey": "iuyIO!@uieywqi!@##uidosa",
+            "expiresDays": 7
+        },
+        "resource": {
+            "path": "/github/cdr/src/resource/sounds/"
+        }
     },
     "recordFile": {
         "transport": "file",
-        "fileRoot": "/recordings/",
-        "maskPath": "$Y/$M/$D/$H"
+        "fileRoot": "/webitel/",
+        "maskPath": "$Y/$M/$D/$H",
+        "awsConfig": {
+            "accessKeyId": "Q3IAJOQ7ZQKF46E2VUEA",
+            "secretAccessKey": "mJ543lPHRo9wV531qz4NvesVYM2362snssW6fZs4"
+        }
     },
-    "awsConfig": {
-        "accessKeyId": "Q3IAJOQ7ZQKF46E2VUEA",
-        "secretAccessKey": "mJ543lPHRo9wV531qz4NvesVYM2362snssW6fZs4"
-    },
-    "downloadAclList": {
+    "uploadAcl": {
         "mode": "allow",
         "ip": "0.0.0.0/0"
-    },
-    "resource": {
-        "path": "/cdr/resource/sounds/"
     }
 }

@@ -1,23 +1,18 @@
 var log = require('../libs/log')(module)
     ,url = require('url')
-    ,downloadAcl = require('../middleware/downloadAcl').acl;
+    ,downloadAcl = require('../middleware/uploadAcl');
 
-var showLegAList = require('../libs/mongo').showLegAList;
-var showLegBList = require('../libs/mongo').showLegBList;
-var showLegACount = require('../libs/mongo').showLegACount;
-var aggregate = require('../libs/mongo').aggregate;
 
-var Transport = require('../libs/transport');
-
+var Transport = require('../middleware/transport');
 var transport = new Transport();
+
 var saveTypeFile = require('../config').get('recordFile:transport');
 
+var cdrDB = require('../middleware/cdrDB');
+
 module.exports = function (app) {
-    app.post('/login', require('./login').post);
 
-    app.post('/logout', require('./logout').post);
-
-    app.use('/api/*', require('../middleware/checkAuth').get);
+    app.all('/api/*', [require('../middleware/checkAuth')]);
 
     app.post('/api/list', function(req, res, next) {
         var columns = req.body.columns;
@@ -25,9 +20,9 @@ module.exports = function (app) {
         var limit = req.body.limit;
         var pageNumber = req.body.pageNumber;
         var sort = req.body.sort;
-        var domain = req.session.domain;
+        var domain = req['webitelDomain'];
 
-        showLegAList(columns, filter, sort, limit, pageNumber, function (err, data) {
+        cdrDB.showLegAList(columns, filter, sort, limit, pageNumber, domain, function (err, data) {
             if (err) return next(err);
             res.json(data);
         });
@@ -35,9 +30,9 @@ module.exports = function (app) {
 
     app.post('/api/aggregate', function(req, res, next) {
         var aggr = req.body.aggr;
-        var domain = req.session.domain;
+        var domain = req['webitelDomain'];
 
-        aggregate(aggr, domain, function (err, data) {
+        cdrDB.aggregate(aggr, domain, function (err, data) {
             if (err) return next(err);
             res.json(data);
         });
@@ -48,14 +43,13 @@ module.exports = function (app) {
         var filter = req.body.filter;
         var legAUuid = req.body.legAUuid;
         var sort = req.body.sort;
-        var domain = req.session.domain;
+        var domain = req['webitelDomain'];
 
         if (!legAUuid || legAUuid == '') {
             res.send(400, "legAUuid - undefined");
             return;
-        }
-
-        showLegBList(columns, filter, sort, legAUuid, function (err, data) {
+        };
+        cdrDB.showLegBList(columns, filter, sort, legAUuid, domain, function (err, data) {
             if (err) return next(err);
             res.json(data);
         });
@@ -63,32 +57,34 @@ module.exports = function (app) {
 
     app.post('/api/listACount', function (req, res, next) {
         var filter = req.body.filter;
-        var domain = req.session.domain;
-        showLegACount(filter, function (err, data) {
+        var domain = req['webitelDomain'];
+
+        cdrDB.showLegACount(filter, domain, function (err, data) {
             if (err)
                 return next(err);
             res.json(data);
-        })
+        });
     });
 
     app.get('/api/list', function (req, res, next) {
-        showLegAList({}, {}, {}, 20, null, null, function(err, result) {
-           // log.info(result);
+        cdrDB.showLegAList({}, {}, {}, 10, 1, req['webitelDomain'], function(err, result) {
+            // log.info(result);
             res.json(result);
-        })
+        });
     });
 
-    //app.put('/api/formLoadFile/:id/:type', require('../libs/transport/file/uploadRecordFile').SaveFile);
-    
-    app.put('/api/formLoadFile/:id/:type', function (req, res, next) {
+    // /sys/formLoadFile?domain=10.10.10.144&&id=test&&format=mp3
+    app.put('/sys/formLoadFile?:id', downloadAcl, function (req, res, next) {
         transport.SaveFile(req, res, next, saveTypeFile);
     });
 
-    app.get('/api/getFile?:id', downloadAcl, transport.GetFile);
-    app.delete('/api/delFiles', require('../middleware/deleteFile').DelFiles);
-    app.delete('/api/delFile?:id', downloadAcl, transport.DelFile);
+    app.get('/api/getFile?:id', transport.GetFile);
+
+    //app.delete('/api/delFiles', require('../middleware/deleteFile').DelFiles);
+
+    app.delete('/api/delFile?:id', transport.DelFile);
 
     //app.del('/api/delCDR', require('../middleware/deleteFile').DelCDR);
 
-    app.get('/sounds/:id', downloadAcl, require('../middleware/soundsResource').GetFile);
+    app.get('/sounds/:id', require('../middleware/soundsResource').GetFile);
 };

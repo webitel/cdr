@@ -1,6 +1,5 @@
 var url = require("url")
     ,log = require('../libs/log')(module)
-    ,config = require('../config')
     ,fs = require('node-fs')
     ,getRecordFile = require('../libs/mongo').GetRecordFile
     ,getRecordFilesFromUuids = require('../libs/mongo').GetRecordFilesFromUuids
@@ -21,7 +20,7 @@ var deleteFile = function (filePath, callback) {
                     callback(err, null);
                     return;
                 };
-                log.info('Successfully deleted file %s', file);
+                log.trace('Successfully deleted file %s', file);
                 callback(null, 'Successfully deleted file');
             });
         }

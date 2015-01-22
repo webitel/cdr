@@ -3,7 +3,7 @@ var fs = require('fs')
     ,util = require('util')
     ,log = require('../libs/log')(module)
     ,config = require('../config')
-    ,resourcePath = config.get("resource:path");
+    ,resourcePath = config.get("application:resource:path");
 
 function getMediaSteram (req, res, file) {
 
