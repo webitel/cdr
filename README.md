@@ -3,6 +3,10 @@ cdr-server
 
 CDR & File Server for Webitel
 
+## Default ports
+
+- `10021/tcp` - http port for call record file uploading
+- `10023/tcp` - https port for REST API and call record file downloading
 
 ## Environment Variables
 
@@ -31,7 +35,7 @@ The CDR image uses several environment variables
 
 `S3_KEY_ID` and `S3_KEY_SECRET`
 
-`ACL_UPLOAD` - Allowed IPs for call records file uploading (default: 0.0.0.0/0)
+`ACL_UPLOAD` - Allowed IPs for call record file uploading (default: 0.0.0.0/0)
 
 ### Logs
 
