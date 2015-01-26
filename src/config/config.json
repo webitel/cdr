@@ -1,6 +1,6 @@
 {
     "ssl": {
-        "enabled": false,
+        "enabled": SSL,
         "key": "/cdr/cert/wss.pem",
         "cert": "/cdr/cert/wss.pem",
         "port": 10023
@@ -10,47 +10,47 @@
         "port": 10021
     },
     "redis": {
-        "host": "localhost",
+        "host": "REDIS_HOST",
         "port": "6379",
         "db_index": 15
     },
     "cdrDB": {
-        "uri": "mongodb://mongodb:27017/webitel",
+        "uri": "mongodb://MONGODB_HOST:27017/webitel",
         "collectionCDR": "cdr",
         "collectionFile": "cdrFile"
     },
     "application": {
         "log": {
-            "loglevel": "trace",
+            "loglevel": "LOGLEVEL",
             "file": "/logs/cdr.log",
             "maxSize": 30000,
             "maxFiles": 5,
             "logstash": {
-                "enabled": true,
-                "host": "it-sfera.com.ua",
+                "enabled": LOGSTASH,
+                "host": "LOGSTASH_HOST",
                 "port": 28777,
                 "node_name": "cdr"
             }
         },
         "auth": {
-            "tokenSecretKey": "iuyIO!@uieywqi!@##uidosa",
+            "tokenSecretKey": "TOKEN_KEY",
             "expiresDays": 7
         },
         "resource": {
-            "path": "/github/cdr/src/resource/sounds/"
+            "path": "/cdr/resource/sounds/"
         }
     },
     "recordFile": {
-        "transport": "file",
-        "fileRoot": "/webitel/",
+        "transport": "STORAGE",
+        "fileRoot": "/STORAGE_ROOT/",
         "maskPath": "$Y/$M/$D/$H",
         "awsConfig": {
-            "accessKeyId": "Q3IAJOQ7ZQKF46E2VUEA",
-            "secretAccessKey": "mJ543lPHRo9wV531qz4NvesVYM2362snssW6fZs4"
+            "accessKeyId": "S3_KEY_ID",
+            "secretAccessKey": "S3_KEY_SECRET"
         }
     },
     "uploadAcl": {
         "mode": "allow",
-        "ip": "0.0.0.0/0"
+        "ip": "ACL_UPLOAD"
     }
 }
