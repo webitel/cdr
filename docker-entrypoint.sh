@@ -13,6 +13,12 @@ else
 	sed -i 's/STORAGE/file/g' /cdr/config/config.json
 fi
 
+if [ "$STORAGE_ROOT" ]; then
+	sed -i 's/STORAGE_ROOT/'$STORAGE_ROOT'/g' /cdr/config/config.json
+else
+	sed -i 's/STORAGE_ROOT/recordings/g' /cdr/config/config.json
+fi
+
 if [ "$ACL_UPLOAD" ]; then
 	sed -i 's/ACL_UPLOAD/'$ACL_UPLOAD'/g' /cdr/config/config.json
 else
@@ -21,6 +27,12 @@ fi
 
 if [ "$REDIS_HOST" ]; then
 	sed -i 's/REDIS_HOST/'$REDIS_HOST'/g' /cdr/config/config.json
+fi
+
+if [ "$REDIS_DB" ]; then
+	sed -i 's/REDIS_DB/'$REDIS_DB'/g' /cdr/config/config.json
+else
+	sed -i 's/REDIS_DB/0/g' /cdr/config/config.json
 fi
 
 if [ "$MONGODB_HOST" ]; then

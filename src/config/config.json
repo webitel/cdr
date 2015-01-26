@@ -12,7 +12,7 @@
     "redis": {
         "host": "REDIS_HOST",
         "port": "6379",
-        "db_index": 15
+        "db_index": REDIS_DB
     },
     "cdrDB": {
         "uri": "mongodb://MONGODB_HOST:27017/webitel",
