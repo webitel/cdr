@@ -5,8 +5,9 @@ CDR & File Server for Webitel
 
 ## Default ports
 
-- `10021/tcp` - http port for call record file uploading
-- `10023/tcp` - https port for REST API and call record file downloading
+`10021/tcp` - http port for call record file uploading from [FreeSWITCH](https://registry.hub.docker.com/u/webitel/freeswitch/)
+
+`10023/tcp` - https port for REST API and file downloading
 
 ## Environment Variables
 
@@ -26,7 +27,7 @@ The CDR image uses several environment variables
 
 ### Storage variables
 
-`STORAGE_TRANSPORT`:
+`STORAGE_TRANSPORT`
 
 - s3 - Amazon S3 storage
 - file - Local file storage (default)
@@ -48,7 +49,7 @@ The CDR image uses several environment variables
 
 ## Supported Docker versions
 
-This image is officially supported on Docker version `1.4` and newest.
+This image is officially supported on Docker version `1.3.2` and newest.
 
 ## User Feedback
 
