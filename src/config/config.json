@@ -26,7 +26,7 @@
             "maxSize": 30000,
             "maxFiles": 5,
             "logstash": {
-                "enabled": LOGSTASH,
+                "enabled": LOGSTASH_ENABLE,
                 "host": "LOGSTASH_HOST",
                 "port": 28777,
                 "node_name": "cdr"
@@ -41,7 +41,7 @@
         }
     },
     "recordFile": {
-        "transport": "STORAGE",
+        "transport": "STORAGE_TRANSPORT",
         "fileRoot": "/STORAGE_ROOT/",
         "maskPath": "$Y/$M/$D/$H",
         "awsConfig": {

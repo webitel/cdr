@@ -22,7 +22,7 @@ The CDR image uses several environment variables
 
 ### Storage variables
 
-`STORAGE` - storage transport:
+`STORAGE_TRANSPORT` - storage transport:
 
 - s3 - Amazon S3 storage
 - file - Local file storage (default)
@@ -37,7 +37,7 @@ The CDR image uses several environment variables
 
 `LOGLEVEL` - log level (default: warn)
 
-`LOGSTASH` - send logs to Logstash Server (default: false)
+`LOGSTASH_ENABLE` - send logs to Logstash Server (default: false)
 
 `LOGSTASH_HOST` - Logstash host or IP
 

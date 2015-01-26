@@ -7,10 +7,10 @@ else
 	sed -i 's/SSL/false/g' /cdr/config/config.json
 fi
 
-if [ "$STORAGE" ]; then
-	sed -i 's/STORAGE/'$STORAGE'/g' /cdr/config/config.json
+if [ "$STORAGE_TRANSPORT" ]; then
+	sed -i 's/STORAGE_TRANSPORT/'$STORAGE_TRANSPORT'/g' /cdr/config/config.json
 else
-	sed -i 's/STORAGE/file/g' /cdr/config/config.json
+	sed -i 's/STORAGE_TRANSPORT/file/g' /cdr/config/config.json
 fi
 
 if [ "$STORAGE_ROOT" ]; then
@@ -45,10 +45,10 @@ else
 	sed -i 's/LOGLEVEL/warn/g' /cdr/config/config.json
 fi
 
-if [ "$LOGSTASH" ]; then
-	sed -i 's/LOGSTASH/'$LOGSTASH'/g' /cdr/config/config.json
+if [ "$LOGSTASH_ENABLE" ]; then
+	sed -i 's/LOGSTASH_ENABLE/'$LOGSTASH_ENABLE'/g' /cdr/config/config.json
 else
-	sed -i 's/LOGSTASH/false/g' /cdr/config/config.json
+	sed -i 's/LOGSTASH_ENABLE/false/g' /cdr/config/config.json
 fi
 
 if [ "$LOGSTASH_HOST" ]; then
