@@ -22,7 +22,7 @@ The CDR image uses several environment variables
 
 ### Storage variables
 
-`STORAGE_TRANSPORT` - storage transport:
+`STORAGE_TRANSPORT`:
 
 - s3 - Amazon S3 storage
 - file - Local file storage (default)

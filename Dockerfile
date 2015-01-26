@@ -10,7 +10,7 @@ COPY docker-entrypoint.sh /
 WORKDIR /cdr
 RUN npm install && npm cache clear
 
-VOLUME ["/cdr/config", "/cdr/cert", "/recordings", "/logs"]
+VOLUME ["/cdr/cert", "/recordings", "/logs"]
 
 EXPOSE 10021 10023
 
