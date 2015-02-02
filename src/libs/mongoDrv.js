@@ -11,11 +11,18 @@ var drv = function (option) {
 
 };
 
+drv._initDB = function (db) {
+    this.db = db;
+    return this.db;
+};
+
 mongoClient.connect(config.get('cdrDB:uri') ,function(err, db) {
     if (err) {
         log.error('Connect db error: %s', err.message);
         throw err;
     };
+    drv._initDB(db);
+    // TODO
     drv.cdrCollection = db.collection(config.get("cdrDB:collectionCDR"));
     drv.fileCollection = db.collection(config.get("cdrDB:collectionFile"));
     log.info('Connected db %s ', config.get('cdrDB:uri'));
@@ -23,5 +30,13 @@ mongoClient.connect(config.get('cdrDB:uri') ,function(err, db) {
         log.error('close mongo');
     })
 });
+
+drv.getCollection = function (name) {
+    try {
+        return this.db.collection(name)
+    } catch (e) {
+        log.error(e.message);
+    }
+};
 
 module.exports = drv;

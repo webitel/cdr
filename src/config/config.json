@@ -9,15 +9,11 @@
         "host": "0.0.0.0",
         "port": 10021
     },
-    "redis": {
-        "host": "REDIS_HOST",
-        "port": "6379",
-        "db_index": REDIS_DB
-    },
     "cdrDB": {
         "uri": "mongodb://MONGODB_HOST:27017/webitel",
         "collectionCDR": "cdr",
-        "collectionFile": "cdrFile"
+        "collectionFile": "cdrFile",
+        "collectionAuth": "authToken"
     },
     "application": {
         "log": {
