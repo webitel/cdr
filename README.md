@@ -17,10 +17,6 @@ The CDR image uses several environment variables
 
 `SSL` - enable https (default: false)
 
-`REDIS_HOST` - Redis host or IP
-
-`REDIS_DB` - Redis DB index (default: 0)
-
 `MONGODB_HOST` - MongoDB host or IP
 
 `TOKEN_KEY` - application token key for storing session

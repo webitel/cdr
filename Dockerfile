@@ -13,6 +13,4 @@ RUN npm install && npm cache clear
 VOLUME ["/cdr/cert", "/recordings", "/logs"]
 
 EXPOSE 10021 10023
-
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["cdr"]
