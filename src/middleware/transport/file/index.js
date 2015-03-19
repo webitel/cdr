@@ -58,7 +58,10 @@ module.exports.getMediaStream = function (req, res, file) {
     fs.lstat(file, function (err, stat) {
 
         if (err) {
-            res.status(500).end('File not found: ' + err);
+            res.status(500).json({
+                "status": "error",
+                "info": err.message
+            });
         } else {
             if (!stat.isFile()) return;
 
@@ -88,12 +91,17 @@ module.exports.getMediaStream = function (req, res, file) {
 
             var stream = fs.createReadStream(file,
                 { flags: 'r', start: start, end: end});
-            stream.pipe(res);
+            
+            stream.on('open', function () {
+                stream.pipe(res);
+            });
+
 
             stream.on('error', function (err) {
                 res.statusCode = 500;
                 log.error('Server load stream error ', err);
                 res.end('Server load stream error: ' + err.message);
+                //stream.destroy();
             });
 
             res.on('close', function () {
@@ -122,6 +130,6 @@ module.exports.deleteFile = function (filePath, callback) {
                 log.trace('Successfully deleted file %s', file);
                 callback(null, 'Successfully deleted file');
             });
-        }
+        };
     });
 };

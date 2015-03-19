@@ -8,6 +8,10 @@ module.exports = function (req, res, next) {
     var ips =config.get("uploadAcl:ip");
 
     if (mode === 'allow' && inSubnet.IPv4(ip, ips)) {
+        req.webitelUser = {
+            role: "GOD",
+            attr: {}
+        };
         next()
     } else {
         log.warn('Unauthorized connection ip: %s', ip);

@@ -7,6 +7,14 @@ var file = require('./file/index')
     ,fileDB = require('../../middleware/fileDB')
     ,log = require('../../libs/log')(module);
 
+function getResponseObject (status, info, description) {
+    return {
+        "status": status,
+        "info": info,
+        "more info": description
+    }
+};
+
 var FileController = module.exports = function (option) {
 };
 
@@ -20,7 +28,7 @@ FileController.prototype.SaveFile = function (req, res, next, type) {
     form.parse(req, function(err, fields, files) {
         if (err) return next(err);
         var isFiles = false;
-        switch (type) {
+        switch (type.toLowerCase()) {
             case 'file':
                 for (var key in files) {
                     file.SaveFile(req, res, files[key]);
@@ -34,65 +42,63 @@ FileController.prototype.SaveFile = function (req, res, next, type) {
                 };
                 break;
             default :
+                log.error('Default transport incorrect.');
+                break;
         };
         if (!isFiles) {
+            log.warn('Formidable: not file stream!');
             res.status(400).send('Bad request!')
-        }
+        };
     });
     return;
 };
 
 FileController.prototype.GetFile = function (req, res, next) {
     try {
-        var parts = url.parse(req.url, true, true);
-        var query = parts.query;
-        var id = query.uuid;
+        var id = req.params['id'];
+        fileDB.getRecordFile(id, function (err, data) {
+            if (err) next(err);
+            if (!data || !data.path) {
+                log.warn('file not found: %s', id);
+                res.status(404).json(getResponseObject('error', 'file not found!'));
+            } else {
+                if (data['type'] == SAVE_FILE_TYPE.S3) {
+                    s3.getMediaStream(req, res, data);
+                } else /*if (data['type'] == SAVE_FILE_TYPE.FILE)*/ {
+                    file.getMediaStream(req, res, data['path'])
+                }
+            };
+        });
     } catch (e) {
         return next(e)
     };
-    fileDB.getRecordFile(id, function (err, data) {
-        if (err) next(err);
-        if (!data || !data.path) {
-            log.warn('file not found: %s', id);
-            res.status(404).send("file not found!");
-        } else {
-            if (data['type'] == SAVE_FILE_TYPE.S3) {
-                s3.getMediaStream(req, res, data);
-            } else /*if (data['type'] == SAVE_FILE_TYPE.FILE)*/ {
-                file.getMediaStream(req, res, data['path'])
-            }
-        };
-    });
 };
 
 FileController.prototype.DelFile = function (req, res, next) {
     var parts = url.parse(req.url, true, true);
+    var recordId = req.params['id'];
     var query = parts.query;
-    if ((typeof query == "undefined") || !query.uuid) {
-        res.status(500).send('bad request');
-        return;
-    };
     var delDB = Boolean(query.db);
 
-    fileDB.getRecordFile(query.uuid, function (err, data) {
+    fileDB.getRecordFile(recordId, function (err, data) {
         if (err) next(err);
         if (!data || !data.path) {
-            log.warn('file not found: %s', query.uuid);
-            res.status(404).send("file not found!")
+            log.warn('file not found: %s', recordId);
+            res.status(404).json(getResponseObject('error', 'file not found!'));
         } else {
             var _id = data['_id'];
             if (data['type'] == SAVE_FILE_TYPE.FILE) {
-                file.deleteFile(data['path'], function (err, message) {
+                file.deleteFile(data['path'], function (err) {
                     if (err) {
-                        res.status(500).send(err);
+                        res.status(500).json(getResponseObject('error', err.message));
                         return;
                     }
                     if (delDB) {
                         fileDB.removeFileDB(_id, function (err) {
                             if (err) {
-                                res.status(500).send(err);
+                                res.status(500).json(getResponseObject('error', err.message));
                                 return;
-                            }
+                            };
                             res.status(200).send(data);
                         })
                     } else {
@@ -117,7 +123,7 @@ FileController.prototype.DelFile = function (req, res, next) {
                         res.status(200).send(data);
                     }
                 });
-            }
-        }
+            };
+        };
     });
 };

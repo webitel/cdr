@@ -19,13 +19,21 @@ module.exports = function(req, res, next) {
                     "message": "Token Expired"
                 });
                 return;
-            }
+            };
 
             // Authorize the user to see if s/he can access our resources
 
             validateUser(key, function (err, dbUser) {
                 if (dbUser && dbUser.token == token) {
                     req.webitelDomain = dbUser['domain'];
+                    req['webitelUser'] = {
+                        "attr": {
+                            "domain": dbUser['domain'],
+                            "role": {
+                                "val": dbUser['role']
+                            }
+                        }
+                    };
                     next(); // To move to next middleware
                 } else {
                     // No user with this name exists, respond back with a 401

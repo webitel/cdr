@@ -31,15 +31,16 @@ function getLogger(module) {
                 level: config.get('application:log:loglevel'),
                 label: path,
                 timestamp: true
-            }),
-            new winston.transports.File({
-                filename: config.get('application:log:file'),
-                maxsize: config.get('application:log:maxSize'),
-                maxFiles: config.get('application:log:maxFiles'),
-                level: config.get('application:log:loglevel'),
-                label: path,
-                timestamp: true
             })
+            //,
+            //new winston.transports.File({
+            //    filename: config.get('application:log:file'),
+            //    maxsize: config.get('application:log:maxSize'),
+            //    maxFiles: config.get('application:log:maxFiles'),
+            //    level: config.get('application:log:loglevel'),
+            //    label: path,
+            //    timestamp: true
+            //})
         ]
     });
 

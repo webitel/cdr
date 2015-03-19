@@ -45,6 +45,11 @@
             "secretAccessKey": "S3_KEY_SECRET"
         }
     },
+    "mediaFile": {
+        "fileRoot": "/STORAGE_ROOT/media/",
+        "maxFieldsSizeMB": 5,
+        "collectionMedia": "mediaFile"
+    },
     "uploadAcl": {
         "mode": "allow",
         "ip": "ACL_UPLOAD"
