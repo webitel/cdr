@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+echo 'Webitel CDR Server '$VERSION
+
 if [ "$SSL" ]; then
 	sed -i 's/SSL/'$SSL'/g' /cdr/config/config.json
 else
