@@ -21,27 +21,9 @@ module.exports = function (req, res, next) {
 };
 
 var getClientIp = function(req) {
-    var ipAddress;
-
-    var forwardedIpsStr = req.headers['x-forwarded-for'];
-
-    if (forwardedIpsStr) {
-        var forwardedIps = forwardedIpsStr.split(',');
-        ipAddress = forwardedIps[0];
-    }
-
-    if (!ipAddress) {
-        ipAddress = req.connection.remoteAddress;
-    }
-
-    if(!ipAddress){
-        return "";
-    }
-
-    if(ipAddress.indexOf(':') !== -1){
-        ipAddress = ipAddress.split(':')[0];
-    }
-
-    return ipAddress;
+    return req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
 };
 
