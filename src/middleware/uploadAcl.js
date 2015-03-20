@@ -2,12 +2,14 @@ var inSubnet = require('insubnet')
     ,config = require('../config')
     ,log = require('../libs/log')(module);
 
+var requestIp = require('request-ip');
+
 module.exports = function (req, res, next) {
     var ip = getClientIp(req);
     var mode = config.get("uploadAcl:mode");
     var ips =config.get("uploadAcl:ip");
 
-    if (mode === 'allow' && inSubnet.IPv4(ip, ips)) {
+    if (mode === 'allow' && inSubnet.Auto(ip, ips)) {
         req.webitelUser = {
             role: "GOD",
             attr: {}
@@ -21,9 +23,6 @@ module.exports = function (req, res, next) {
 };
 
 var getClientIp = function(req) {
-    return req.headers['x-forwarded-for'] ||
-        req.connection.remoteAddress ||
-        req.socket.remoteAddress ||
-        req.connection.socket.remoteAddress;
+    return requestIp.getClientIp(req);
 };
 
