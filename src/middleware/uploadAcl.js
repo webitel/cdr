@@ -7,7 +7,7 @@ var requestIp = require('request-ip');
 module.exports = function (req, res, next) {
     var ip = getClientIp(req);
     if (ip) {
-        ip.replace(/^::ffff:/, '');
+        ip = ip.replace(/^::ffff:/, '');
     };
     var mode = config.get("uploadAcl:mode");
     var ips =config.get("uploadAcl:ip");
