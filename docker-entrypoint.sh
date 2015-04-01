@@ -59,4 +59,6 @@ if [ "$S3_KEY_SECRET" ]; then
 	sed -i 's/S3_KEY_SECRET/'$S3_KEY_SECRET'/g' /cdr/config/config.json
 fi
 
+sed -i 's/S3_REGION/'$S3_REGION'/g' /cdr/config/config.json
+
 exec node app.js

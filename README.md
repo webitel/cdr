@@ -32,6 +32,8 @@ The CDR image uses several environment variables
 
 `S3_KEY_ID` and `S3_KEY_SECRET`
 
+`S3_REGION` - S3 Region
+
 `ACL_UPLOAD` - Allowed IPs for call record file uploading (default: 0.0.0.0/0)
 
 ### Logs

@@ -42,7 +42,8 @@
         "maskPath": "$Y/$M/$D/$H",
         "awsConfig": {
             "accessKeyId": "S3_KEY_ID",
-            "secretAccessKey": "S3_KEY_SECRET"
+            "secretAccessKey": "S3_KEY_SECRET",
+            "region": "S3_REGION"
         }
     },
     "mediaFile": {
