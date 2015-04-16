@@ -174,7 +174,7 @@ function getLastIdSort(sort) {
 
 function buildFilterQuery(filter) {
     var filterArray = [];
-    filterArray.push(filterLegA); // TODO
+    //filterArray.push(filterLegA); // TODO
     if (filter) {
         for (var key in filter) {
             if (key == '_id' && ObjectId.isValid(filter[key])) {
