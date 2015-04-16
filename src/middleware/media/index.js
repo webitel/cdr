@@ -47,7 +47,7 @@ module.exports = {
             limit: limit,
             pageNumber: page,
             sort: {},
-            domain: _user.attr['domain']
+            domain: domainName
         };
 
         db.searches(option, function (err, data) {
