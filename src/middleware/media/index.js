@@ -151,9 +151,9 @@ module.exports = {
             return;
         };
 
-        if (_user.attr['domain']) {
+        /*if (_user.attr['domain']) {
             _type = 'mp3';
-        };
+        };*/
 
         if (req.headers['content-type'].match(/json/i)) {
             res.status(400).json({

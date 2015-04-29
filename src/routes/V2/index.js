@@ -25,7 +25,7 @@ module.exports = function (app) {
     app.get('/api/v2/media/:type?', require('../../middleware/media').get);
     app.get('/api/v2/media/:type/:id', require('../../middleware/media').stream);
     app.post('/api/v2/media/searches', require('../../middleware/media').searches);
-    app.post('/api/v2/media', require('../../middleware/media').post);
+    app.post('/api/v2/media/:type?', require('../../middleware/media').post);
     app.post('/api/v2/media/local', require('../../middleware/media').postLocal);
 
     app.put('/api/v2/media/:type/:id', require('../../middleware/media').put);
