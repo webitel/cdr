@@ -130,6 +130,61 @@ module.exports = {
             res.status(200).json(_response);
         });
     },
+
+    delRecord: function (req, res, next) {
+        try {
+            var _user = req.webitelUser;
+            if (_user.attr['role']['val'] < USER_ROLE.ROOT) {
+                res.status(403).json({
+                    "status": "error",
+                    "info": "Forbidden!"
+                });
+                return;
+            };
+            var type = req.params['type'],
+                name = req.params['name'],
+                domain = _user.attr['domain'] || req.query['domain'],
+                path = UPLOAD_DIR + domain
+                ;
+            if (!type || !name || !domain) {
+                res.status(400).json({
+                    "status": "error",
+                    "info": "Bad request"
+                });
+                return;
+            };
+
+            db.deleteFromName(name, domain, type, function (err, result) {
+                if (err) {
+                    res.status(500).json({
+                        "status": "error",
+                        "info": err["message"]
+                    });
+                    return;
+                };
+                if (result > 0) {
+                    try {
+                        fs.remove(path + '/' + name);
+                        res.status(200).json({
+                            "status": "OK",
+                            "info": "Remove " + result + " record."
+                        });
+                    } catch (e) {
+                        next(e);
+                    };
+                } else {
+                    res.status(404).json({
+                        "status": "error",
+                        "info": "Not found!"
+                    });
+                };
+                return;
+            });
+
+        } catch (e) {
+            next(e);
+        };
+    },
     
     post: function (req, res, next) {
         var _user = req.webitelUser,
@@ -321,7 +376,9 @@ module.exports = {
         var _user = req.webitelUser,
             _id = req.params['id'],
             _type = req.params['type'],
-            domainName = _user.attr['domain'] || req.query['domain'];
+            domainName = _user.attr['domain'] || req.query['domain'],
+            queryStream = req.query['stream']
+            ;
 
         db.getOne(_id, domainName, _type, function (err, result) {
             if (err) {
@@ -345,42 +402,60 @@ module.exports = {
                 } else {
                     if (!stat.isFile()) return;
 
-                    var start = 0;
-                    var end = 0;
-                    var range = req.header('Range');
-                    if (range != null) {
-                        start = parseInt(range.slice(range.indexOf('bytes=') + 6,
-                            range.indexOf('-')));
-                        end = parseInt(range.slice(range.indexOf('-') + 1,
-                            range.length));
-                    }
-                    if (isNaN(end) || end == 0) end = stat.size - 1;
+                    if (queryStream === "false") {
+                        var stream = fs.createReadStream(path,
+                            {
+                                flags: 'r',
+                                bufferSize: 8 * 1024
+                            });
+                        stream
+                            .on('close', res.destroy.bind(res))
+                            .on('error', res.destroy.bind(res))
+                            .pipe(res)
+                            .on('close', stream.destroy.bind(stream))
+                            .on('error', stream.destroy.bind(stream));
+                        return;
 
-                    if (start > end) return;
+                    } else {
 
-                    res.writeHead(206, {
-                        'Connection':'close',
-                        'Cache-Control':'private',
-                        'Content-Type': 'audio/mpeg',
-                        'Content-Length': end - start,
-                        'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
-                        'Accept-Ranges':'bytes',
-                        'Transfer-Encoding':'chunked'
-                    });
+                        var start = 0;
+                        var end = 0;
+                        var range = req.header('Range');
+                        if (range != null) {
+                            start = parseInt(range.slice(range.indexOf('bytes=') + 6,
+                                range.indexOf('-')));
+                            end = parseInt(range.slice(range.indexOf('-') + 1,
+                                range.length));
+                        }
+                        if (isNaN(end) || end == 0) end = stat.size - 1;
 
-                    var stream = fs.createReadStream(path,
-                        {
-                            flags: 'r',
-                            start: start,
-                            end: end,
-                            bufferSize: 8 * 1024
+                        if (start > end) return;
+
+                        res.writeHead(206, {
+                            'Connection': 'close',
+                            'Cache-Control': 'private',
+                            'Content-Type': 'audio/mpeg',
+                            'Content-Length': end - start,
+                            'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
+                            'Accept-Ranges': 'bytes',
+                            'Transfer-Encoding': 'chunked'
                         });
-                    stream
-                        .on('close', res.destroy.bind(res))
-                        .on('error', res.destroy.bind(res))
-                        .pipe(res)
-                        .on('close', stream.destroy.bind(stream))
-                        .on('error', stream.destroy.bind(stream));
+
+                        var stream = fs.createReadStream(path,
+                            {
+                                flags: 'r',
+                                start: start,
+                                end: end,
+                                bufferSize: 8 * 1024
+                            });
+                        stream
+                            .on('close', res.destroy.bind(res))
+                            .on('error', res.destroy.bind(res))
+                            .pipe(res)
+                            .on('close', stream.destroy.bind(stream))
+                            .on('error', stream.destroy.bind(stream));
+
+                    }
 
                 };
             });

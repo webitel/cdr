@@ -89,6 +89,19 @@ var dbFile = {
         };
     },
 
+    deleteFromName: function (name, domain, type, cb) {
+        var dbFile = db.getCollection(COLLECTION_NAME);
+        try {
+            dbFile.remove({
+                "name": name,
+                "domain": domain,
+                "type": type
+            }, cb);
+        } catch (e) {
+            cb(e);
+        };
+    },
+
     bulkOp: function () {
         return db.getCollection(COLLECTION_NAME).initializeUnorderedBulkOp();
     },

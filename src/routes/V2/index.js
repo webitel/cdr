@@ -27,6 +27,7 @@ module.exports = function (app) {
     app.post('/api/v2/media/searches', require('../../middleware/media').searches);
     app.post('/api/v2/media/:type?', require('../../middleware/media').post);
     app.post('/api/v2/media/local', require('../../middleware/media').postLocal);
+    app.delete('/api/v2/media/:type/:name', require('../../middleware/media').delRecord);
 
     app.put('/api/v2/media/:type/:id', require('../../middleware/media').put);
 
