@@ -60,7 +60,7 @@ app.use(function(err, req, res, next){
     return;
 });
 
-var useSSL = config.get('ssl:enabled');
+var useSSL = config.get('ssl:enabled').toString() == 'true';
 if (useSSL) {
     var key = fs.readFileSync(config.get('ssl:key'));
     var cert = fs.readFileSync(config.get('ssl:cert'));
