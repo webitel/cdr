@@ -3,7 +3,8 @@ var fs = require('fs')
     ,util = require('util')
     ,log = require('../libs/log')(module)
     ,config = require('../config')
-    ,resourcePath = config.get("application:resource:path");
+    ,path = require('path')
+    ,resourcePath = path.normalize(config.get("application:resource:path"));
 
 function getMediaSteram (req, res, file) {
 
@@ -61,7 +62,23 @@ function getMediaSteram (req, res, file) {
 
 module.exports.GetFile = function (req, res, next) {
     try {
-        var _path = resourcePath + '/' + req.params.id;
+        var _path = req.params.id;
+        if (~_path.indexOf('\0')) {
+            res.status(404).json({
+                "status": "error",
+                "info": "Not found."
+            });
+            return;
+        };
+
+        _path = path.normalize(path.join(resourcePath, _path));
+        if (_path.indexOf(resourcePath) != 0) {
+            res.status(404).json({
+                "status": "error",
+                "info": "Not found."
+            });
+            return;
+        };
         getMediaSteram(req, res, _path);
     } catch (e) {
         res.send(400)
