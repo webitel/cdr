@@ -6,6 +6,7 @@ var conf = require('../../config'),
     elasticConf = conf.get('elastic'),
     elastic = require('./elastic')(elasticConf),
     log = require('../../libs/log')(module),
+    _ = require('underscore'),
     async = require('async');
 
 //var moment = require('moment');
@@ -110,15 +111,14 @@ function exportCollection(desc, mongoDb, callback) {
 
             stream.on('data', function (doc) {
                 stream.pause();
+                if (desc.fields) {
+                    doc = _.pick(doc, desc.fields);
+                };
                 elastic.create({
                     index: indexName,
                     type: desc.type,
                     id: doc._id.toString(),
-                    body: {
-                        "_id": doc._id.toString(),
-                        "variables": doc.variables,
-                        "callflow": doc.callflow
-                    }
+                    body: doc
                 }, function (err) {
                     if (err) {
                         if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
