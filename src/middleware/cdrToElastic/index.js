@@ -15,7 +15,7 @@ function exportCollection(desc, mongoDb, callback) {
     var collection = mongoDb.collection(desc.name);
     var query = {};
 
-    var indexName = desc.index + '-' + (new Date().toLocaleDateString()).replace(/-/g,'.');
+    var indexName = desc.index + '-' + (new Date().toLocaleDateString()).replace(/-|\//g,'.');
 
     if (!collection) {
         return callback('collection ' + desc.name + ' does not exist.');
