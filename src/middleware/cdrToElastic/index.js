@@ -116,7 +116,8 @@ function exportCollection(desc, mongoDb, callback) {
                     id: doc._id.toString(),
                     body: {
                         "_id": doc._id.toString(),
-                        "variables": doc.variables
+                        "variables": doc.variables,
+                        "callflow": doc.callflow
                     }
                 }, function (err) {
                     if (err) {
@@ -142,7 +143,7 @@ function exportCollection(desc, mongoDb, callback) {
     ], function (err) {
         if (err) {
             log.error(('====> collection [' + desc.name + '] - failed to export.'));
-            //log.error(err);
+            log.error(err);
             return callback(err);
         }
         log.trace(('====> collection [' + desc.name + '] - end to export.'));

@@ -6,9 +6,9 @@
     "requestTimeout": 5000,
     "collections": [{
         "name": "cdr",
-        "index": "statistic",
+        "index": "cdr",
         "type": "collection",
-        "fields": ["_id", "variables"],
+        "fields": ["variables", "callflow"],
         "mappings": {
           "collection": {
             "dynamic_templates" : [ {
@@ -18,6 +18,14 @@
                     "type" : "string"
                   }
                 }
+            },
+            {
+              "string_fields" : {
+                "path_match" : "callflow.*",
+                "mapping" : {
+                  "type" : "{dynamic_type}"
+                }
+              }
             }],
             "properties": {
               "variables": {
