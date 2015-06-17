@@ -24,6 +24,7 @@ function saveToFile(file, query, res) {
     var date = new Date();
     var domain = query.domain;
     var localFileTmp = file['path'];
+    var fileSize = file["size"];
 
     var path = maskPath || '';
 
@@ -60,6 +61,7 @@ function saveToFile(file, query, res) {
                     "bucketName": bucketName,
                     "type": SAVE_FILE_TYPE.S3,
                     "createdOn": new Date(),
+                    "size": fileSize,
                     "requestCount": 0
                 }, function (err) {
                     if (err) return log.error(err.message);

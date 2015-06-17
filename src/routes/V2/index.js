@@ -19,6 +19,8 @@ module.exports = function (app) {
 
     // File CDR
     app.get('/api/v2/files/:id', file.getResource);
+    // TODO WTEL-171
+    //app.get('/api/v2/files/stats');
     app.delete('/api/v2/files/:id', file.deleteResource);
 
     // Media IVR or user media

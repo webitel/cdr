@@ -36,6 +36,7 @@ function saveToFile(file, query, res) {
                         "domain": domain,
                         "type": SAVE_FILE_TYPE.FILE,
                         "createdOn": new Date(),
+                        "size": file["size"],
                         "requestCount": 0
                     }, function (err) {
                         if (err) return log.error(err.message);
