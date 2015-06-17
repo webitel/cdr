@@ -42,15 +42,19 @@ function exportCollection(desc, mongoDb, callback) {
             if (!existsIndex) {
                 log.trace('----> creating new index [' + indexName + ']');
                 elastic.indices.create({index: indexName}, function (err, result) {
-                    next(err);
+                    next(err, true);
                 });
             } else {
                 log.trace('----> skip creating new index [' + indexName + ']');
-                next();
+                next(null, false);
             }
         },
 
-        function (next) {
+        function (createdIndex, next) {
+            if (createdIndex) {
+                next();
+                return
+            };
             log.trace('----> find max start_stamp in index [' + indexName + ']');
             elastic.search({
                 index: desc.index + '-*',

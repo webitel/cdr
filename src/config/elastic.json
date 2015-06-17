@@ -15,9 +15,20 @@
                 "string_fields" : {
                   "path_match" : "variables.*",
                   "mapping" : {
-                    "type" : "string"
+                    "type" : "string",
+                    "index" : "not_analyzed"
                   }
                 }
+            },
+            {
+              "notanalyzed": {
+              "match":              "*",
+              "match_mapping_type": "string",
+              "mapping": {
+                "type":        "string",
+                "index":       "not_analyzed"
+              }
+             }
             }
            ],
             "properties": {
