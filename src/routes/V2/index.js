@@ -18,9 +18,9 @@ module.exports = function (app) {
     app.post('/api/v2/cdr/b/searches', cdr.showListB);
 
     // File CDR
+    // WTEL-171
+    app.get('/api/v2/files/stats/:id?', file.getFileStats);
     app.get('/api/v2/files/:id', file.getResource);
-    // TODO WTEL-171
-    //app.get('/api/v2/files/stats');
     app.delete('/api/v2/files/:id', file.deleteResource);
 
     // Media IVR or user media
