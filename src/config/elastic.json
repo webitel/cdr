@@ -32,6 +32,103 @@
             }
            ],
             "properties": {
+              "Call start time": {
+                "type": "date",
+                "format": "yyyy-MM-dd HH:mm:ss",
+                "index" : "not_analyzed"
+              },
+              "Call answer time": {
+                "type": "date",
+                "format": "yyyy-MM-dd HH:mm:ss",
+                "index" : "not_analyzed"
+              },
+              "Call direction": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Hangup cause": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Q.850 Hangup Code": {
+                "type": "long",
+                "index" : "not_analyzed"
+              },
+              "Call duration in seconds": {
+                "type": "long",
+                "index" : "not_analyzed"
+              },
+              "Call duration": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Connected call duration in seconds": {
+                "type": "long",
+                "index" : "not_analyzed"
+              },
+              "Connected call duration": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Call end time": {
+                "type": "date",
+                "format": "yyyy-MM-dd HH:mm:ss",
+                "index" : "not_analyzed"
+              },
+              "Bridge time": {
+                "type": "date",
+                "format": "yyyy-MM-dd HH:mm:ss",
+                "index" : "not_analyzed"
+              },
+              "Progress time": {
+                "type": "date",
+                "format": "yyyy-MM-dd HH:mm:ss",
+                "index" : "not_analyzed"
+              },
+              "Dialed User": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Dialed Domain name": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Agent ID": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Queue ID": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Destination number": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Call record in seconds": {
+                "type": "long",
+                "index" : "not_analyzed"
+              },
+              "CallerID number": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Domain name": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "Bridged": {
+                "type": "boolean",
+                "index" : "not_analyzed"
+              },
+              "PDD": {
+                "type": "long",
+                "index" : "not_analyzed"
+              },
+              "Ring Duration": {
+                "type": "long",
+                "index" : "not_analyzed"
+              },
               "callflow": {
                 "type": "nested",
                 "include_in_parent" : true,
