@@ -48,14 +48,14 @@ function setCustomAttribute (record) {
         record["Progress time"] = record.variables.progress_stamp; // +
         //record["Dialed User"] = record.variables.dialed_user; // +
         //record["Dialed Domain name"] = record.variables.dialed_domain; // +
-        record["Agent ID"] = record.variables.cc_agent  && record.variables.cc_agent.split('@')[0]; // +
-        record["Queue ID"] = record.variables.cc_queue && record.variables.cc_queue.split('@')[0]; // +
+        record["Agent ID"] = record.variables.cc_agent  && ('' + record.variables.cc_agent).split('@')[0]; // +
+        record["Queue ID"] = record.variables.cc_queue && ('' + record.variables.cc_queue).split('@')[0]; // +
         record["Destination number"] = callflow.caller_profile.destination_number; // +
         record["Call record in seconds"] = record.variables.record_seconds; // +
         record["CallerID number"] = callflow.caller_profile.caller_id_number; // +
         record["Domain name"] = record.variables.domain_name; // +
-        record["User ID"] = record.variables.presence_id && record.variables.presence_id.split('@')[0]; // +
-        record["Destination User"] = record.variables.dialed_user && record.variables.dialed_user.split('@')[0]; // +
+        record["User ID"] = record.variables.presence_id && ('' + record.variables.presence_id).split('@')[0]; // +
+        record["Destination User"] = record.variables.dialed_user && ('' + record.variables.dialed_user).split('@')[0]; // +
         record["Bridged"] = record.variables.bridge_stamp ? true : false; // +
         record["PDD"] = (callflow.times.progress_time > 0)
             ? (callflow.times.progress_time + callflow.times.progress_media_time) - callflow.times.created_time
