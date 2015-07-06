@@ -50,6 +50,10 @@
                 "type": "string",
                 "index" : "not_analyzed"
               },
+              "User ID string": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
               "Q.850 Hangup Code": {
                 "type": "long",
                 "index" : "not_analyzed"
@@ -83,14 +87,6 @@
               "Progress time": {
                 "type": "date",
                 "format": "yyyy-MM-dd HH:mm:ss",
-                "index" : "not_analyzed"
-              },
-              "Dialed User": {
-                "type": "string",
-                "index" : "not_analyzed"
-              },
-              "Dialed Domain name": {
-                "type": "string",
                 "index" : "not_analyzed"
               },
               "Agent ID": {

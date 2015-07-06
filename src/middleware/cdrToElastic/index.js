@@ -37,7 +37,7 @@ function setCustomAttribute (record) {
         record["Call start time"] = record.variables.start_stamp; // +
         record["Call answer time"] = record.variables.answer_stamp; // +
         record["Call direction"] = record.variables.webitel_direction; // +
-        record["Hangup cause"] = record.variables.bridge_hangup_cause; // +
+        record["Hangup cause"] = record.variables.hangup_cause; // +
         record["Q.850 Hangup Code"] = record.variables.hangup_cause_q850; // +
         record["Call duration in seconds"] = record.variables.duration; // +
         record["Call duration"] = ('' + record.variables.duration).toHHMMSS(); // +- todo
@@ -46,14 +46,15 @@ function setCustomAttribute (record) {
         record["Call end time"] = record.variables.end_stamp; // +
         record["Bridge time"] = record.variables.bridge_stamp; // +
         record["Progress time"] = record.variables.progress_stamp; // +
-        record["Dialed User"] = record.variables.dialed_user; // +
-        record["Dialed Domain name"] = record.variables.dialed_domain; // +
-        record["Agent ID"] = record.variables.cc_agent; // +
-        record["Queue ID"] = record.variables.cc_queue; // +
+        //record["Dialed User"] = record.variables.dialed_user; // +
+        //record["Dialed Domain name"] = record.variables.dialed_domain; // +
+        record["Agent ID"] = record.variables.cc_agent  && record.variables.cc_agent.split('@')[0]; // +
+        record["Queue ID"] = record.variables.cc_queue && record.variables.cc_queue.split('@')[0]; // +
         record["Destination number"] = callflow.caller_profile.destination_number; // +
         record["Call record in seconds"] = record.variables.record_seconds; // +
         record["CallerID number"] = callflow.caller_profile.caller_id_number; // +
         record["Domain name"] = record.variables.domain_name; // +
+        record["User ID string"] = record.variables.presence_id && record.variables.presence_id.split('@')[0]; // +
         record["Bridged"] = record.variables.bridge_stamp ? true : false; // +
         record["PDD"] = (callflow.times.progress_time > 0)
             ? (callflow.times.progress_time + callflow.times.progress_media_time) - callflow.times.created_time
