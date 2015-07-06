@@ -50,7 +50,11 @@
                 "type": "string",
                 "index" : "not_analyzed"
               },
-              "User ID string": {
+              "User ID": {
+                "type": "string",
+                "index" : "not_analyzed"
+              },
+              "User ID dialed": {
                 "type": "string",
                 "index" : "not_analyzed"
               },
