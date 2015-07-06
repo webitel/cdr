@@ -55,7 +55,7 @@ function setCustomAttribute (record) {
         record["CallerID number"] = callflow.caller_profile.caller_id_number; // +
         record["Domain name"] = record.variables.domain_name; // +
         record["User ID"] = record.variables.presence_id && record.variables.presence_id.split('@')[0]; // +
-        record["User ID dialed"] = record.variables.dialed_user && record.variables.dialed_user.split('@')[0]; // +
+        record["Destination User"] = record.variables.dialed_user && record.variables.dialed_user.split('@')[0]; // +
         record["Bridged"] = record.variables.bridge_stamp ? true : false; // +
         record["PDD"] = (callflow.times.progress_time > 0)
             ? (callflow.times.progress_time + callflow.times.progress_media_time) - callflow.times.created_time
