@@ -17,7 +17,7 @@ module.exports = {
             var sort = req.body.sort;
             var domain = req['webitelDomain'];
 
-            cdrDB.showLegAList(columns, filter, sort, limit, pageNumber, domain, function (err, data) {
+            cdrDB.showLegAList(columns, filter, sort, limit, pageNumber, domain, req, function (err, data) {
                 if (err) return next(err);
                 res.json(data);
             });
@@ -29,7 +29,7 @@ module.exports = {
     // TODO /api/list +
     showGetList: function (req, res, next) {
         try {
-            cdrDB.showLegAList(null, {}, {}, 10, 1, req['webitelDomain'], function (err, result) {
+            cdrDB.showLegAList(null, {}, {}, 10, 1, req['webitelDomain'], req, function (err, result) {
                 if (err) return next(err);
                 res.json(result);
             });
@@ -79,7 +79,7 @@ module.exports = {
             var filter = req.body.filter;
             var domain = req['webitelDomain'];
 
-            cdrDB.showLegACount(filter, domain, function (err, data) {
+            cdrDB.showLegACount(filter, domain, req, function (err, data) {
                 if (err)
                     return next(err);
                 res.json(data);

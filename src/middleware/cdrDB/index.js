@@ -9,7 +9,7 @@ var cdr = {
             .limit(10)
             .toArray(cb)
     },
-    showLegAList: function (columns, filter, sort, limit, pageNumber, domain, callback) {
+    showLegAList: function (columns, filter, sort, limit, pageNumber, domain, req, callback) {
         var cdrCollection = db.cdrCollection;
         columns = columns || defColumns;
         sort = sort || {
@@ -24,6 +24,12 @@ var cdr = {
             query['$and'].push({
                 "variables.domain_name": domain
             });
+
+        if (req.webitelUser && req.webitelUser.attr.role['val'] === 0) {
+            query['$and'].push({
+                "variables.presence_id": req.webitelUser.attr['id']
+            });
+        };
 
         cdrCollection.find(query, columns)
             .sort(sort)
@@ -75,7 +81,7 @@ var cdr = {
             });
     },
 
-    showLegACount: function (filter, domain, callback) {
+    showLegACount: function (filter, domain, req, callback) {
         var cdrCollection = db.cdrCollection;
 
         var query = buildFilterQuery(filter);
@@ -83,6 +89,14 @@ var cdr = {
             query['$and'].push({
                 "variables.domain_name": domain
             });
+
+
+        if (req.webitelUser && req.webitelUser.attr.role['val'] === 0) {
+            query['$and'].push({
+                "variables.presence_id": req.webitelUser.attr['id']
+            });
+        };
+
         cdrCollection.find(query).count(function(err, results) {
             callback(err, results);
         });

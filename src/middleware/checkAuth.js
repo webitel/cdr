@@ -31,7 +31,8 @@ module.exports = function(req, res, next) {
                             "domain": dbUser['domain'],
                             "role": {
                                 "val": dbUser['role']
-                            }
+                            },
+                            "id": dbUser['username']
                         }
                     };
                     next(); // To move to next middleware
