@@ -13,7 +13,8 @@
         "uri": "mongodb://MONGODB_HOST:27017/webitel",
         "collectionCDR": "cdr",
         "collectionFile": "cdrFile",
-        "collectionAuth": "authToken"
+        "collectionAuth": "authToken",
+        "collectionEmail": "emailConfig"
     },
     "application": {
         "log": {

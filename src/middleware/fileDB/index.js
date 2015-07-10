@@ -8,7 +8,18 @@ var dbFile = {
 
     getRecordFile: function (uuid, callback) {
         var dbFile = db.fileCollection;
-        dbFile.findOne({uuid: uuid}, callback);
+        var query;
+
+        if (uuid instanceof Object) {
+            query = uuid
+        } else {
+            query = {
+                uuid: uuid
+            }
+        };
+        dbFile
+            .find(query)
+            .toArray(callback);
     },
 
     getFilesStats: function (uuid, domain, option, callback) {

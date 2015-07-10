@@ -34,6 +34,7 @@ function saveToFile(file, query, res) {
                         "uuid": uuid,
                         "path": filePath,
                         "domain": domain,
+                        "content-type": res['incoming-content-type'],
                         "type": SAVE_FILE_TYPE.FILE,
                         "createdOn": new Date(),
                         "size": file["size"],
@@ -54,7 +55,9 @@ module.exports.SaveFile = function(req, res, file) {
     saveToFile(file, query, res);
 };
 
-module.exports.getMediaStream = function (req, res, file) {
+module.exports.getMediaStream = function (req, res, data) {
+    var file = data['path'];
+    var contentType = data['content-type'] || 'audio/mpeg';
 
     fs.lstat(file, function (err, stat) {
 
@@ -82,7 +85,7 @@ module.exports.getMediaStream = function (req, res, file) {
             res.writeHead(206, {
                 'Connection':'close',
                 'Cache-Control':'private',
-                'Content-Type': 'audio/mpeg',
+                'Content-Type': contentType,
                 'Content-Length': end - start,
                 'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
                 'Accept-Ranges':'bytes',

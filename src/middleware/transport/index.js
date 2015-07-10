@@ -5,6 +5,7 @@ var file = require('./file/index')
     ,formidable = require('formidable')
     ,SAVE_FILE_TYPE = require('../../const/index').SAVE_FILE_TYPE
     ,fileDB = require('../../middleware/fileDB')
+    ,email = require('../email')
     ,log = require('../../libs/log')(module);
 
 function getResponseObject (status, info, description) {
@@ -18,37 +19,88 @@ function getResponseObject (status, info, description) {
 var FileController = module.exports = function (option) {
 };
 
+FileController.prototype.sendEMail = function (req, files, cb) {
+    if (req.query['email']) {
+        try {
+            var fileName = req.query['id'] + '.' + req.query['type'];
+            var subject, text;
+            if (req.query['type'] === 'pdf') {
+                subject = '[webitel] You have received a new fax';
+                text = 'You have received a new fax from Webitel Fax Server\n\n--\nWebitel Cloud Platform';
+            } else {
+                subject = '[webitel] You have received a new call record file';
+                text = 'You have received a new call record file from Webitel\n\n--\nWebitel Cloud Platform';
+            }
+            ;
+            var attachments = [];
+
+            for (var key in files) {
+                attachments.push({
+                    "path": files[key]['path'],
+                    "filename": fileName
+                });
+            }
+            ;
+            email.send(
+                {
+                    "to": req.query['email'],
+                    "subject": subject,
+                    "text": text,
+                    "attachments": attachments
+                },
+                req.query['domain'],
+                function (err, info) {
+                    if (err) {
+                        log.error(err);
+                    } else {
+                        log.trace('Send file %s to email(s) %s', fileName, req.query['email']);
+                    };
+                    cb(err, info);
+                });
+        } catch (e) {
+            cb(e);
+        };
+    } else {
+        cb();
+    };
+};
+
 FileController.prototype.SaveFile = function (req, res, next, type) {
 
     var form = new formidable.IncomingForm();
-    if (req['headers']['content-type'] == 'audio/wav' || req['headers']['content-type'] == 'audio/mpeg') {
-        req['headers']['content-type'] = 'octet-stream';
-    };
+    var scope = this;
+
+    // TODO
+    res['incoming-content-type'] = req['headers']['content-type'];
+    req['headers']['content-type'] = 'octet-stream';
 
     form.parse(req, function(err, fields, files) {
         if (err) return next(err);
         var isFiles = false;
-        switch (type.toLowerCase()) {
-            case 'file':
-                for (var key in files) {
-                    file.SaveFile(req, res, files[key]);
-                    isFiles = true;
-                };
-                break;
-            case 's3':
-                for (var key in files) {
-                    s3.SaveFile(req, res, files[key]);
-                    isFiles = true;
-                };
-                break;
-            default :
-                log.error('Default transport incorrect.');
-                break;
-        };
-        if (!isFiles) {
-            log.warn('Formidable: not file stream!');
-            res.status(400).send('Bad request!')
-        };
+
+        scope.sendEMail(req, files, function (err, info) {
+            switch (type.toLowerCase()) {
+                case 'file':
+                    for (var key in files) {
+                        file.SaveFile(req, res, files[key]);
+                        isFiles = true;
+                    };
+                    break;
+                case 's3':
+                    for (var key in files) {
+                        s3.SaveFile(req, res, files[key]);
+                        isFiles = true;
+                    };
+                    break;
+                default :
+                    log.error('Default transport incorrect.');
+                    break;
+            };
+            if (!isFiles) {
+                log.warn('Formidable: not file stream!');
+                res.status(400).send('Bad request!')
+            };
+        });
     });
     return;
 };
@@ -56,8 +108,48 @@ FileController.prototype.SaveFile = function (req, res, next, type) {
 FileController.prototype.GetFile = function (req, res, next) {
     try {
         var id = req.params['id'];
-        fileDB.getRecordFile(id, function (err, data) {
-            if (err) next(err);
+        var query;
+        var contentType = req.query['type'] || 'audio/mpeg';
+
+        switch (contentType) {
+            case 'all':
+                query = {
+                    "uuid": id
+                };
+                break;
+            case 'audio/mpeg':
+                query = {
+                    "$and": [{
+                        "uuid": id
+                    },{
+                        "$or": [{
+                            "content-type": contentType
+                        }, {
+                            "content-type": {
+                                "$exists": false
+                            }
+                        }]
+                    }]
+                };
+                break;
+            default:
+                query = {
+                    "uuid": id,
+                    "content-type": contentType
+                };
+                break;
+        };
+
+        fileDB.getRecordFile(query, function (err, resJson) {
+            if (err) return next(err);
+
+            if (contentType === 'all') {
+                res.status(200).json(resJson);
+                return;
+            };
+
+            var data = resJson[0];
+
             if (!data || !data.path) {
                 log.warn('file not found: %s', id);
                 res.status(404).json(getResponseObject('error', 'file not found!'));
@@ -65,7 +157,7 @@ FileController.prototype.GetFile = function (req, res, next) {
                 if (data['type'] == SAVE_FILE_TYPE.S3) {
                     s3.getMediaStream(req, res, data);
                 } else /*if (data['type'] == SAVE_FILE_TYPE.FILE)*/ {
-                    file.getMediaStream(req, res, data['path'])
+                    file.getMediaStream(req, res, data)
                 }
             };
         });
@@ -79,6 +171,7 @@ FileController.prototype.DelFile = function (req, res, next) {
     var recordId = req.params['id'];
     var query = parts.query;
     var delDB = Boolean(query.db);
+    var contentType = query['type'] || '';
 
     fileDB.getRecordFile(recordId, function (err, data) {
         if (err) next(err);
