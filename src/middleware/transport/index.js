@@ -20,7 +20,7 @@ var FileController = module.exports = function (option) {
 };
 
 FileController.prototype.sendEMail = function (req, files, cb) {
-    if (req.query['email']) {
+    if (req.query['email'] && req.query['email'] != 'none') {
         try {
             var fileName = req.query['id'] + '.' + req.query['type'];
             var subject, text;
