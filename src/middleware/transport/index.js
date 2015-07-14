@@ -51,7 +51,7 @@ FileController.prototype.sendEMail = function (req, files, cb) {
                 req.query['domain'],
                 function (err, info) {
                     if (err) {
-                        log.error(err);
+                        log.warn(err['message']);
                     } else {
                         log.trace('Send file %s to email(s) %s', fileName, req.query['email']);
                     };

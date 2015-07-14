@@ -27,6 +27,10 @@ var EmailController = {
                     return cb(err);
                 };
 
+                if (!res) {
+                    return cb(new Error('Not found parameters.'));
+                };
+
                 if (typeof Provider[res.provider] != 'function') {
                     return cb(new Error('Bad provider name.'));
                 };

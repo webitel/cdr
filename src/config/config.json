@@ -1,59 +1,59 @@
 {
-    "ssl": {
-        "enabled": SSL,
-        "key": "/cdr/cert/wss.pem",
-        "cert": "/cdr/cert/wss.pem",
-        "port": 10023
+  "ssl": {
+    "enabled": SSL,
+    "key": "/cdr/cert/wss.pem",
+    "cert": "/cdr/cert/wss.pem",
+    "port": 10023
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 10021
+  },
+  "cdrDB": {
+    "uri": "mongodb://MONGODB_HOST:27017/webitel",
+    "collectionCDR": "cdr",
+    "collectionFile": "cdrFile",
+    "collectionAuth": "authToken",
+    "collectionEmail": "emailConfig"
+  },
+  "application": {
+    "log": {
+      "loglevel": "LOGLEVEL",
+      "file": "/logs/cdr.log",
+      "maxSize": 30000,
+      "maxFiles": 5,
+      "logstash": {
+        "enabled": LOGSTASH_ENABLE,
+        "host": "LOGSTASH_HOST",
+        "port": 28777,
+        "node_name": "cdr"
+      }
     },
-    "server": {
-        "host": "0.0.0.0",
-        "port": 10021
+    "auth": {
+      "tokenSecretKey": "TOKEN_KEY",
+      "expiresDays": 7
     },
-    "cdrDB": {
-        "uri": "mongodb://MONGODB_HOST:27017/webitel",
-        "collectionCDR": "cdr",
-        "collectionFile": "cdrFile",
-        "collectionAuth": "authToken",
-        "collectionEmail": "emailConfig"
-    },
-    "application": {
-        "log": {
-            "loglevel": "LOGLEVEL",
-            "file": "/logs/cdr.log",
-            "maxSize": 30000,
-            "maxFiles": 5,
-            "logstash": {
-                "enabled": LOGSTASH_ENABLE,
-                "host": "LOGSTASH_HOST",
-                "port": 28777,
-                "node_name": "cdr"
-            }
-        },
-        "auth": {
-            "tokenSecretKey": "TOKEN_KEY",
-            "expiresDays": 7
-        },
-        "resource": {
-            "path": "/cdr/resource/sounds/"
-        }
-    },
-    "recordFile": {
-        "transport": "STORAGE_TRANSPORT",
-        "fileRoot": "/STORAGE_ROOT/",
-        "maskPath": "$Y/$M/$D/$H",
-        "awsConfig": {
-            "accessKeyId": "S3_KEY_ID",
-            "secretAccessKey": "S3_KEY_SECRET",
-            "region": "S3_REGION"
-        }
-    },
-    "mediaFile": {
-        "fileRoot": "/STORAGE_ROOT/media/",
-        "maxFieldsSizeMB": 5,
-        "collectionMedia": "mediaFile"
-    },
-    "uploadAcl": {
-        "mode": "allow",
-        "ip": "ACL_UPLOAD"
+    "resource": {
+      "path": "/cdr/resource/sounds/"
     }
+  },
+  "recordFile": {
+    "transport": "STORAGE_TRANSPORT",
+    "fileRoot": "/STORAGE_ROOT/",
+    "maskPath": "$Y/$M/$D/$H",
+    "awsConfig": {
+      "accessKeyId": "S3_KEY_ID",
+      "secretAccessKey": "S3_KEY_SECRET",
+      "region": "S3_REGION"
+    }
+  },
+  "mediaFile": {
+    "fileRoot": "/STORAGE_ROOT/media/",
+    "maxFieldsSizeMB": 5,
+    "collectionMedia": "mediaFile"
+  },
+  "uploadAcl": {
+    "mode": "allow",
+    "ip": "ACL_UPLOAD"
+  }
 }
