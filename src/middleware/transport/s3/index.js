@@ -47,7 +47,7 @@ function saveToFile(file, query, res) {
                 Bucket: bucketName,
                 Key: path,
                 Body: fileStream,
-                ContentType: res['incoming-content-type']
+                ContentType: res['incoming-content-type'] || 'audio/mpeg'
             }, function (err) {
                 if (err) {
                     log.error(err);
@@ -58,7 +58,7 @@ function saveToFile(file, query, res) {
                     "uuid": uuid,
                     "path": path,
                     "domain": domain,
-                    "content-type": res['incoming-content-type'],
+                    "content-type": res['incoming-content-type'] || 'audio/mpeg',
                     "bucketName": bucketName,
                     "type": SAVE_FILE_TYPE.S3,
                     "createdOn": new Date(),
@@ -93,7 +93,7 @@ module.exports.getMediaStream = function (req, res, file) {
         var url = s3.getSignedUrl('getObject', params);
         res.writeHead(302, {
             'Location': url,
-            'Content-Type': file['content-type']
+            'Content-Type': file['content-type'] || 'audio/mpeg'
         });
         res.end();
     } catch (e) {
