@@ -88,6 +88,7 @@ var dbFile = {
     removeFileDB: function (_id, callback) {
         var dbFile = db.fileCollection;
         try {
+            // TODO setObjectID !!!
             dbFile.remove({_id: _id}, callback);
         } catch (e) {
             callback(e);

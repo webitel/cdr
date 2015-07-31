@@ -2,16 +2,17 @@
   "elastic": {
     "enabled": false,
     "intervalMin": 5,
-    "host": "elasticsearch:9200",
+    "host": "pre.webitel.com:9200",
     "requestTimeout": 5000,
     "collections": [{
         "name": "cdr",
-        "index": "cdr",
+        "index": "igor",
         "type": "collection",
         "fields": ["_id", "variables", "callflow"],
         "mappings": {
           "collection": {
-            "dynamic_templates" : [ {
+            "dynamic_templates" : [
+              {
                 "string_fields" : {
                   "path_match" : "variables.*",
                   "mapping" : {
@@ -19,16 +20,16 @@
                     "index" : "not_analyzed"
                   }
                 }
-            },
-            {
-              "notanalyzed": {
-              "match":              "*",
-              "match_mapping_type": "string",
-              "mapping": {
-                "type":        "string",
-                "index":       "not_analyzed"
-              }
-             }
+              },
+              {
+                "notanalyzed": {
+                  "match":              "*",
+                  "match_mapping_type": "string",
+                  "mapping": {
+                    "type":        "string",
+                    "index":       "not_analyzed"
+                  }
+               }
             }
            ],
             "properties": {
