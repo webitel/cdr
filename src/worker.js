@@ -9,6 +9,8 @@ var config = require('./config');
 var bodyParser = require('body-parser');
 var fs = require('fs');
 
+require('./middleware/cdrToElastic');
+
 var app = express();
 
 app.set('port', config.get('server:port'));

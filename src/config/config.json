@@ -1,6 +1,6 @@
 {
   "ssl": {
-    "enabled": false,
+    "enabled": SSL,
     "key": "/cdr/cert/wss.pem",
     "cert": "/cdr/cert/wss.pem",
     "port": 10023
@@ -10,7 +10,7 @@
     "port": 10021
   },
   "cdrDB": {
-    "uri": "mongodb://pre.webitel.com:27017/webitel",
+    "uri": "mongodb://MONGODB_HOST:27017/webitel",
     "collectionCDR": "cdr",
     "collectionFile": "cdrFile",
     "collectionAuth": "authToken",
@@ -18,12 +18,12 @@
   },
   "application": {
     "log": {
-      "loglevel": "trace",
+      "loglevel": "LOGLEVEL",
       "file": "/logs/cdr.log",
       "maxSize": 30000,
       "maxFiles": 5,
       "logstash": {
-        "enabled": false,
+        "enabled": LOGSTASH_ENABLE,
         "host": "LOGSTASH_HOST",
         "port": 28777,
         "node_name": "cdr"

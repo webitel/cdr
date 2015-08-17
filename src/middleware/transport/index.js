@@ -175,7 +175,7 @@ FileController.prototype.DelFile = function (req, res, next) {
 
     fileDB.getRecordFile(recordId, function (err, fileData) {
         if (err) next(err);
-        var data = fileData[0];
+        var data = fileData && fileData[0];
         if (!data || !data.path) {
             log.warn('file not found: %s', recordId);
             res.status(404).json(getResponseObject('error', 'file not found!'));

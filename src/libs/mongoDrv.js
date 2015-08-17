@@ -29,13 +29,6 @@ mongoClient.connect(config.get('cdrDB:uri') ,function(err, db) {
     db.on('close', function () {
         log.error('close mongodb');
     });
-
-    // TODO
-    var elasticConf = config.get('elastic');
-    if (elasticConf && elasticConf.enabled.toString() == 'true') {
-        log.info('Start Mongodb to Elastic');
-        require('../middleware/cdrToElastic')(db);
-    }
 });
 
 drv.getCollection = function (name) {
