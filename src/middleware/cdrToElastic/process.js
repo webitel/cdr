@@ -119,7 +119,7 @@ function exportCollection(desc, mongoDb, callback) {
                 } else {
                     startExportDate = (result['aggregations']['maxDate']['value'] + 1000) * 1000;
                 };
-                console.log(startExportDate);
+
                 query = {
                     "callflow.times.created_time": {
                         "$gt": startExportDate
@@ -146,7 +146,7 @@ function exportCollection(desc, mongoDb, callback) {
 
             var stream = collection
                 .find(query)
-                .sort({"callflow.times.created_time": -1})
+                .sort({"callflow.times.created_time": 1})
                 .stream();
 
             stream.on('data', function (doc) {
