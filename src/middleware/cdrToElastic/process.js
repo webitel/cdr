@@ -78,7 +78,8 @@ function exportCollection(desc, mongoDb, callback) {
     var collection = mongoDb.collection(desc.name);
     var query = {};
 
-    var indexName = desc.index + '-' + (new Date().toLocaleDateString()).replace(/-|\//g,'.');
+    var currentDate = new Date();
+    var indexName = desc.index + '-' + currentDate.getMonth() + '.' + currentDate.getFullYear();
 
     if (!collection) {
         return callback('collection ' + desc.name + ' does not exist.');
