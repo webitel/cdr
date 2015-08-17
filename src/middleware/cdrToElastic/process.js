@@ -147,7 +147,7 @@ function exportCollection(desc, mongoDb, callback) {
 
             var stream = collection
                 .find(query)
-                //.sort({"callflow.times.created_time": -1})
+                .sort({"callflow.times.created_time": -1})
                 .stream();
 
             stream.on('data', function (doc) {

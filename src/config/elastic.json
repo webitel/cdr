@@ -282,9 +282,6 @@
                     "conference_member_id": {
                       "type": "long"
                     },
-                    "dialed_user": {
-                      "type": "long"
-                    },
                     "duration": {
                       "type": "long"
                     },
