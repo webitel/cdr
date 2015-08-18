@@ -23,7 +23,7 @@ if (elasticConf && elasticConf.enabled.toString() == 'true') {
 };
 
 function initExportProcess () {
-    var timeMSec = elasticConf.intervalMin * 60 * 1000;
+    var timeMSec = parseInt(elasticConf.intervalMin) * 60 * 1000;
     var timerId = setTimeout(function tick() {
 
         var child = child_process.fork(
@@ -35,7 +35,7 @@ function initExportProcess () {
         });
 
         child.on('exit', function () {
-            log.debug('Next sync with %s min', elasticConf.intervalMin);
+            log.trace('Next sync with %s min', elasticConf.intervalMin);
             timerId = setTimeout(tick, timeMSec);
         });
 

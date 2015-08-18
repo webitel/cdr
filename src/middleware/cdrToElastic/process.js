@@ -172,7 +172,7 @@ function exportCollection(desc, mongoDb, callback) {
                             return next(err);
                         }
                     } else {
-                        log.trace('Save document id %s', doc._id.toString());
+                        log.debug('Save document id %s', doc._id.toString());
                     };
                     stream.resume();
                 });
@@ -203,5 +203,7 @@ mongoClient.connect(conf.get('cdrDB:uri') ,function(err, db) {
     };
     exportCollection(elasticConf.collections[0], db, function (err) {
         db.close();
+        log.debug('Process exit 0.');
+        process.exit(0);
     });
 });
