@@ -143,11 +143,14 @@ function exportCollection(desc, mongoDb, callback) {
         },
 
         function (total, next) {
+            if (total === 0)
+                return next();
             log.trace('----> streaming collection to elastic');
 
             var stream = collection
                 .find(query)
-                .sort({"callflow.times.created_time": -1})
+                .sort({"callflow.times.created_time": 1})
+                //.batchSize(10000)
                 .stream();
 
             stream.on('data', function (doc) {
