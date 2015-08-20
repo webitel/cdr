@@ -58,6 +58,7 @@ module.exports.SaveFile = function(req, res, file) {
 module.exports.getMediaStream = function (req, res, data) {
     var file = data['path'];
     var contentType = data['content-type'] || 'audio/mpeg';
+    var requestFileName = req.query['file_name'];
 
     fs.lstat(file, function (err, stat) {
 
@@ -82,7 +83,7 @@ module.exports.getMediaStream = function (req, res, data) {
 
             if (start > end) return;
 
-            res.writeHead(206, {
+            var responseHeaders = {
                 'Connection':'close',
                 'Cache-Control':'private',
                 'Content-Type': contentType,
@@ -91,7 +92,13 @@ module.exports.getMediaStream = function (req, res, data) {
                 'Accept-Ranges':'bytes',
 //        'Server':'webitel',
                 'Transfer-Encoding':'chunked'
-            });
+            };
+
+            if (requestFileName) {
+                responseHeaders['Content-disposition'] = 'attachment;  filename=' + requestFileName;
+            };
+
+            res.writeHead(206, responseHeaders);
 
             var stream = fs.createReadStream(file,
                 { flags: 'r', start: start, end: end});
