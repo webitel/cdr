@@ -92,15 +92,14 @@ module.exports.getMediaStream = function (req, res, file) {
         };
         var requestFileName = req.query['file_name'];
 
+        if (requestFileName) {
+            params.ResponseContentDisposition = 'attachment;  filename=' + requestFileName;
+        };
         var url = s3.getSignedUrl('getObject', params);
 
         var responseHeaders = {
             'Location': url,
             'Content-Type': file['content-type'] || 'audio/mpeg'
-        };
-
-        if (requestFileName) {
-            responseHeaders['Content-disposition'] = 'attachment;  filename=' + requestFileName;
         };
         res.writeHead(302, responseHeaders);
         res.end();
