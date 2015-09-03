@@ -13,9 +13,9 @@ function saveToFile(file, query, res) {
     var fileName = uuid + '.' + type;
     var date = new Date();
     var path = maskPath;
-    var domain = query.domain;
+    var domain = query.domain || 'unknown';
 
-    path = config.get("recordFile:fileRoot") + path.replace(/\$Y/g, date.getFullYear()).replace(/\$M/g, (date.getMonth() + 1)).
+    path = config.get("recordFile:fileRoot") + domain + '/' + path.replace(/\$Y/g, date.getFullYear()).replace(/\$M/g, (date.getMonth() + 1)).
         replace(/\$D/g, date.getDate()).replace(/\$H/g, date.getHours()).
         replace(/\$m/g, date.getMinutes());
 

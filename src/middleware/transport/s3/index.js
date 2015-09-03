@@ -22,13 +22,13 @@ function saveToFile(file, query, res) {
     var type = query.type || 'mp3';
     var keyName = uuid + '.' + type;
     var date = new Date();
-    var domain = query.domain;
+    var domain = query.domain || 'unknown';
     var localFileTmp = file['path'];
     var fileSize = file["size"];
 
     var path = maskPath || '';
 
-    path = path.replace(/\$Y/g, date.getFullYear()).replace(/\$M/g, (date.getMonth() + 1)).
+    path = domain + '/' + path.replace(/\$Y/g, date.getFullYear()).replace(/\$M/g, (date.getMonth() + 1)).
         replace(/\$D/g, date.getDate()).replace(/\$H/g, date.getHours()).
         replace(/\$m/g, date.getMinutes());
 
