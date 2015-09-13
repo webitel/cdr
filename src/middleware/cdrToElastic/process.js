@@ -172,7 +172,7 @@ function exportCollection(desc, mongoDb, callback) {
                             return next(err);
                         }
                     } else {
-                        log.debug('Save document id %s', doc._id.toString());
+                        console.log('Save document id %s', doc._id.toString());
                     };
                     stream.resume();
                 });

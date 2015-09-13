@@ -1,7 +1,7 @@
 {
   "elastic": {
     "enabled": false,
-    "intervalMin": 5,
+    "intervalMin": 2,
     "host": "elasticsearch:9200",
     "requestTimeout": 5000,
     "collections": [{
