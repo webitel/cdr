@@ -1,14 +1,14 @@
 {
   "elastic": {
     "enabled": false,
-    "intervalMin": 2,
+    "intervalMin": 1,
     "host": "elasticsearch:9200",
     "requestTimeout": 5000,
     "collections": [{
         "name": "cdr",
         "index": "cdr",
         "type": "collection",
-        "fields": ["_id", "variables", "callflow"]
+        "fields": ["_id", "variables"]
       }
     ],
     "templates": [
@@ -40,6 +40,9 @@
                 }
               ],
               "properties": {
+                "Location" : {
+                  "type" : "geo_point"
+                },
                 "Call start time": {
                   "type": "date",
                   "format": "yyyy-MM-dd HH:mm:ss",
@@ -136,111 +139,6 @@
                 "Ring Duration": {
                   "type": "long",
                   "index" : "not_analyzed"
-                },
-                "callflow": {
-                  "type": "nested",
-                  "include_in_parent" : true,
-                  "properties": {
-                    "times": {
-                      "type": "object",
-                      "store" : "yes",
-                      "properties": {
-                        "created_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "profile_created_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "progress_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "progress_media_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "answered_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "bridged_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "last_hold_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "hold_accum_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "hangup_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "resurrect_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        },
-                        "transfer_time": {
-                          "store" : "yes",
-                          "type": "long"
-                        }
-                      }
-                    },
-                    "caller_profile": {
-                      "type": "object",
-                      "store" : "yes",
-                      "properties": {
-                        "username": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "dialplan": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "caller_id_name": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "ani": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "caller_id_number": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "network_addr": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "destination_number": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "uuid": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "context": {
-                          "store" : "yes",
-                          "type": "string"
-                        },
-                        "chan_name": {
-                          "store" : "yes",
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "dialplan": {
-                      "type": "string"
-                    }
-                  }
                 },
                 "variables": {
                   "type": "object",
@@ -418,6 +316,44 @@
                       "type": "long"
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      {
+        "name": "wagents",
+        "body": {
+          "template" : "agentsstatus*",
+          "mappings": {
+            "collectionagents": {
+              "properties": {
+                "date": {
+                  "type": "date",
+                  "index": "not_analyzed"
+                },
+                "userId": {
+                  "type": "string",
+                  "store" : true,
+                  "index": "not_analyzed"
+                },
+                "state": {
+                  "type": "string",
+                  "index": "not_analyzed"
+                },
+                "status": {
+                  "type": "string",
+                  "index": "not_analyzed"
+                },
+                "duration": {
+                  "type": "long",
+                  "index": "not_analyzed"
+                },
+                "domain": {
+                  "type": "string",
+                  "index": "not_analyzed"
                 }
               }
             }

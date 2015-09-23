@@ -66,6 +66,8 @@ function setCustomAttribute (record) {
             ? callflow.times.hangup_time - callflow.times.created_time
             : callflow.times.answered_time - callflow.times.created_time;
 
+        record["Location"] = record.variables.webitel_location;
+
     } catch (e) {
         log.error(e);
     } finally {
@@ -73,7 +75,7 @@ function setCustomAttribute (record) {
     };
 };
 
-function exportCollection(desc, mongoDb, callback) {
+function exportCollectionCdr(desc, mongoDb, callback) {
 
     var collection = mongoDb.collection(desc.name);
     var query = {};
@@ -195,13 +197,223 @@ function exportCollection(desc, mongoDb, callback) {
     });
 };
 
+function exportGeo(mongoDb, cb) {
+    const COLLECTION_NAME = 'newAreaCodeImport';
+    const TYPE_MAPPING = 'geocollection';
+
+    var collection = mongoDb.collection(COLLECTION_NAME);
+    var indexName = 'mygeo2';
+    var query = {"status": "OK", "version": 1};
+
+    async.waterfall([
+        function (next) {
+            log.trace('----> checking connection to elastic');
+            elastic.ping({requestTimeout: 10000}, function (err) {
+                next(err);
+            });
+        },
+
+        function (next) {
+            log.trace('----> analizing collection [' + COLLECTION_NAME + ']');
+            collection.count(query, function (err, total) {
+                if (err) {
+                    return next(err);
+                }
+
+                log.trace('----> find ' + total + ' documents to export');
+                next(null, total);
+            });
+        },
+
+        function (total, next) {
+            if (total === 0)
+                return next();
+            log.trace('----> streaming collection to elastic');
+
+            var stream = collection
+                .find(query)
+                .stream();
+
+            stream.on('data', function (doc) {
+                stream.pause();
+                if (!doc['goecode'][0]) {
+                    return stream.resume();
+                }
+
+
+                elastic.create({
+                    index: indexName + (doc.domain || ''),
+                    type: TYPE_MAPPING,
+                    id: doc._id.toString(),
+                    //body: {
+                    //    "Country": doc['Country'],
+                    //    "Country Code": doc['Country Code'],
+                    //    "Area": doc['Area'],
+                    //    "Date": new Date().getTime(),
+                    //    "Area Code": doc['Area Code'],
+                    //    "location": {
+                    //        "lat" : doc['qeocode']['results'][0]['geometry']['location'].lat,
+                    //        "lon" : doc['qeocode']['results'][0]['geometry']['location'].lng
+                    //    }
+                    //}
+                    body: {
+                        "Country": doc['country'],
+                        "Country Code": doc['code'],
+                        "Area": doc['city'],
+                        "Date": new Date().getTime(),
+                        "location": doc['goecode'][0]['latitude'] + ',' + doc['goecode'][0]['longitude']
+                    }
+                }, function (err) {
+                    if (err) {
+                        if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
+                            log.warn(err['message']);
+                        } else {
+                            log.error('failed to create document %s in elastic.', err['message']);
+                            return next(err);
+                        }
+                    } else {
+                        console.log('Save document id %s', doc._id.toString());
+                    };
+                    stream.resume();
+                });
+            });
+
+            stream.on('end', function (err) {
+                stream.destroy();
+                next(err, total);
+            });
+        },
+
+    ], function (err) {
+        if (err) {
+            log.error(('====> collection [' + COLLECTION_NAME + '] - failed to export.'));
+            log.error(err);
+            return cb(err);
+        }
+        log.trace(('====> collection [' + COLLECTION_NAME + '] - end to export.'));
+        cb(null);
+    });
+};
+
+function exportUsersStatus(mongoDb, cb) {
+    const COLLECTION_NAME = 'agentStatus';
+    const TYPE_MAPPING = 'collectionagents';
+
+    var collection = mongoDb.collection(COLLECTION_NAME);
+    var indexName = 'agentsstatus-';
+    var query = {};
+
+    async.waterfall([
+        function (next) {
+            log.trace('----> checking connection to elastic');
+            elastic.ping({requestTimeout: 10000}, function (err) {
+                next(err);
+            });
+        },
+
+        function (next) {
+            log.trace('----> find max date in index [' + indexName + '-*' + ']');
+            elastic.search({
+                index: indexName + '*',
+                size: 1,
+                body: {
+                    "aggs": {
+                        "maxDate": {
+                            "max": {
+                                "field": "date"
+                            }
+                        }
+                    }
+                }
+            }, function (err, result) {
+                if (err) return next(err);
+                if (!result) {
+                    return next(new Error('Bad aggregatins.'))
+                };
+                var startExportDate;
+                if (result && !result['aggregations']) {
+                    startExportDate = 0;
+                } else {
+                    startExportDate = (result['aggregations']['maxDate']['value']);
+                };
+
+                query = {
+                    "date": {
+                        "$gt": startExportDate
+                    }
+                };
+                next();
+            });
+        },
+
+        function (next) {
+            log.trace('----> analizing collection [' + COLLECTION_NAME + ']');
+            collection.count(query, function (err, total) {
+                if (err) {
+                    return next(err);
+                }
+
+                log.trace('----> find ' + total + ' documents to export');
+                next(null, total);
+            });
+        },
+
+        function (total, next) {
+            if (total === 0)
+                return next();
+            log.trace('----> streaming collection to elastic');
+
+            var stream = collection
+                .find(query)
+                .stream();
+
+            stream.on('data', function (doc) {
+                stream.pause();
+
+                elastic.create({
+                    index: indexName + (doc.domain || ''),
+                    type: TYPE_MAPPING,
+                    id: doc._id.toString(),
+                    body: doc
+                }, function (err) {
+                    if (err) {
+                        if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
+                            log.warn(err['message']);
+                        } else {
+                            log.error('failed to create document %s in elastic.', err['message']);
+                            return next(err);
+                        }
+                    } else {
+                        console.log('Save document id %s', doc._id.toString());
+                    };
+                    stream.resume();
+                });
+            });
+
+            stream.on('end', function (err) {
+                stream.destroy();
+                next(err, total);
+            });
+        },
+
+    ], function (err) {
+        if (err) {
+            log.error(('====> collection [' + COLLECTION_NAME + '] - failed to export.'));
+            log.error(err);
+            return cb(err);
+        }
+        log.trace(('====> collection [' + COLLECTION_NAME + '] - end to export.'));
+        cb(null);
+    });
+};
+
 var mongoClient = new MongoClient();
 mongoClient.connect(conf.get('cdrDB:uri') ,function(err, db) {
     if (err) {
         log.error('Connect db error: %s', err.message);
         throw err;
     };
-    exportCollection(elasticConf.collections[0], db, function (err) {
+    exportCollectionCdr(elasticConf.collections[0], db, function (err) {
         db.close();
         log.debug('Process exit 0.');
         process.exit(0);

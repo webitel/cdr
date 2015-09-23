@@ -52,21 +52,42 @@ function initTemplates(cb) {
         var templates = elasticConf.templates || [];
 
         var tasks = [];
+        var delTemplate = [];
+
         templates.forEach(function (template) {
-            if (elasticTemplatesNames.indexOf(template.name) == -1) {
-                tasks.push(function (done) {
-                    elastic.indices.putTemplate(
+            if (elasticTemplatesNames.indexOf(template.name) > -1) {
+                delTemplate.push(function (done) {
+                    elastic.indices.deleteTemplate(
                         template,
-                        done
+                        function (err) {
+                            if (err) {
+                                log.error(err);
+                            } else {
+                                log.debug('Template %s deleted.', template.name)
+                            }
+                            done();
+                        }
                     );
                 });
-            } else {
-                log.debug('Skip create template %s', template.name);
             };
+
+            tasks.push(function (done) {
+                elastic.indices.putTemplate(
+                    template,
+                    function (err) {
+                        if (err) {
+                            log.error(err);
+                        } else {
+                            log.debug('Template %s - created.', template.name);
+                        }
+                        done();
+                    }
+                );
+            });
         });
 
         if (tasks.length > 0) {
-            async.waterfall(tasks, cb);
+            async.waterfall([].concat(delTemplate, tasks) , cb);
         } else {
             cb();
         }
