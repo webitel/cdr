@@ -157,14 +157,15 @@ function exportCollectionCdr(desc, mongoDb, callback) {
 
             stream.on('data', function (doc) {
                 stream.pause();
+                var _record = setCustomAttribute(doc);
                 if (desc.fields) {
-                    doc = _.pick(doc, desc.fields);
+                    _record = _.pick(_record, desc.fields);
                 };
                 elastic.create({
                     index: indexName + (doc.variables.domain_name ? '-' + doc.variables.domain_name : ''),
                     type: desc.type,
                     id: doc._id.toString(),
-                    body: setCustomAttribute(doc)
+                    body: _record
                 }, function (err) {
                     if (err) {
                         if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
@@ -198,7 +199,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
 };
 
 function exportGeo(mongoDb, cb) {
-    const COLLECTION_NAME = 'newAreaCodeImport';
+    const COLLECTION_NAME = 'location';
     const TYPE_MAPPING = 'geocollection';
 
     var collection = mongoDb.collection(COLLECTION_NAME);
