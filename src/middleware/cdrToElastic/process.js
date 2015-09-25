@@ -159,8 +159,11 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 stream.pause();
                 var _record = setCustomAttribute(doc);
                 if (desc.fields) {
-                    _record = _.pick(_record, desc.fields);
+                    //_record = _.pick(_record, desc.fields);
                 };
+                delete _record.callflow;
+                delete _record.app_log;
+                delete _record.channel_data;
                 elastic.create({
                     index: indexName + (doc.variables.domain_name ? '-' + doc.variables.domain_name : ''),
                     type: desc.type,
