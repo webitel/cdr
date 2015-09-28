@@ -132,14 +132,6 @@
                   "type": "boolean",
                   "index" : "not_analyzed"
                 },
-                "PDD": {
-                  "type": "long",
-                  "index" : "not_analyzed"
-                },
-                "Ring Duration": {
-                  "type": "long",
-                  "index" : "not_analyzed"
-                },
                 "variables": {
                   "type": "object",
                   "properties": {
@@ -147,34 +139,10 @@
                       "type": "date",
                       "format": "yyyy-MM-dd HH:mm:ss"
                     },
-                    "answer_epoch": {
-                      "type": "long"
-                    },
-                    "answer_uepoch": {
-                      "type": "long"
-                    },
-                    "answermsec": {
-                      "type": "long"
-                    },
                     "answersec": {
                       "type": "long"
                     },
-                    "answerusec": {
-                      "type": "long"
-                    },
-                    "billmsec": {
-                      "type": "long"
-                    },
                     "billsec": {
-                      "type": "long"
-                    },
-                    "billusec": {
-                      "type": "long"
-                    },
-                    "bridge_epoch": {
-                      "type": "long"
-                    },
-                    "bridge_uepoch": {
                       "type": "long"
                     },
                     "conference_member_id": {
@@ -183,49 +151,13 @@
                     "duration": {
                       "type": "long"
                     },
-                    "end_epoch": {
-                      "type": "long"
-                    },
-                    "end_uepoch": {
-                      "type": "long"
-                    },
-                    "flow_billmsec": {
-                      "type": "long"
-                    },
                     "flow_billsec": {
-                      "type": "long"
-                    },
-                    "flow_billusec": {
                       "type": "long"
                     },
                     "hangup_cause_q850": {
                       "type": "long"
                     },
-                    "hold_accum_ms": {
-                      "type": "long"
-                    },
                     "hold_accum_seconds": {
-                      "type": "long"
-                    },
-                    "hold_accum_usec": {
-                      "type": "long"
-                    },
-                    "last_hold_epoch": {
-                      "type": "long"
-                    },
-                    "last_hold_uepoch": {
-                      "type": "long"
-                    },
-                    "local_media_port": {
-                      "type": "long"
-                    },
-                    "local_video_port": {
-                      "type": "long"
-                    },
-                    "max_forwards": {
-                      "type": "long"
-                    },
-                    "mduration": {
                       "type": "long"
                     },
                     "original_read_rate": {
@@ -237,64 +169,16 @@
                     "playback_seconds": {
                       "type": "long"
                     },
-                    "profile_start_epoch": {
-                      "type": "long"
-                    },
-                    "profile_start_uepoch": {
-                      "type": "long"
-                    },
-                    "progress_epoch": {
-                      "type": "long"
-                    },
-                    "progress_media_epoch": {
-                      "type": "long"
-                    },
-                    "progress_media_uepoch": {
-                      "type": "long"
-                    },
-                    "progress_mediamsec": {
-                      "type": "long"
-                    },
                     "progress_mediasec": {
-                      "type": "long"
-                    },
-                    "progress_mediausec": {
-                      "type": "long"
-                    },
-                    "progress_uepoch": {
-                      "type": "long"
-                    },
-                    "progressmsec": {
-                      "type": "long"
-                    },
-                    "progressusec": {
                       "type": "long"
                     },
                     "read_rate": {
                       "type": "long"
                     },
-                    "record_ms": {
-                      "type": "long"
-                    },
                     "record_seconds": {
                       "type": "long"
                     },
-                    "remote_media_port": {
-                      "type": "long"
-                    },
-                    "remote_video_port": {
-                      "type": "long"
-                    },
                     "sip_invite_failure_status": {
-                      "type": "long"
-                    },
-                    "start_epoch": {
-                      "type": "long"
-                    },
-                    "start_uepoch": {
-                      "type": "long"
-                    },
-                    "uduration": {
                       "type": "long"
                     },
                     "video_read_rate": {
@@ -303,13 +187,7 @@
                     "video_write_rate": {
                       "type": "long"
                     },
-                    "waitmsec": {
-                      "type": "long"
-                    },
                     "waitsec": {
-                      "type": "long"
-                    },
-                    "waitusec": {
                       "type": "long"
                     },
                     "write_rate": {
