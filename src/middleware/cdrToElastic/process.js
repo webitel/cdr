@@ -97,13 +97,30 @@ function setCustomAttribute (record) {
         record["Domain name"] = record.variables.domain_name; // +
         record["User ID"] = record.variables.presence_id && ('' + record.variables.presence_id).split('@')[0]; // +
         record["Destination User"] = record.variables.dialed_user && ('' + record.variables.dialed_user).split('@')[0]; // +
-        record["Bridged"] = record.variables.bridge_stamp ? true : false; // +
-        //record["PDD"] = (callflow.times.progress_time > 0)
-        //    ? (callflow.times.progress_time + callflow.times.progress_media_time) - callflow.times.created_time
-        //    : 0; //
-        //record["Ring Duration"] = (callflow.times.answered_time === 0)
-        //    ? callflow.times.hangup_time - callflow.times.created_time
-        //    : callflow.times.answered_time - callflow.times.created_time;
+
+        record["Bridged"] = record.variables.bridge_epoch > 0
+            ? true
+            : false
+        ;
+
+        record["Ring Duration"] = (record.variables['answer_epoch'] > 0)
+            ? record.variables['answer_epoch'] - record.variables['start_epoch']
+            : record.variables['end_epoch'] - record.variables['start_epoch']
+        ;
+
+        record["Before Bridge Delay"] = (record.variables.bridge_epoch > 0)
+            ? record.variables.bridge_epoch - record.variables.start_epoch
+            : 0
+        ;
+
+        record["Post Dialing Delay"] = (record.variables['progress_epoch'] > 0)
+            ? record.variables['progress_epoch'] - record.variables['start_epoch']
+            : (record.variables['progress_media_epoch'] > 0)
+                ? record.variables['progress_media_epoch'] - record.variables['start_epoch']
+                : (record.variables['answer_epoch'] > 0)
+                    ? record.variables['answer_epoch'] - record.variables['start_epoch']
+                    : record.variables['end_epoch'] - record.variables['start_epoch']
+        ;
 
         record["Location"] = record.variables.webitel_location;
 
@@ -111,6 +128,9 @@ function setCustomAttribute (record) {
             if (record.variables.hasOwnProperty(delName))
                 delete record['variables'][delName];
         });
+
+        record["CreatedOnStorage"] = (callflow.times && callflow.times.created_time) || 0;
+
     } catch (e) {
         log.error(e);
     } finally {
@@ -149,7 +169,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                     "aggs": {
                         "maxDate": {
                             "max": {
-                                "field": "variables.start_stamp"
+                                "field": "CreatedOnStorage"
                             }
                         }
                     }
@@ -163,7 +183,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 if (result && !result['aggregations']) {
                     startExportDate = 0;
                 } else {
-                    startExportDate = (result['aggregations']['maxDate']['value'] + 1000) * 1000;
+                    startExportDate = result['aggregations']['maxDate']['value'];
                 };
 
                 query = {
@@ -201,12 +221,11 @@ function exportCollectionCdr(desc, mongoDb, callback) {
             stream.on('data', function (doc) {
                 stream.pause();
                 var _record = setCustomAttribute(doc);
-                if (desc.fields) {
-                    //_record = _.pick(_record, desc.fields);
-                };
                 delete _record.callflow;
                 delete _record.app_log;
                 delete _record.channel_data;
+                delete _record.hold_record;
+                //console.dir(_record);
                 elastic.create({
                     index: indexName + (doc.variables.domain_name ? '-' + doc.variables.domain_name : ''),
                     type: desc.type,

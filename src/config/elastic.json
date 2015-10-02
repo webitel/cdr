@@ -3,7 +3,8 @@
     "enabled": false,
     "intervalMin": 1,
     "host": "elasticsearch:9200",
-    "requestTimeout": 5000,
+    "keepAlive": true,
+    "requestTimeout": 500000,
     "collections": [{
         "name": "cdr",
         "index": "cdr",
@@ -131,6 +132,18 @@
                 "Bridged": {
                   "type": "boolean",
                   "index" : "not_analyzed"
+                },
+                "Ring Duration": {
+                  "type": "long"
+                },
+                "Before Bridge Delay": {
+                  "type": "long"
+                },
+                "Post Dialing Delay": {
+                  "type": "long"
+                },
+                "CreatedOnStorage": {
+                  "type": "long"
                 },
                 "variables": {
                   "type": "object",
