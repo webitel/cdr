@@ -162,7 +162,7 @@ module.exports = {
                     });
                     return;
                 };
-                if (result > 0) {
+                if (result && result.result && result.result.n > 0) {
                     try {
                         fs.remove(path + '/' + name);
                         res.status(200).json({
