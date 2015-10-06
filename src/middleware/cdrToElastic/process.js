@@ -80,28 +80,54 @@ function setCustomAttribute (record) {
         record["Call direction"] = record.variables.webitel_direction; // +
         record["Hangup cause"] = record.variables.hangup_cause; // +
         record["Q.850 Hangup Code"] = record.variables.hangup_cause_q850; // +
-        record["Call duration in seconds"] = record.variables.duration; // +
-        record["Call duration"] = ('' + record.variables.duration).toHHMMSS(); // +- todo
-        record["Connected call duration in seconds"] = record.variables.billsec; // +
-        record["Connected call duration"] = ('' + record.variables.billsec).toHHMMSS(); // +- todo
+        record["Call duration"] = record.variables.duration; // +
+        //record["Call duration"] = ('' + record.variables.duration).toHHMMSS(); // +- todo
+        record["Connected call duration"] = record.variables.billsec; // +
+        //record["Connected call duration"] = ('' + record.variables.billsec).toHHMMSS(); // +- todo
         record["Call end time"] = record.variables.end_stamp; // +
-        record["Bridge time"] = record.variables.bridge_stamp; // +
+        if (record.variables.bridge_epoch > 0)
+            record["Bridge time"] = record.variables.bridge_epoch * 1000; // +
+
         record["Progress time"] = record.variables.progress_stamp; // +
         //record["Dialed User"] = record.variables.dialed_user; // +
         //record["Dialed Domain name"] = record.variables.dialed_domain; // +
         record["Agent ID"] = record.variables.cc_agent  && ('' + record.variables.cc_agent).split('@')[0]; // +
         record["Queue ID"] = record.variables.cc_queue && ('' + record.variables.cc_queue).split('@')[0]; // +
+        record["Queue stop cause"] = record.variables.cc_cause; // +
+        record["Queue cancel reason"] = record.variables.cc_cancel_reason; // +
+        record["Queue stop side"] = record.variables.cc_side; // +
+
+        if (record.variables.cc_queue_joined_epoch)
+            record["Queue start time"] = record.variables.cc_queue_joined_epoch * 1000; // +
+
+        if (record.variables.cc_queue_answered_epoch)
+            record["Queue answer time"] = record.variables.cc_queue_answered_epoch * 1000; // +
+
+        let _queueStopTime = record.variables.cc_queue_canceled_epoch || record.variables.cc_queue_terminated_epoch;
+        if (_queueStopTime > 0)
+            record["Queue stop time"] =  _queueStopTime * 1000;
+
+        record["Queue Answer Delay"] = record.variables.cc_queue_answered_epoch
+            ? record.variables.cc_queue_answered_epoch - record.variables.cc_queue_joined_epoch
+            : 0; // +
+
+        record["Queue call duration"] = (record.variables.cc_queue_canceled_epoch || record.variables.cc_queue_terminated_epoch)
+            - record.variables.cc_queue_joined_epoch;
+
+        record["Queue connected call duration"] = record.variables.cc_queue_answered_epoch
+            ? record.variables.cc_queue_terminated_epoch - record.variables.cc_queue_answered_epoch
+            : 0; // +
+
+        record["Queue Answered"] = record.variables.cc_queue_answered_epoch > 0; // +
+
         record["Destination number"] = callflow.caller_profile.destination_number; // +
-        record["Call record in seconds"] = record.variables.record_seconds; // +
+        record["Call record duration"] = record.variables.record_seconds; // +
         record["CallerID number"] = callflow.caller_profile.caller_id_number; // +
         record["Domain name"] = record.variables.domain_name; // +
         record["User ID"] = record.variables.presence_id && ('' + record.variables.presence_id).split('@')[0]; // +
         record["Destination User"] = record.variables.dialed_user && ('' + record.variables.dialed_user).split('@')[0]; // +
 
-        record["Bridged"] = record.variables.bridge_epoch > 0
-            ? true
-            : false
-        ;
+        record["Bridged"] = record.variables.bridge_epoch > 0;
 
         record["Ring Duration"] = (record.variables['answer_epoch'] > 0)
             ? record.variables['answer_epoch'] - record.variables['start_epoch']

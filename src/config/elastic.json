@@ -74,20 +74,40 @@
                   "type": "long",
                   "index" : "not_analyzed"
                 },
-                "Call duration in seconds": {
-                  "type": "long",
-                  "index" : "not_analyzed"
-                },
                 "Call duration": {
-                  "type": "string",
-                  "index" : "not_analyzed"
-                },
-                "Connected call duration in seconds": {
                   "type": "long",
                   "index" : "not_analyzed"
+                },
+                "Queue start time": {
+                  "type": "date",
+                  "index": "not_analyzed"
+                },
+                "Queue answer time": {
+                  "type": "date",
+                  "index": "not_analyzed"
+                },
+                "Queue stop time": {
+                  "type": "date",
+                  "index": "not_analyzed"
+                },
+                "Queue Answer Delay": {
+                  "type": "long",
+                  "index": "not_analyzed"
+                },
+                "Queue call duration": {
+                  "type": "long",
+                  "index": "not_analyzed"
+                },
+                "Queue connected call duration": {
+                  "type": "long",
+                  "index": "not_analyzed"
+                },
+                "Queue Answered": {
+                  "type": "boolean",
+                  "index": "not_analyzed"
                 },
                 "Connected call duration": {
-                  "type": "string",
+                  "type": "long",
                   "index" : "not_analyzed"
                 },
                 "Call end time": {
@@ -97,7 +117,6 @@
                 },
                 "Bridge time": {
                   "type": "date",
-                  "format": "yyyy-MM-dd HH:mm:ss",
                   "index" : "not_analyzed"
                 },
                 "Progress time": {
@@ -117,8 +136,8 @@
                   "type": "string",
                   "index" : "not_analyzed"
                 },
-                "Call record in seconds": {
-                  "type": "long",
+                "Call record duration": {
+                  "type": "integer",
                   "index" : "not_analyzed"
                 },
                 "CallerID number": {
