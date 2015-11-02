@@ -9,7 +9,14 @@
         "name": "cdr",
         "index": "cdr",
         "type": "collection",
-        "fields": ["_id", "variables"]
+        "fields": ["_id", "variables"],
+        "_fn": "exportCollectionCdr"
+      },
+      {
+        "name": "agentStatus",
+        "index": "agentsstatus",
+        "type": "collectionagents",
+        "_fn": "exportUsersStatus"
       }
     ],
     "templates": [
@@ -70,7 +77,7 @@
                   "type": "string",
                   "index" : "not_analyzed"
                 },
-                "Q.850 Hangup Code": {
+                "Q850 Hangup Code": {
                   "type": "long",
                   "index" : "not_analyzed"
                 },
@@ -240,13 +247,13 @@
           "mappings": {
             "collectionagents": {
               "properties": {
-                "date": {
-                  "type": "date",
-                  "index": "not_analyzed"
-                },
                 "userId": {
                   "type": "string",
                   "store" : true,
+                  "index": "not_analyzed"
+                },
+                "domain": {
+                  "type": "string",
                   "index": "not_analyzed"
                 },
                 "state": {
@@ -257,12 +264,24 @@
                   "type": "string",
                   "index": "not_analyzed"
                 },
+                "description": {
+                  "type": "string",
+                  "index": "not_analyzed"
+                },
+                "online": {
+                  "type": "boolean",
+                  "index": "not_analyzed"
+                },
                 "duration": {
                   "type": "long",
                   "index": "not_analyzed"
                 },
-                "domain": {
-                  "type": "string",
+                "date": {
+                  "type": "date",
+                  "index": "not_analyzed"
+                },
+                "endDate": {
+                  "type": "date",
                   "index": "not_analyzed"
                 }
               }

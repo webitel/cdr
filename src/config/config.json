@@ -14,7 +14,8 @@
     "collectionCDR": "cdr",
     "collectionFile": "cdrFile",
     "collectionAuth": "authToken",
-    "collectionEmail": "emailConfig"
+    "collectionEmail": "emailConfig",
+    "collectionAgentStatus": "agentStatus"
   },
   "application": {
     "log": {

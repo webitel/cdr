@@ -79,7 +79,7 @@ function setCustomAttribute (record) {
         record["Call answer time"] = record.variables.answer_stamp; // +
         record["Call direction"] = record.variables.webitel_direction; // +
         record["Hangup cause"] = record.variables.hangup_cause; // +
-        record["Q.850 Hangup Code"] = record.variables.hangup_cause_q850; // +
+        record["Q850 Hangup Code"] = record.variables.hangup_cause_q850; // +
         record["Call duration"] = record.variables.duration; // +
         //record["Call duration"] = ('' + record.variables.duration).toHHMMSS(); // +- todo
         record["Connected call duration"] = record.variables.billsec; // +
@@ -289,14 +289,16 @@ function exportCollectionCdr(desc, mongoDb, callback) {
     });
 };
 
-function exportGeo(mongoDb, cb) {
-    const COLLECTION_NAME = 'location';
-    const TYPE_MAPPING = 'geocollection';
+function exportUsersStatus(desc, mongoDb, cb) {
+    var COLLECTION_NAME = desc.name;
+    var TYPE_MAPPING = desc.type;
 
     var collection = mongoDb.collection(COLLECTION_NAME);
-    var indexName = 'mygeo2';
-    var query = {"status": "OK", "version": 1};
+    var currentDate = new Date();
+    var indexName = desc.index + '-' + (currentDate.getMonth() + 1) + '.' + currentDate.getFullYear();
 
+    var query = {"endDate": {"$exists": 1}, "account": {"$exists": 1}};
+    log.trace(('====> exporting collection [' + desc.name + ']'));
     async.waterfall([
         function (next) {
             log.trace('----> checking connection to elastic');
@@ -306,107 +308,9 @@ function exportGeo(mongoDb, cb) {
         },
 
         function (next) {
-            log.trace('----> analizing collection [' + COLLECTION_NAME + ']');
-            collection.count(query, function (err, total) {
-                if (err) {
-                    return next(err);
-                }
-
-                log.trace('----> find ' + total + ' documents to export');
-                next(null, total);
-            });
-        },
-
-        function (total, next) {
-            if (total === 0)
-                return next();
-            log.trace('----> streaming collection to elastic');
-
-            var stream = collection
-                .find(query)
-                .stream();
-
-            stream.on('data', function (doc) {
-                stream.pause();
-                if (!doc['goecode'][0]) {
-                    return stream.resume();
-                }
-
-
-                elastic.create({
-                    index: indexName + (doc.domain || ''),
-                    type: TYPE_MAPPING,
-                    id: doc._id.toString(),
-                    //body: {
-                    //    "Country": doc['Country'],
-                    //    "Country Code": doc['Country Code'],
-                    //    "Area": doc['Area'],
-                    //    "Date": new Date().getTime(),
-                    //    "Area Code": doc['Area Code'],
-                    //    "location": {
-                    //        "lat" : doc['qeocode']['results'][0]['geometry']['location'].lat,
-                    //        "lon" : doc['qeocode']['results'][0]['geometry']['location'].lng
-                    //    }
-                    //}
-                    body: {
-                        "Country": doc['country'],
-                        "Country Code": doc['code'],
-                        "Area": doc['city'],
-                        "Date": new Date().getTime(),
-                        "location": doc['goecode'][0]['latitude'] + ',' + doc['goecode'][0]['longitude']
-                    }
-                }, function (err) {
-                    if (err) {
-                        if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
-                            log.warn(err['message']);
-                        } else {
-                            log.error('failed to create document %s in elastic.', err['message']);
-                            return next(err);
-                        }
-                    } else {
-                        console.log('Save document id %s', doc._id.toString());
-                    };
-                    stream.resume();
-                });
-            });
-
-            stream.on('end', function (err) {
-                stream.destroy();
-                next(err, total);
-            });
-        },
-
-    ], function (err) {
-        if (err) {
-            log.error(('====> collection [' + COLLECTION_NAME + '] - failed to export.'));
-            log.error(err);
-            return cb(err);
-        }
-        log.trace(('====> collection [' + COLLECTION_NAME + '] - end to export.'));
-        cb(null);
-    });
-};
-
-function exportUsersStatus(mongoDb, cb) {
-    const COLLECTION_NAME = 'agentStatus';
-    const TYPE_MAPPING = 'collectionagents';
-
-    var collection = mongoDb.collection(COLLECTION_NAME);
-    var indexName = 'agentsstatus-';
-    var query = {};
-
-    async.waterfall([
-        function (next) {
-            log.trace('----> checking connection to elastic');
-            elastic.ping({requestTimeout: 10000}, function (err) {
-                next(err);
-            });
-        },
-
-        function (next) {
-            log.trace('----> find max date in index [' + indexName + '-*' + ']');
+            log.trace('----> find max date in index [' + desc.index + '-*' + ']');
             elastic.search({
-                index: indexName + '*',
+                index: desc.index + '-*',
                 size: 1,
                 body: {
                     "aggs": {
@@ -420,7 +324,7 @@ function exportUsersStatus(mongoDb, cb) {
             }, function (err, result) {
                 if (err) return next(err);
                 if (!result) {
-                    return next(new Error('Bad aggregatins.'))
+                    return next(new Error('Bad aggregations.'))
                 };
                 var startExportDate;
                 if (result && !result['aggregations']) {
@@ -429,10 +333,8 @@ function exportUsersStatus(mongoDb, cb) {
                     startExportDate = (result['aggregations']['maxDate']['value']);
                 };
 
-                query = {
-                    "date": {
-                        "$gt": startExportDate
-                    }
+                query['date'] = {
+                    "$gt": startExportDate
                 };
                 next();
             });
@@ -457,13 +359,15 @@ function exportUsersStatus(mongoDb, cb) {
 
             var stream = collection
                 .find(query)
+                .sort({"date": 1})
                 .stream();
 
             stream.on('data', function (doc) {
                 stream.pause();
+                doc['duration'] = Math.round((doc['endDate'] - doc['date']) / 1000);
 
                 elastic.create({
-                    index: indexName + (doc.domain || ''),
+                    index: indexName + (doc.domain ? '-' + doc.domain  : ''),
                     type: TYPE_MAPPING,
                     id: doc._id.toString(),
                     body: doc
@@ -499,15 +403,41 @@ function exportUsersStatus(mongoDb, cb) {
     });
 };
 
+const FUNCTIONS = {
+    exportCollectionCdr: exportCollectionCdr,
+    exportUsersStatus: exportUsersStatus
+};
+
 var mongoClient = new MongoClient();
 mongoClient.connect(conf.get('cdrDB:uri') ,function(err, db) {
     if (err) {
         log.error('Connect db error: %s', err.message);
         throw err;
     };
-    exportCollectionCdr(elasticConf.collections[0], db, function (err) {
+    var tasks = [];
+
+    elasticConf.collections.forEach(function (item) {
+        if (FUNCTIONS.hasOwnProperty(item['_fn'])) {
+            tasks.push(function (cb) {
+                FUNCTIONS[item['_fn']](item, db, cb);
+            });
+        } else {
+            log.warn("Option _fn required.");
+        };
+    });
+
+
+    async.waterfall(tasks, function (err) {
+        if (err)
+            log.error(err);
+
         db.close();
-        log.debug('Process exit 0.');
         process.exit(0);
     });
+
+    //exportCollectionCdr(elasticConf.collections[0], db, function (err) {
+    //    db.close();
+    //    log.debug('Process exit 0.');
+    //    process.exit(0);
+    //});
 });
