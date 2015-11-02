@@ -5,7 +5,8 @@
     "host": "elasticsearch:9200",
     "keepAlive": true,
     "requestTimeout": 500000,
-    "collections": [{
+    "collections": [
+      {
         "name": "cdr",
         "index": "cdr",
         "type": "collection",

@@ -209,7 +209,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 if (result && !result['aggregations']) {
                     startExportDate = 0;
                 } else {
-                    startExportDate = result['aggregations']['maxDate']['value'];
+                    startExportDate = result['aggregations']['maxDate']['value'] || 0;
                 };
 
                 query = {
@@ -251,11 +251,15 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 delete _record.app_log;
                 delete _record.channel_data;
                 delete _record.hold_record;
+                delete _record._version;
+                delete _record._ttl;
+                var _id = _record._id.toString();
+                delete _record._id;
                 //console.dir(_record);
                 elastic.create({
                     index: indexName + (doc.variables.domain_name ? '-' + doc.variables.domain_name : ''),
                     type: desc.type,
-                    id: doc._id.toString(),
+                    id: _id,
                     body: _record
                 }, function (err) {
                     if (err) {
@@ -266,7 +270,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                             return next(err);
                         }
                     } else {
-                        console.log('Save document id %s', doc._id.toString());
+                        console.log('Save document id %s', _id);
                     };
                     stream.resume();
                 });
@@ -330,7 +334,7 @@ function exportUsersStatus(desc, mongoDb, cb) {
                 if (result && !result['aggregations']) {
                     startExportDate = 0;
                 } else {
-                    startExportDate = (result['aggregations']['maxDate']['value']);
+                    startExportDate = (result['aggregations']['maxDate']['value'] || 0);
                 };
 
                 query['date'] = {
@@ -365,11 +369,15 @@ function exportUsersStatus(desc, mongoDb, cb) {
             stream.on('data', function (doc) {
                 stream.pause();
                 doc['duration'] = Math.round((doc['endDate'] - doc['date']) / 1000);
+                var _id = doc._id.toString();
+                delete doc._id;
+                delete doc._version;
+                delete doc._ttl;
 
                 elastic.create({
                     index: indexName + (doc.domain ? '-' + doc.domain  : ''),
                     type: TYPE_MAPPING,
-                    id: doc._id.toString(),
+                    id: _id,
                     body: doc
                 }, function (err) {
                     if (err) {
@@ -380,7 +388,7 @@ function exportUsersStatus(desc, mongoDb, cb) {
                             return next(err);
                         }
                     } else {
-                        console.log('Save document id %s', doc._id.toString());
+                        console.log('Save document id %s', _id);
                     };
                     stream.resume();
                 });
