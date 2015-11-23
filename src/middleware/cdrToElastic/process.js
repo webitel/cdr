@@ -293,6 +293,13 @@ function exportCollectionCdr(desc, mongoDb, callback) {
     });
 };
 
+function setUserDescription(data) {
+    if (!data['description']) {
+        data['description'] = data['state'] + '/' + data['status']
+    }
+    return data;
+};
+
 function exportUsersStatus(desc, mongoDb, cb) {
     var COLLECTION_NAME = desc.name;
     var TYPE_MAPPING = desc.type;
@@ -373,6 +380,10 @@ function exportUsersStatus(desc, mongoDb, cb) {
                 delete doc._id;
                 delete doc._version;
                 delete doc._ttl;
+
+                if (!doc['description']) {
+                    doc['description'] = doc['state'] + '/' + doc['status']
+                };
 
                 elastic.create({
                     index: indexName + (doc.domain ? '-' + doc.domain  : ''),
