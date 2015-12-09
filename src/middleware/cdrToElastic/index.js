@@ -43,53 +43,70 @@ function initExportProcess () {
 };
 
 function initTemplates(cb) {
-    elastic.indices.getTemplate(function (err, res) {
-        if (err) {
-            return cb(err);
-        };
+    const MAX_RETRY = 15,
+        TIMEOUT = 5000
+        ;
+    var currentRetry = 0;
 
-        var elasticTemplatesNames = Object.keys(res);
-        var templates = elasticConf.templates || [];
+    (function retry (err, connecting) {
+        if (connecting) {
+            return elastic.indices.getTemplate(function (err, res) {
+                if (err) {
+                    return cb(err);
+                };
 
-        var tasks = [];
-        var delTemplate = [];
+                var elasticTemplatesNames = Object.keys(res);
+                var templates = elasticConf.templates || [];
 
-        templates.forEach(function (template) {
-            if (elasticTemplatesNames.indexOf(template.name) > -1) {
-                delTemplate.push(function (done) {
-                    elastic.indices.deleteTemplate(
-                        template,
-                        function (err) {
-                            if (err) {
-                                log.error(err);
-                            } else {
-                                log.debug('Template %s deleted.', template.name)
+                var tasks = [];
+                var delTemplate = [];
+
+                templates.forEach(function (template) {
+                    if (elasticTemplatesNames.indexOf(template.name) > -1) {
+                        delTemplate.push(function (done) {
+                            elastic.indices.deleteTemplate(
+                                template,
+                                function (err) {
+                                    if (err) {
+                                        log.error(err);
+                                    } else {
+                                        log.debug('Template %s deleted.', template.name)
+                                    }
+                                    done();
+                                }
+                            );
+                        });
+                    };
+
+                    tasks.push(function (done) {
+                        elastic.indices.putTemplate(
+                            template,
+                            function (err) {
+                                if (err) {
+                                    log.error(err);
+                                } else {
+                                    log.debug('Template %s - created.', template.name);
+                                }
+                                done();
                             }
-                            done();
-                        }
-                    );
+                        );
+                    });
                 });
-            };
 
-            tasks.push(function (done) {
-                elastic.indices.putTemplate(
-                    template,
-                    function (err) {
-                        if (err) {
-                            log.error(err);
-                        } else {
-                            log.debug('Template %s - created.', template.name);
-                        }
-                        done();
-                    }
-                );
+                if (tasks.length > 0) {
+                    async.waterfall([].concat(delTemplate, tasks) , cb);
+                } else {
+                    cb();
+                }
             });
-        });
-
-        if (tasks.length > 0) {
-            async.waterfall([].concat(delTemplate, tasks) , cb);
-        } else {
-            cb();
+        };
+        if (currentRetry > MAX_RETRY) {
+            return cb(new Error('No connect to elastic. Process export stop.'));
         }
-    });
+        log.debug('Check elastic ping. Retry: ' + currentRetry++);
+
+        setTimeout( () => elastic.ping({host: elasticConf.host, requestTimeout: TIMEOUT}, retry), TIMEOUT);
+    })();
+
+
 };
