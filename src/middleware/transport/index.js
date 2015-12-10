@@ -110,6 +110,7 @@ FileController.prototype.GetFile = function (req, res, next) {
         var id = req.params['id'];
         var query;
         var contentType = req.query['type'] || 'audio/mpeg';
+        var pathName = req.query['name'];
 
         switch (contentType) {
             case 'all':
@@ -118,17 +119,31 @@ FileController.prototype.GetFile = function (req, res, next) {
                 };
                 break;
             case 'audio/mpeg':
+                var setOrQuery = function () {
+                    var _r = [];
+
+                    if (pathName) {
+                        _r.push({
+                            "name": pathName
+                        });
+                    } else {
+                        _r.push({
+                            "content-type": contentType
+                        });
+                        _r.push({
+                            "content-type": {
+                                "$exists": false
+                            }
+                        });
+                    };
+                    return _r;
+                };
+
                 query = {
                     "$and": [{
                         "uuid": id
                     },{
-                        "$or": [{
-                            "content-type": contentType
-                        }, {
-                            "content-type": {
-                                "$exists": false
-                            }
-                        }]
+                        "$or": setOrQuery()
                     }]
                 };
                 break;

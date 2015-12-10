@@ -20,7 +20,8 @@ var bucketName = (rootBucket)
 function saveToFile(file, query, res) {
     var uuid = query.id || new Date().getTime();
     var type = query.type || 'mp3';
-    var keyName = uuid + '.' + type;
+    var namePref = query.name || 'none';
+    var keyName = uuid + '_' + namePref + '.' + type;
     var date = new Date();
     var domain = query.domain || 'unknown';
     var localFileTmp = file['path'];
@@ -56,6 +57,7 @@ function saveToFile(file, query, res) {
                 };
                 fileDB.insertFile({
                     "uuid": uuid,
+                    "name": namePref,
                     "path": path,
                     "domain": domain,
                     "content-type": res['incoming-content-type'] || 'audio/mpeg',

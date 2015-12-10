@@ -10,7 +10,8 @@ var http = require("http")
 function saveToFile(file, query, res) {
     var uuid = query.id || new Date().getTime();
     var type = query.type || 'mp3';
-    var fileName = uuid + '.' + type;
+    var namePref = query.name || 'none';
+    var fileName = uuid + '_' + namePref + '.' + type;
     var date = new Date();
     var path = maskPath;
     var domain = query.domain || 'unknown';
@@ -32,6 +33,7 @@ function saveToFile(file, query, res) {
                 } else {
                     fileDB.insertFile({
                         "uuid": uuid,
+                        "name": namePref,
                         "path": filePath,
                         "domain": domain,
                         "content-type": res['incoming-content-type'],
