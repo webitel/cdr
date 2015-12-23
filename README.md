@@ -1,6 +1,8 @@
 cdr-server
 ===
 
+[![Build Status](https://dev.webitel.com/buildStatus/icon?job=build_cdr)](https://dev.webitel.com/job/build_cdr)
+
 CDR & File Server for Webitel
 
 ## Default ports
