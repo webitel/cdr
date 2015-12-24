@@ -214,7 +214,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 log.debug('Max startExportDate: %s', startExportDate);
                 query = {
                     "callflow.times.created_time": {
-                        "$gte": startExportDate - 60000,
+                        "$gte": startExportDate - (5 * 60000),
                         "$lte": Date.now() * 1000
                     }
                 };
@@ -288,7 +288,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                             log.debug('Created %s documents', countCreate)
                         };
                         log.debug("onCreateCbCount: %s; onDataCount: %s", onCreateCbCount, onDataCount);
-                        return next(err, total);
+                        return next(null, total);
                     };
                     stream.resume();
                 });
