@@ -211,10 +211,11 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 } else {
                     startExportDate = result['aggregations']['maxDate']['value'] || 0;
                 };
-
+                log.debug('Max startExportDate: %s', startExportDate);
                 query = {
                     "callflow.times.created_time": {
-                        "$gt": startExportDate
+                        "$gt": startExportDate,
+                        "$lte": Date.now() * 1000
                     }
                 };
                 next();
@@ -242,10 +243,17 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 .find(query)
                 .sort({"callflow.times.created_time": 1})
                 //.batchSize(10000)
-                .stream();
+                .stream(),
+                _total = total,
+                countCreate = 0,
+                onDataCount = 0,
+                onCreateCbCount = 0;
 
             stream.on('data', function (doc) {
-                stream.pause();
+                onDataCount++;
+                if (--_total < 0)
+                    total++;
+
                 var _record = setCustomAttribute(doc);
                 delete _record.callflow;
                 delete _record.app_log;
@@ -262,6 +270,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                     id: _id,
                     body: _record
                 }, function (err) {
+                    onCreateCbCount++;
                     if (err) {
                         if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
                             log.warn(err['message']);
@@ -269,16 +278,22 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                             log.error('failed to create document %s in elastic.', err['message']);
                             return next(err);
                         }
-                    } else {
-                        console.log('Save document id %s', _id);
+                    };
+
+                    countCreate++;
+                    if ((total === onDataCount) && (total === onCreateCbCount)){
+                        if ( (total - countCreate) !== 0){
+                            log.error('ERROR IMPORT TOTAL %s Created %s', total, countCreate);
+                        } else {
+                            log.debug('Created %s documents', countCreate)
+                        };
+                        log.debug("onCreateCbCount: %s; onDataCount: %s", onCreateCbCount, onDataCount);
+                        return next(err, total);
                     };
                     stream.resume();
                 });
-            });
 
-            stream.on('end', function (err) {
-                stream.destroy();
-                next(err, total);
+                stream.pause();
             });
         },
 
@@ -345,7 +360,8 @@ function exportUsersStatus(desc, mongoDb, cb) {
                 };
 
                 query['date'] = {
-                    "$gt": startExportDate
+                    "$gt": startExportDate,
+                    "$lte": Date.now() * 1000
                 };
                 next();
             });
@@ -371,10 +387,17 @@ function exportUsersStatus(desc, mongoDb, cb) {
             var stream = collection
                 .find(query)
                 .sort({"date": 1})
-                .stream();
+                .stream(),
+                _total = total,
+                countCreate = 0,
+                onDataCount = 0,
+                onCreateCbCount = 0;
 
             stream.on('data', function (doc) {
-                stream.pause();
+                onDataCount++;
+                if (--_total < 0)
+                    total++;
+
                 doc['duration'] = Math.round((doc['endDate'] - doc['date']) / 1000);
                 var _id = doc._id.toString();
                 delete doc._id;
@@ -398,11 +421,21 @@ function exportUsersStatus(desc, mongoDb, cb) {
                             log.error('failed to create document %s in elastic.', err['message']);
                             return next(err);
                         }
-                    } else {
-                        console.log('Save document id %s', _id);
+                    };
+                    countCreate++;
+                    if ((total === onDataCount) && (total === onCreateCbCount)){
+                        if ( (total - countCreate) !== 0){
+                            log.error('ERROR IMPORT TOTAL %s Created %s', total, countCreate);
+                        } else {
+                            log.debug('Created %s documents', countCreate)
+                        };
+                        log.debug("onCreateCbCount: %s; onDataCount: %s", onCreateCbCount, onDataCount);
+                        return next(err, total);
                     };
                     stream.resume();
                 });
+
+                stream.pause();
             });
 
             stream.on('end', function (err) {
@@ -450,8 +483,10 @@ mongoClient.connect(conf.get('cdrDB:uri') ,function(err, db) {
         if (err)
             log.error(err);
 
-        db.close();
-        process.exit(0);
+        setTimeout(() => {
+            db.close();
+            process.exit(0);
+        }, 5000);
     });
 
     //exportCollectionCdr(elasticConf.collections[0], db, function (err) {
