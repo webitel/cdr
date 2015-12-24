@@ -214,7 +214,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 log.debug('Max startExportDate: %s', startExportDate);
                 query = {
                     "callflow.times.created_time": {
-                        "$gt": startExportDate,
+                        "$gte": startExportDate - 60000,
                         "$lte": Date.now() * 1000
                     }
                 };
@@ -273,7 +273,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                     onCreateCbCount++;
                     if (err) {
                         if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
-                            log.warn(err['message']);
+                            //log.warn(err['message']);
                         } else {
                             log.error('failed to create document %s in elastic.', err['message']);
                             return next(err);
