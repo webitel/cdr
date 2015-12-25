@@ -17,7 +17,7 @@
         "name": "agentStatus",
         "index": "agentsstatus",
         "type": "collectionagents",
-        "_fn": "exportUsersStatus"
+        "_fn": "exportUsersStatus1"
       }
     ],
     "templates": [

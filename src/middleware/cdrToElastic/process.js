@@ -10,6 +10,7 @@ var conf = require('../../config'),
     log = require('../../libs/log')(module),
     _ = require('underscore'),
     MongoDb = require("mongodb"),
+    ObjectId = require('mongodb').ObjectId,
     MongoClient = MongoDb.MongoClient,
     async = require('async');
 
@@ -155,7 +156,7 @@ function setCustomAttribute (record) {
                 delete record['variables'][delName];
         });
 
-        record["CreatedOnStorage"] = (callflow.times && callflow.times.created_time) || 0;
+        record["CreatedOnStorage"] = record._id.getTimestamp().getTime();
 
     } catch (e) {
         log.error(e);
@@ -192,13 +193,17 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 index: desc.index + '-*',
                 size: 1,
                 body: {
-                    "aggs": {
-                        "maxDate": {
-                            "max": {
-                                "field": "CreatedOnStorage"
+                    "filter" : {
+                        "match_all" : { }
+                    },
+                    "sort": [
+                        {
+                            "CreatedOnStorage": {
+                                "order": "desc"
                             }
                         }
-                    }
+                    ],
+                    "size": 1
                 }
             }, function (err, result) {
                 if (err) return next(err);
@@ -206,16 +211,16 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                     return next(new Error('Bad aggregatins.'))
                 };
                 var startExportDate;
-                if (result && !result['aggregations']) {
-                    startExportDate = 0;
+
+                if (result && result.hits && result.hits.hits && result.hits.hits.length > 0) {
+                    startExportDate = new ObjectId(result.hits.hits[0]._id);
                 } else {
-                    startExportDate = result['aggregations']['maxDate']['value'] || 0;
+                    startExportDate = new ObjectId.createFromTime(1);
                 };
-                log.debug('Max startExportDate: %s', startExportDate);
+                log.debug('Max startExportDate: %s', startExportDate.toString());
                 query = {
-                    "callflow.times.created_time": {
-                        "$gte": startExportDate - (5 * 60000),
-                        "$lte": Date.now() * 1000
+                    "_id": {
+                        "$gte": startExportDate
                     }
                 };
                 next();
@@ -241,7 +246,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
 
             var stream = collection
                 .find(query)
-                .sort({"callflow.times.created_time": 1})
+                .sort({"_id": 1})
                 //.batchSize(10000)
                 .stream(),
                 _total = total,
@@ -253,6 +258,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 onDataCount++;
                 if (--_total < 0)
                     total++;
+                ;
 
                 var _record = setCustomAttribute(doc);
                 delete _record.callflow;
