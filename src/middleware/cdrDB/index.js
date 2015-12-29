@@ -194,8 +194,9 @@ function buildFilterQuery(filter) {
                 continue;
             }
             for (var item in filter[key]) {
-                if (filter[key][item] == '_id' && ObjectId.isValid(filter[key])) {
-                    filter[key][item] = ObjectId(filter[key]);
+                // TODO ... parse _id
+                if (key == '_id' && ObjectId.isValid(filter[key][item])) {
+                    filter[key][item] = ObjectId(filter[key][item]);
                 }
             }
         }
