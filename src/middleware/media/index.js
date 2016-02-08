@@ -8,20 +8,24 @@ var USER_ROLE = require('../../const').USER_ROLE,
     conf = require('../../config'),
     fs = require('fs-extra'),
     log = require('../../libs/log')(module),
+    checkPermission = require('../../middleware/acl'),
     UPLOAD_DIR = conf.get('mediaFile:fileRoot'),
     MAX_FILE_SIZE = conf.get('mediaFile:maxFieldsSizeMB') || 2;
 
 module.exports = {
     get: function (req, res, next) {
         var _user = req.webitelUser,
+            acl = _user.attr.acl,
             _type = req.params['type'];
-        if (_user.attr['role']['val'] < USER_ROLE.ADMIN) {
+
+        if (!checkPermission(acl, 'cdr/media', 'r')) {
             res.status(403).json({
                 "status": "error",
                 "info": "Forbidden!"
             });
             return;
         };
+
 
         var query = req.query,
             limit = query['limit'],
@@ -60,8 +64,10 @@ module.exports = {
     },
 
     searches: function (req, res, next) {
-        var _user = req.webitelUser;
-        if (_user.attr['role']['val'] < USER_ROLE.ADMIN) {
+        var _user = req.webitelUser,
+            acl = _user.attr.acl;
+
+        if (!checkPermission(acl, 'cdr/media', 'r')) {
             res.status(403).json({
                 "status": "error",
                 "info": "Forbidden!"
@@ -90,7 +96,8 @@ module.exports = {
     
     postLocal: function (req, res, next) {
         var _user = req.webitelUser;
-        if (_user.attr['role']['val'] < USER_ROLE.ROOT) {
+
+        if (_user.attr.domain) {
             res.status(403).json({
                 "status": "error",
                 "info": "Forbidden!"
@@ -133,14 +140,18 @@ module.exports = {
 
     delRecord: function (req, res, next) {
         try {
-            var _user = req.webitelUser;
-            if (_user.attr['role']['val'] < USER_ROLE.ROOT) {
+            var _user = req.webitelUser,
+                acl = _user.attr.acl;
+
+            if (!checkPermission(acl, 'cdr/media', 'd')) {
                 res.status(403).json({
                     "status": "error",
                     "info": "Forbidden!"
                 });
                 return;
             };
+
+
             var type = req.params['type'],
                 name = req.params['name'],
                 domain = _user.attr['domain'] || req.query['domain'],
@@ -188,14 +199,17 @@ module.exports = {
     
     post: function (req, res, next) {
         var _user = req.webitelUser,
+            acl = _user.attr.acl,
             _type = req.params['type'] || 'mp3';
-        if (_user.attr['role']['val'] < USER_ROLE.ADMIN) {
+
+        if (!checkPermission(acl, 'cdr/media', 'c')) {
             res.status(403).json({
                 "status": "error",
                 "info": "Forbidden!"
             });
             return;
         };
+
 
         var domainName = _user.attr['domain'] || req.query['domain'];
         if (!domainName && (_type && _type === 'mp3')) {
@@ -309,9 +323,10 @@ module.exports = {
     
     put: function (req, res, next) {
         var _user = req.webitelUser,
+            acl = _user.attr.acl,
             _type = req.params['type'];
 
-        if (_user.attr['role']['val'] < USER_ROLE.ADMIN) {
+        if (!checkPermission(acl, 'cdr/media', 'u')) {
             res.status(403).json({
                 "status": "error",
                 "info": "Forbidden!"
@@ -374,11 +389,20 @@ module.exports = {
     
     stream: function (req, res, next) {
         var _user = req.webitelUser,
+            acl = _user.attr.acl,
             _id = req.params['id'],
             _type = req.params['type'],
             domainName = _user.attr['domain'] || req.query['domain'],
             queryStream = req.query['stream']
             ;
+
+        if (!checkPermission(acl, 'cdr/media', 'r')) {
+            res.status(403).json({
+                "status": "error",
+                "info": "Forbidden!"
+            });
+            return;
+        };
 
         db.getOne(_id, domainName, _type, function (err, result) {
             if (err) {
