@@ -1,6 +1,5 @@
 var winston = require('winston');
 var config = require('../config');
-require('winston-logstash');
 
 function getLogger(module) {
 
@@ -28,30 +27,12 @@ function getLogger(module) {
         transports: [
             new winston.transports.Console({
                 colorize: true,
-                level: config.get('application:log:loglevel'),
+                level: config.get('application:loglevel'),
                 label: path,
                 timestamp: true
             })
-            //,
-            //new winston.transports.File({
-            //    filename: config.get('application:log:file'),
-            //    maxsize: config.get('application:log:maxSize'),
-            //    maxFiles: config.get('application:log:maxFiles'),
-            //    level: config.get('application:log:loglevel'),
-            //    label: path,
-            //    timestamp: true
-            //})
         ]
     });
-
-    if (config.get('application:log:logstash:enabled').toString() == 'true') {
-        logger.add(winston.transports.Logstash, {
-            port: config.get('application:log:logstash:port'),
-            node_name: config.get('application:log:logstash:node_name'),
-            host: config.get('application:log:logstash:host'),
-            level: config.get('application:log:loglevel')
-        });
-    };
 
     return logger;
 }

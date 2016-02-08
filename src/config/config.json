@@ -1,6 +1,6 @@
 {
   "ssl": {
-    "enabled": SSL,
+    "enabled": false,
     "key": "/cdr/cert/wss.pem",
     "cert": "/cdr/cert/wss.pem",
     "port": 10023
@@ -9,8 +9,8 @@
     "host": "0.0.0.0",
     "port": 10021
   },
-  "cdrDB": {
-    "uri": "mongodb://MONGODB_HOST:27017/webitel",
+  "mongodb": {
+    "uri": "mongodb://mongo:27017/webitel",
     "collectionCDR": "cdr",
     "collectionFile": "cdrFile",
     "collectionAuth": "authToken",
@@ -18,20 +18,9 @@
     "collectionAgentStatus": "agentStatus"
   },
   "application": {
-    "log": {
-      "loglevel": "LOGLEVEL",
-      "file": "/logs/cdr.log",
-      "maxSize": 30000,
-      "maxFiles": 5,
-      "logstash": {
-        "enabled": LOGSTASH_ENABLE,
-        "host": "LOGSTASH_HOST",
-        "port": 28777,
-        "node_name": "cdr"
-      }
-    },
+    "loglevel": "trace",
     "auth": {
-      "tokenSecretKey": "TOKEN_KEY",
+      "tokenSecretKey": "g6Yhdb8jUm!hJ78Jhsw4EEc",
       "expiresDays": 7
     },
     "resource": {

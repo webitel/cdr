@@ -16,16 +16,16 @@ drv._initDB = function (db) {
     return this.db;
 };
 
-mongoClient.connect(config.get('cdrDB:uri') ,function(err, db) {
+mongoClient.connect(config.get('mongodb:uri') ,function(err, db) {
     if (err) {
         log.error('Connect db error: %s', err.message);
         throw err;
     };
     drv._initDB(db);
     // TODO
-    drv.cdrCollection = db.collection(config.get("cdrDB:collectionCDR"));
-    drv.fileCollection = db.collection(config.get("cdrDB:collectionFile"));
-    log.info('Connected db %s ', config.get('cdrDB:uri'));
+    drv.cdrCollection = db.collection(config.get("mongodb:collectionCDR"));
+    drv.fileCollection = db.collection(config.get("mongodb:collectionFile"));
+    log.info('Connected db %s ', config.get('mongodb:uri'));
     db.on('close', function () {
         log.error('close mongodb');
     });

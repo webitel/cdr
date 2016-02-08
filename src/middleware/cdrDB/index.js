@@ -1,5 +1,6 @@
 var db = require('../../libs/mongoDrv'),
     ObjectId = require('mongodb').ObjectId,
+    checkPermission = require('../../middleware/acl'),
     log = require('../../libs/log');
 
 var cdr = {
@@ -10,6 +11,10 @@ var cdr = {
             .toArray(cb)
     },
     showLegAList: function (columns, filter, sort, limit, pageNumber, domain, req, callback) {
+
+        var acl = req.webitelUser && req.webitelUser.attr.acl,
+            _ro = false
+        ;
         var cdrCollection = db.cdrCollection;
         columns = columns || defColumns;
         sort = sort || {
@@ -25,11 +30,15 @@ var cdr = {
                 "variables.domain_name": domain
             });
 
-        if (req.webitelUser && req.webitelUser.attr.role['val'] === 0) {
+        if (checkPermission(acl, 'cdr', 'ro', true)) {
             query['$and'].push({
                 "variables.presence_id": req.webitelUser.attr['id']
             });
+            _ro = true;
         };
+        if (!_ro && !checkPermission(acl, 'cdr', 'r')) {
+            return callback(new Error("Permission denied!"))
+        }
 
         cdrCollection.find(query, columns)
             .sort(sort)
@@ -84,6 +93,11 @@ var cdr = {
     showLegACount: function (filter, domain, req, callback) {
         var cdrCollection = db.cdrCollection;
 
+        var acl = req.webitelUser && req.webitelUser.attr.acl,
+            _ro = false
+            ;
+
+
         var query = buildFilterQuery(filter);
         if (domain && typeof domain == "string")
             query['$and'].push({
@@ -91,11 +105,17 @@ var cdr = {
             });
 
 
-        if (req.webitelUser && req.webitelUser.attr.role['val'] === 0) {
+        if (checkPermission(acl, 'cdr', 'ro', true)) {
             query['$and'].push({
                 "variables.presence_id": req.webitelUser.attr['id']
             });
+            _ro = true;
         };
+
+        if (!_ro && !checkPermission(acl, 'cdr', 'r')) {
+            return callback(new Error("Permission denied!"))
+        };
+
 
         cdrCollection.find(query).count(function(err, results) {
             callback(err, results);

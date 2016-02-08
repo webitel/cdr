@@ -3,7 +3,7 @@ var jwt = require('jwt-simple'),
     log = require('../libs/log')(module),
     crypto = require('crypto'),
     mongoDb = require('../libs/mongoDrv'),
-    AUTH_DB_NAME = config.get("cdrDB:collectionAuth");
+    AUTH_DB_NAME = config.get("mongodb:collectionAuth");
 
 
 var auth = {

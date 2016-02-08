@@ -4,7 +4,7 @@
 
 var log = require('../libs/log')(module),
     conf = require('../config'),
-    EmailCollectionName = conf.get('cdrDB:collectionEmail'),
+    EmailCollectionName = conf.get('mongodb:collectionEmail'),
     nodemailer = require('nodemailer'),
     smtpPool = require('nodemailer-smtp-pool'),
     db = require('../libs/mongoDrv');

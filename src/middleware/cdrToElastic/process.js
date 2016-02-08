@@ -467,7 +467,7 @@ const FUNCTIONS = {
 };
 
 var mongoClient = new MongoClient();
-mongoClient.connect(conf.get('cdrDB:uri') ,function(err, db) {
+mongoClient.connect(conf.get('mongodb:uri') ,function(err, db) {
     if (err) {
         log.error('Connect db error: %s', err.message);
         throw err;

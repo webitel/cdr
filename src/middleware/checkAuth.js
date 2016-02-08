@@ -32,7 +32,8 @@ module.exports = function(req, res, next) {
                             "role": {
                                 "val": dbUser['role']
                             },
-                            "id": dbUser['username']
+                            "id": dbUser['username'],
+                            "acl": decoded.hasOwnProperty('acl') ? decoded.acl : null
                         }
                     };
                     next(); // To move to next middleware

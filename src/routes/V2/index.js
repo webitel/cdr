@@ -9,17 +9,17 @@ module.exports = function (app) {
     app.all('/api/v2/*', [require('../../middleware/checkAuth')]);
 
     // Leg A
-    app.get ('/api/v2/cdr', cdr.showGetList);
-    app.post('/api/v2/cdr/searches', cdr.showPostList);
-    app.post('/api/v2/cdr/counts', cdr.showListACount);
-    app.post('/api/v2/cdr/aggregates', cdr.aggregate);
+    app.get ('/api/v2/cdr', cdr.showGetList); //+
+    app.post('/api/v2/cdr/searches', cdr.showPostList);  //+
+    app.post('/api/v2/cdr/counts', cdr.showListACount); //+
+    app.post('/api/v2/cdr/aggregates', cdr.aggregate); // TODO
 
     // Leg B
-    app.post('/api/v2/cdr/b/searches', cdr.showListB);
+    app.post('/api/v2/cdr/b/searches', cdr.showListB); // TODO
 
     // File CDR
     // WTEL-171
-    app.get('/api/v2/files/stats/:id?', file.getFileStats);
+    app.get('/api/v2/files/stats/:id?', file.getFileStats); // TODO
     app.get('/api/v2/files/:id', file.getResource);
     app.delete('/api/v2/files/:id', file.deleteResource);
 

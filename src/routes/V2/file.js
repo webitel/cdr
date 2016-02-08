@@ -5,11 +5,21 @@
 var Transport = require('../../middleware/transport');
 var transport = new Transport();
 var fileDb = require('../../middleware/fileDB');
+var checkPermission = require('../../middleware/acl');
 
 module.exports = {
     getResource: function (req, res, next) {
         try {
-            transport.GetFile(req, res, next);
+            var acl = req.webitelUser && req.webitelUser.attr.acl;
+            // TODO
+            if (checkPermission(acl, 'cdr/files', 'r') || checkPermission(acl, 'cdr/files', 'ro')) {
+                transport.GetFile(req, res, next);
+            } else {
+                return res.status(401).json({
+                    "status": "error",
+                    "info": "Permission denied!"
+                })
+            }
         } catch (e) {
             next(e);
         }
