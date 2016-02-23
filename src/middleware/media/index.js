@@ -461,8 +461,7 @@ module.exports = {
                             'Content-Type': 'audio/mpeg',
                             'Content-Length': end - start,
                             'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
-                            'Accept-Ranges': 'bytes',
-                            'Transfer-Encoding': 'chunked'
+                            'Accept-Ranges': 'bytes'
                         });
 
                         var stream = fs.createReadStream(path,

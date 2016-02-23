@@ -57,6 +57,45 @@ module.exports.SaveFile = function(req, res, file) {
     saveToFile(file, query, res);
 };
 
+function readRangeHeader(range, totalLength) {
+    if (range == null || range.length == 0)
+        return null;
+
+    var array = range.split(/bytes=([0-9]*)-([0-9]*)/);
+    var start = parseInt(array[1]);
+    var end = parseInt(array[2]);
+    var result = {
+        Start: isNaN(start) ? 0 : start,
+        End: isNaN(end) ? (totalLength - 1) : end
+    };
+
+    if (!isNaN(start) && isNaN(end)) {
+        result.Start = start;
+        result.End = totalLength - 1;
+    }
+
+    if (isNaN(start) && !isNaN(end)) {
+        result.Start = totalLength - end;
+        result.End = totalLength - 1;
+    }
+
+    return result;
+};
+
+function sendResponse(response, responseStatus, responseHeaders, readable) {
+    console.dir(responseStatus);
+    response.writeHead(responseStatus, responseHeaders);
+
+    if (readable == null)
+        response.end();
+    else
+        readable.on('open', function () {
+            readable.pipe(response);
+        });
+
+    return null;
+}
+
 module.exports.getMediaStream = function (req, res, data) {
     var file = data['path'];
     var contentType = data['content-type'] || 'audio/mpeg';
@@ -70,58 +109,44 @@ module.exports.getMediaStream = function (req, res, data) {
                 "info": err.message
             });
         } else {
-            if (!stat.isFile()) return;
-
-            var start = 0;
-            var end = 0;
-            var range = req.header('Range');
-            if (range != null) {
-                start = parseInt(range.slice(range.indexOf('bytes=') + 6,
-                    range.indexOf('-')));
-                end = parseInt(range.slice(range.indexOf('-') + 1,
-                    range.length));
-            }
-            if (isNaN(end) || end == 0) end = stat.size - 1;
-
-            if (start > end) return;
-
-            var responseHeaders = {
-                'Connection':'close',
-                'Cache-Control':'private',
-                'Content-Type': contentType,
-                'Content-Length': end - start,
-                'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
-                'Accept-Ranges':'bytes',
-//        'Server':'webitel',
-                'Transfer-Encoding':'chunked'
+            if (!stat.isFile()) {
+                return res.status(500).json({
+                    "status": "error",
+                    "info": 'Bad file.'
+                });
             };
 
+            var responseHeaders = {};
             if (requestFileName) {
                 responseHeaders['Content-disposition'] = 'attachment;  filename=' + requestFileName;
             };
+            var rangeRequest = readRangeHeader(req.headers['range'], stat.size);
+            if (rangeRequest == null) {
+                responseHeaders['Content-Type'] = contentType;
+                responseHeaders['Content-Length'] = stat.size;
+                responseHeaders['Accept-Ranges'] = 'bytes';
 
-            res.writeHead(206, responseHeaders);
+                sendResponse(res, 200, responseHeaders, fs.createReadStream(file));
+                return null;
+            };
 
-            var stream = fs.createReadStream(file,
-                { flags: 'r', start: start, end: end});
-            
-            stream.on('open', function () {
-                stream.pipe(res);
-            });
+            var start = rangeRequest.Start;
+            var end = rangeRequest.End;
 
+            if (start >= stat.size || end >= stat.size) {
+                responseHeaders['Content-Range'] = 'bytes */' + stat.size; // File size.
 
-            stream.on('error', function (err) {
-                res.statusCode = 500;
-                log.error('Server load stream error ', err);
-                res.end('Server load stream error: ' + err.message);
-                //stream.destroy();
-            });
+                sendResponse(res, 416, responseHeaders, null);
+                return null;
+            };
 
-            res.on('close', function () {
-                stream.destroy();
-            });
-            req.on('finish', function(){
-            });
+            responseHeaders['Content-Range'] = 'bytes ' + start + '-' + end + '/' + stat.size;
+            responseHeaders['Content-Length'] = start == end ? 0 : (end - start + 1);
+            responseHeaders['Content-Type'] = contentType;
+            responseHeaders['Accept-Ranges'] = 'bytes';
+            responseHeaders['Cache-Control'] = 'no-cache';
+
+            sendResponse(res, 206, responseHeaders, fs.createReadStream(file, {flags: 'r', start: start, end: end }));
         }
     });
 

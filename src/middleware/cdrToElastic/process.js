@@ -271,7 +271,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 delete _record._id;
                 //console.dir(_record);
                 elastic.create({
-                    index: indexName + (doc.variables.domain_name ? '-' + doc.variables.domain_name : ''),
+                    index: (indexName + (doc.variables.domain_name ? '-' + doc.variables.domain_name : '')).toLowerCase(),
                     type: desc.type,
                     id: _id,
                     body: _record
