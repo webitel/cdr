@@ -15,7 +15,13 @@ module.exports = function (req, res, next) {
     if (mode === 'allow' && inSubnet.Auto(ip, ips)) {
         req.webitelUser = {
             role: "GOD",
-            attr: {}
+            attr: {
+                acl: {
+                    'cdr/files': ['*'],
+                    'cdr/media': ['*'],
+                    'cdr': ['*']
+                }
+            }
         };
         next()
     } else {

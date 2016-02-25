@@ -248,6 +248,13 @@ module.exports = {
             });
 
         form.parse(req, function (err, fields, files) {
+            if (err)
+                return res.status(500)
+                    .json({
+                        "status": "error",
+                        "info": err.message
+                    });
+
             if (Object.keys(files).length < 1) {
                 return res.status(400).json({
                     "status": "error",
@@ -442,6 +449,36 @@ module.exports = {
 
                     } else {
 
+                        var responseHeaders = {};
+
+                        var rangeRequest = readRangeHeader(req.headers['range'], stat.size);
+                        if (rangeRequest == null) {
+                            responseHeaders['Content-Type'] = 'audio/mpeg';
+                            responseHeaders['Content-Length'] = stat.size;
+                            responseHeaders['Accept-Ranges'] = 'bytes';
+
+                            sendResponse(res, 200, responseHeaders, fs.createReadStream(path));
+                            return null;
+                        };
+
+                        var start = rangeRequest.Start;
+                        var end = rangeRequest.End;
+
+                        if (start >= stat.size || end >= stat.size) {
+                            responseHeaders['Content-Range'] = 'bytes */' + stat.size; // File size.
+
+                            sendResponse(res, 416, responseHeaders, null);
+                            return null;
+                        };
+
+                        responseHeaders['Content-Range'] = 'bytes ' + start + '-' + end + '/' + stat.size;
+                        responseHeaders['Content-Length'] = start == end ? 0 : (end - start + 1);
+                        responseHeaders['Content-Type'] = 'audio/mpeg';
+                        responseHeaders['Accept-Ranges'] = 'bytes';
+                        responseHeaders['Cache-Control'] = 'no-cache';
+
+                        sendResponse(res, 206, responseHeaders, fs.createReadStream(path, {flags: 'r', start: start, end: end }));
+                        /*
                         var start = 0;
                         var end = 0;
                         var range = req.header('Range');
@@ -477,6 +514,7 @@ module.exports = {
                             .pipe(res)
                             .on('close', stream.destroy.bind(stream))
                             .on('error', stream.destroy.bind(stream));
+                        */
 
                     }
 
@@ -485,3 +523,44 @@ module.exports = {
         });
     }
 };
+
+
+// TODO
+function readRangeHeader(range, totalLength) {
+    if (range == null || range.length == 0)
+        return null;
+
+    var array = range.split(/bytes=([0-9]*)-([0-9]*)/);
+    var start = parseInt(array[1]);
+    var end = parseInt(array[2]);
+    var result = {
+        Start: isNaN(start) ? 0 : start,
+        End: isNaN(end) ? (totalLength - 1) : end
+    };
+
+    if (!isNaN(start) && isNaN(end)) {
+        result.Start = start;
+        result.End = totalLength - 1;
+    }
+
+    if (isNaN(start) && !isNaN(end)) {
+        result.Start = totalLength - end;
+        result.End = totalLength - 1;
+    }
+
+    return result;
+};
+
+function sendResponse(response, responseStatus, responseHeaders, readable) {
+    //console.dir(responseStatus);
+    response.writeHead(responseStatus, responseHeaders);
+
+    if (readable == null)
+        response.end();
+    else
+        readable.on('open', function () {
+            readable.pipe(response);
+        });
+
+    return null;
+}

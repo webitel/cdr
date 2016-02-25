@@ -83,7 +83,7 @@ function readRangeHeader(range, totalLength) {
 };
 
 function sendResponse(response, responseStatus, responseHeaders, readable) {
-    console.dir(responseStatus);
+    //console.dir(responseStatus);
     response.writeHead(responseStatus, responseHeaders);
 
     if (readable == null)
