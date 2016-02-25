@@ -451,7 +451,16 @@ module.exports = {
 
                         var responseHeaders = {};
 
-                        var rangeRequest = readRangeHeader(req.headers['range'], stat.size);
+                        var rangeRequest;
+                        if (/FreeSWITCH/.test(req.headers['user-agent']) && !req.headers['range']) {
+                            rangeRequest = {
+                                Start: 0,
+                                End: stat.size - 1
+                            }
+                        } else {
+                            rangeRequest = readRangeHeader(req.headers['range'], stat.size);
+                        };
+
                         if (rangeRequest == null) {
                             responseHeaders['Content-Type'] = 'audio/mpeg';
                             responseHeaders['Content-Length'] = stat.size;
@@ -478,43 +487,45 @@ module.exports = {
                         responseHeaders['Cache-Control'] = 'no-cache';
 
                         sendResponse(res, 206, responseHeaders, fs.createReadStream(path, {flags: 'r', start: start, end: end }));
-                        /*
-                        var start = 0;
-                        var end = 0;
-                        var range = req.header('Range');
-                        if (range != null) {
-                            start = parseInt(range.slice(range.indexOf('bytes=') + 6,
-                                range.indexOf('-')));
-                            end = parseInt(range.slice(range.indexOf('-') + 1,
-                                range.length));
-                        }
-                        if (isNaN(end) || end == 0) end = stat.size - 1;
 
-                        if (start > end) return;
 
-                        res.writeHead(206, {
-                            'Connection': 'close',
-                            'Cache-Control': 'private',
-                            'Content-Type': 'audio/mpeg',
-                            'Content-Length': end - start,
-                            'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
-                            'Accept-Ranges': 'bytes'
-                        });
+                        //var start = 0;
+                        //var end = 0;
+                        //var range = req.header('Range');
+                        //if (range != null) {
+                        //    start = parseInt(range.slice(range.indexOf('bytes=') + 6,
+                        //        range.indexOf('-')));
+                        //    end = parseInt(range.slice(range.indexOf('-') + 1,
+                        //        range.length));
+                        //}
+                        //if (isNaN(end) || end == 0) end = stat.size - 1;
+                        //
+                        //if (start > end) return;
+                        //
+                        //res.writeHead(206, {
+                        //    'Connection': 'close',
+                        //    'Cache-Control': 'private',
+                        //    'Content-Type': 'audio/mpeg',
+                        //    'Content-Length': end - start,
+                        //    'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
+                        //    'Accept-Ranges': 'bytes',
+                        //    'Transfer-Encoding': 'chunked'
+                        //});
+                        //
+                        //var stream = fs.createReadStream(path,
+                        //    {
+                        //        flags: 'r',
+                        //        start: start,
+                        //        end: end,
+                        //        bufferSize: 8 * 1024
+                        //    });
+                        //stream
+                        //    .on('close', res.destroy.bind(res))
+                        //    .on('error', res.destroy.bind(res))
+                        //    .pipe(res)
+                        //    .on('close', stream.destroy.bind(stream))
+                        //    .on('error', stream.destroy.bind(stream));
 
-                        var stream = fs.createReadStream(path,
-                            {
-                                flags: 'r',
-                                start: start,
-                                end: end,
-                                bufferSize: 8 * 1024
-                            });
-                        stream
-                            .on('close', res.destroy.bind(res))
-                            .on('error', res.destroy.bind(res))
-                            .pipe(res)
-                            .on('close', stream.destroy.bind(stream))
-                            .on('error', stream.destroy.bind(stream));
-                        */
 
                     }
 
