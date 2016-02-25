@@ -7,6 +7,11 @@ var Transport = require('../middleware/transport');
 var transport = new Transport();
 
 module.exports = function (app) {
+    app.use(function(req, res, next) {
+        log.trace('Method: %s, url: %s, path: %s, ip:', req.method, req.url, req.path);
+        next();
+    });
+    
     // SYSTEM
 
     // /sys/formLoadFile?domain=10.10.10.144&&id=test&&format=mp3
