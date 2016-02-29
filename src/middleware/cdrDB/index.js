@@ -30,13 +30,15 @@ var cdr = {
                 "variables.domain_name": domain
             });
 
-        if (checkPermission(acl, 'cdr', 'ro', true)) {
+        var _readAll = checkPermission(acl, 'cdr', 'r');
+
+        if (!_readAll && checkPermission(acl, 'cdr', 'ro', true)) {
             query['$and'].push({
                 "variables.presence_id": req.webitelUser.attr['id']
             });
             _ro = true;
         };
-        if (!_ro && !checkPermission(acl, 'cdr', 'r')) {
+        if (!_ro && !_readAll) {
             return callback(new Error("Permission denied!"))
         }
 
@@ -105,16 +107,17 @@ var cdr = {
             });
 
 
-        if (checkPermission(acl, 'cdr', 'ro', true)) {
+        var _readAll = checkPermission(acl, 'cdr', 'r');
+
+        if (!_readAll && checkPermission(acl, 'cdr', 'ro', true)) {
             query['$and'].push({
                 "variables.presence_id": req.webitelUser.attr['id']
             });
             _ro = true;
         };
-
-        if (!_ro && !checkPermission(acl, 'cdr', 'r')) {
+        if (!_ro && !_readAll) {
             return callback(new Error("Permission denied!"))
-        };
+        }
 
 
         cdrCollection.find(query).count(function(err, results) {
