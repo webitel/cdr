@@ -8,7 +8,7 @@ var aws = require('aws-sdk')
     ,maskPath = config.get("recordFile:maskPath");
 
 aws.config.update(config.get("recordFile:awsConfig"));
-aws.config.httpOptions = {timeout: 5000};
+aws.config.httpOptions = {timeout: 10000};
 
 // Create an S3 client
 var s3 = new aws.S3();
