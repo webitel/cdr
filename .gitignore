@@ -1,2 +1,3 @@
-/src/cert/wss.pem
+node_modules/
+src/cert/wss.pem
 .idea/
