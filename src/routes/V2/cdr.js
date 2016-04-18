@@ -3,9 +3,19 @@
  */
 
 var cdrDB = require('../../middleware/cdrDB'),
+    elastic = require('../../middleware/elastic'),
     log = require('../../libs/log')(module);
 
 module.exports = {
+
+    getElastic: function (req, res, next) {
+        elastic.get(req.webitelUser && req.webitelUser.attr, req.body, (err, result) => {
+            if (err)
+                return next(err);
+
+            res.json(result);
+        })
+    },
 
     // TODO /api/list +
     showPostList: function (req, res, next) {

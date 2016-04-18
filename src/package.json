@@ -7,7 +7,7 @@
     "aws-sdk": "^2.3.1",
     "body-parser": "^1.15.0",
     "cookie-parser": "^1.4.1",
-    "elasticsearch": "^11.0.0",
+    "elasticsearch": "^11.0.1",
     "eventemitter2": "^1.0.0",
     "express": "^4.13.4",
     "express-ipfilter": "0.0.25",

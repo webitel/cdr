@@ -11,6 +11,7 @@ module.exports = function (app) {
     // Leg A
     app.get ('/api/v2/cdr', cdr.showGetList); //+
     app.post('/api/v2/cdr/searches', cdr.showPostList);  //+
+    app.post('/api/v2/cdr/text', cdr.getElastic);  //+
     app.post('/api/v2/cdr/counts', cdr.showListACount); //+
     app.post('/api/v2/cdr/aggregates', cdr.aggregate); // TODO
 
