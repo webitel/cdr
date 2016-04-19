@@ -47,6 +47,7 @@ module.exports = {
                 "term": {"variables.presence_id": caller.id}
             });
         var columns = option.columns;
+        var columnsDate = option.columnsDate || [];
         var query = option.query || "*";
         var limit = parseInt(option.limit, 10) || 40;
         var pageNumber = option.pageNumber;
@@ -64,6 +65,7 @@ module.exports = {
                 //q: query,
                 from: pageNumber > 0 ? ((pageNumber - 1) * limit) : 0, //Number — Starting offset (default: 0)
                 body: {
+                    "fielddata_fields": columnsDate,
                     "sort": [sort || {}],
                     "query": {
                         "filtered": {
