@@ -169,7 +169,11 @@
                   "type": "long"
                 },
                 "CreatedOnStorage": {
-                  "type": "long"
+                  "type": "long",
+                  "index" : "not_analyzed",
+                  "norms" : {
+                    "enabled" : false
+                  }
                 },
                 "variables": {
                   "type": "object",
