@@ -170,10 +170,8 @@
                 },
                 "CreatedOnStorage": {
                   "type": "long",
-                  "index" : "not_analyzed",
-                  "norms" : {
-                    "enabled" : false
-                  }
+                  "store": "yes",
+                  "include_in_all": false
                 },
                 "variables": {
                   "type": "object",
