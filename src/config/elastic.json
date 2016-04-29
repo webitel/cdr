@@ -12,12 +12,6 @@
         "type": "collection",
         "fields": ["_id", "variables"],
         "_fn": "exportCollectionCdr"
-      },
-      {
-        "name": "agentStatus",
-        "index": "agentsstatus",
-        "type": "collectionagents",
-        "_fn": "exportUsersStatus1"
       }
     ],
     "templates": [

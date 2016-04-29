@@ -214,15 +214,16 @@ function exportCollectionCdr(desc, mongoDb, callback) {
 
                 if (result && result.hits && result.hits.hits && result.hits.hits.length > 0) {
                     startExportDate = new ObjectId(result.hits.hits[0]._id);
+                    query = {
+                        "_id": {
+                            "$gte": startExportDate
+                        }
+                    };
                 } else {
                     startExportDate = new ObjectId.createFromTime(1);
                 };
                 log.debug('Max startExportDate: %s', startExportDate.toString());
-                query = {
-                    "_id": {
-                        "$gte": startExportDate
-                    }
-                };
+
                 next();
             });
         },
