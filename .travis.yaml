@@ -1,0 +1,13 @@
+sudo: required  
+services:  
+  - docker
+install:  
+  - docker login --email=$DOCKER_HUB_EMAIL --username=$DOCKER_HUB_USERNAME --password=$DOCKER_HUB_PASSWORD
+
+script:  
+  - sed -i 's/ENV VERSION/ENV VERSION '$TRAVIS_TAG'-sha1:'$(git rev-parse --short HEAD)'/g' Dockerfile
+  - docker build -t $DOCKER_IMAGE_NAME .
+  - if [ ! -z "$TRAVIS_TAG" ]; then docker tag $DOCKER_IMAGE_NAME:latest $DOCKER_IMAGE_NAME:$TRAVIS_TAG; fi && docker push $DOCKER_IMAGE_NAME
+
+env:  
+  - DOCKER_IMAGE_NAME=webitel/cdr-server
