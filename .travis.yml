@@ -4,6 +4,7 @@ services:
 
 before_install:
   - sed -i 's/ENV VERSION/ENV VERSION $TRAVIS_TAG-sha1:$TRAVIS_COMMIT/g' Dockerfile
+  - if [ ! -z "$TRAVIS_TAG" ]; then sed -i 's/ENV VERSION/ENV VERSION '${TRAVIS_TAG}'-sha1:'${TRAVIS_COMMIT}'/g' Dockerfile; else sed -i 's/ENV VERSION/ENV VERSION latest sha1:'${TRAVIS_COMMIT}'/g' Dockerfile; fi
 
 install:  
   - docker login --email=$DOCKER_HUB_EMAIL --username=$DOCKER_HUB_USERNAME --password=$DOCKER_HUB_PASSWORD
