@@ -1,7 +1,7 @@
 cdr-server
 ===
 
-[![Build Status](https://dev.webitel.com/buildStatus/icon?job=build_cdr)](https://dev.webitel.com/job/build_cdr)
+[![Build Status](https://travis-ci.org/webitel/cdr.svg?branch=master)](https://travis-ci.org/webitel/cdr)
 
 CDR & File Server for Webitel
 
