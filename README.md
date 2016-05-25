@@ -1,7 +1,7 @@
 cdr-server
 ===
 
-[![Build Status](https://travis-ci.org/webitel/cdr.svg?branch=master)](https://travis-ci.org/webitel/cdr)
+[![Build Status](https://travis-ci.org/webitel/cdr.svg?branch=master)](https://travis-ci.org/webitel/cdr) [![Docker Pulls](https://img.shields.io/docker/pulls/webitel/cdr-server.svg?maxAge=2592000)](https://hub.docker.com/r/webitel/cdr-server)
 
 CDR & File Server for Webitel
 
