@@ -1,7 +1,7 @@
 cdr-server
 ===
 
-[![Build Status](https://dev.webitel.com/buildStatus/icon?job=build_cdr)](https://dev.webitel.com/job/build_cdr)
+[![Build Status](https://travis-ci.org/webitel/cdr.svg?branch=master)](https://travis-ci.org/webitel/cdr) [![Docker Pulls](https://img.shields.io/docker/pulls/webitel/cdr-server.svg?maxAge=2592000)](https://hub.docker.com/r/webitel/cdr-server)
 
 CDR & File Server for Webitel
 
@@ -38,20 +38,14 @@ The CDR image uses several environment variables
 
 `ACL_UPLOAD` - Allowed IPs for call record file uploading (default: 0.0.0.0/0)
 
-### Logs
-
 `LOGLEVEL` - log level (default: warn)
-
-`LOGSTASH_ENABLE` - send logs to Logstash Server (default: false)
-
-`LOGSTASH_HOST` - Logstash host or IP
 
 
 ## Supported Docker versions
 
-This image is officially supported on Docker version `1.3.2` and newest.
+This image is officially supported on Docker version `1.10` and newest.
 
 ## User Feedback
 
 ### Issues
-If you have any problems with or questions about this image, please contact us through a [GitHub issue](https://github.com/webitel/cdr/issues).
+If you have any problems with or questions about this image, please contact us through a [Jira](https://my.webitel.com/).
