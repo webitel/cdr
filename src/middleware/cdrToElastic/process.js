@@ -279,7 +279,7 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 }, function (err) {
                     onCreateCbCount++;
                     if (err) {
-                        if (err['message'] && err['message'].indexOf('DocumentAlreadyExistsException') > -1) {
+                        if (err['message'] && err['message'].indexOf('document_already_exists_exception') > -1) {
                             //log.warn(err['message']);
                         } else {
                             log.error('failed to create document %s in elastic.', err['message']);
@@ -474,6 +474,11 @@ mongoClient.connect(conf.get('mongodb:uri') ,function(err, db) {
         throw err;
     };
     var tasks = [];
+
+    db.on('close', () => {
+        log.error('Close mongodb. process force stop');
+        process.exit(0);
+    });
 
     elasticConf.collections.forEach(function (item) {
         if (FUNCTIONS.hasOwnProperty(item['_fn'])) {
