@@ -168,7 +168,10 @@ function setCustomAttribute (record) {
 function exportCollectionCdr(desc, mongoDb, callback) {
 
     var collection = mongoDb.collection(desc.name);
-    var query = {};
+    var query = {
+        "variables.loopback_leg": {$ne: "A"},
+        "variables.webitel_direction": {$ne: "dialer"}
+    };
 
     var currentDate = new Date();
     var indexName = desc.index + '-' + (currentDate.getMonth() + 1) + '.' + currentDate.getFullYear();
@@ -209,19 +212,17 @@ function exportCollectionCdr(desc, mongoDb, callback) {
                 if (err) return next(err);
                 if (!result) {
                     return next(new Error('Bad aggregatins.'))
-                };
+                }
                 var startExportDate;
 
                 if (result && result.hits && result.hits.hits && result.hits.hits.length > 0) {
                     startExportDate = new ObjectId(result.hits.hits[0]._id);
-                    query = {
-                        "_id": {
-                            "$gte": startExportDate
-                        }
-                    };
+                    query._id = {
+                        "$gte": startExportDate
+                    }
                 } else {
                     startExportDate = new ObjectId.createFromTime(1);
-                };
+                }
                 log.debug('Max startExportDate: %s', startExportDate.toString());
 
                 next();
