@@ -57,6 +57,7 @@ module.exports = {
             {
                 index: `cdr-*${caller.domain ? '-' + caller.domain : '' }`,
                 size: limit,
+                scroll: '30s',
                 //ignoreUnavailable: true,
                 //allowNoIndices: true,
 
