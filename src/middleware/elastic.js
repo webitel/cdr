@@ -51,13 +51,13 @@ module.exports = {
         var query = option.query || "*";
         var limit = parseInt(option.limit, 10) || 40;
         var pageNumber = option.pageNumber;
-        var sort = option.sort;
+        var sort = (option.sort && Object.keys(option.sort).length > 0) ? option.sort : {"Call start time":{"order":"desc","unmapped_type":"boolean"}};
 
         elastic.search(
             {
                 index: `cdr-*${caller.domain ? '-' + caller.domain : '' }`,
                 size: limit,
-                scroll: '30s',
+                // scroll: '30s',
                 //ignoreUnavailable: true,
                 //allowNoIndices: true,
 
@@ -67,7 +67,7 @@ module.exports = {
                 from: pageNumber > 0 ? ((pageNumber - 1) * limit) : 0, //Number — Starting offset (default: 0)
                 body: {
                     "fielddata_fields": columnsDate,
-                    "sort": [sort || {}],
+                    "sort": [sort],
                     "query": {
                         "filtered": {
                             "query": {
