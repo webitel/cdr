@@ -98,7 +98,7 @@ FileController.prototype.SaveFile = function (req, res, next, type) {
             };
             if (!isFiles) {
                 log.warn('Formidable: not file stream!');
-                res.status(400).send('Bad request!')
+                res.status(200).send('Not file stream!')
             };
         });
     });
