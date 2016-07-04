@@ -153,6 +153,10 @@
                   "type": "boolean",
                   "index" : "not_analyzed"
                 },
+                "Answered": {
+                  "type": "boolean",
+                  "index" : "not_analyzed"
+                },
                 "Ring Duration": {
                   "type": "long"
                 },

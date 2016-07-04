@@ -39,7 +39,7 @@ module.exports = {
     // TODO /api/list +
     showGetList: function (req, res, next) {
         try {
-            cdrDB.showLegAList(null, {}, {}, 10, 1, req['webitelDomain'], req, function (err, result) {
+            cdrDB.showLegAList({_id: 1}, {}, {}, 10, 1, req['webitelDomain'], req, function (err, result) {
                 if (err) return next(err);
                 res.json(result);
             });

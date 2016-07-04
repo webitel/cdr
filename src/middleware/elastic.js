@@ -5,14 +5,57 @@
 
 var elasticsearch = require('elasticsearch'),
     checkPermission = require('../middleware/acl'),
+    log = require('../libs/log')(module),
     config = require('../config').get('elastic')
     ;
+
+const CDR_NAME = 'cdr*',
+    MAX_RESULT_WINDOW = 2147483647;
 
 var elastic = new elasticsearch.Client({
     host: config.host,
     requestTimeout: config.requestTimeout
 });
 
+function setIndexSettings() {
+    elastic.indices.putSettings({
+        index: CDR_NAME,
+        body: {
+            max_result_window: MAX_RESULT_WINDOW
+        }
+    }, (err, res) => {
+        if (err)
+            return log.error(err);
+
+        log.info(`Set default max_result_window - success`);
+    });
+}
+
+(function getSettings() {
+    elastic.indices.getSettings({
+        index: CDR_NAME,
+        name: "index.max_result_window"
+    }, (err, res) => {
+        if (err) {
+            setTimeout(getSettings, 2000);
+            return log.error(err);
+        }
+
+        let indexName = Object.keys(res);
+        if (indexName.length > 0) {
+            let indexSettings = res[indexName[0]] && res[indexName[0]].settings;
+            let max_result_window = +(indexSettings && indexSettings.index && indexSettings.index.max_result_window);
+
+            if (!max_result_window || max_result_window < 1000000) {
+                setIndexSettings()
+            } else {
+                log.trace('Skip set max_result_window')
+            }
+        } else {
+            setIndexSettings();
+        }
+    });
+})();
 
 module.exports = {
     get: function (caller, option, cb) {
