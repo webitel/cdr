@@ -78,7 +78,7 @@ function setCustomAttribute (record) {
 
         record["Call start time"] = record.variables.start_stamp; // +
         record["Call answer time"] = record.variables.answer_stamp; // +
-        record["Answered"] = +record.variables.answer_stamp > 0; // +
+        record["Answered"] = +record.variables.answer_epoch > 0; // +
         record["Call direction"] = record.variables.webitel_direction; // +
         record["Hangup cause"] = record.variables.hangup_cause; // +
         record["Q850 Hangup Code"] = record.variables.hangup_cause_q850; // +
