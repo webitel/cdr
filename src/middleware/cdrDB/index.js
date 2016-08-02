@@ -152,6 +152,21 @@ var cdr = {
         } catch (e) {
             callback(500);
         }
+    },
+    
+    insert: function (data, cb) {
+        let cdrCollection = db.cdrCollection;
+        cdrCollection.insert(data, cb);
+    },
+    
+    updateById: function (id, data, cb) {
+        let cdrCollection = db.cdrCollection;
+        cdrCollection.updateOne({_id: id}, data, cb);
+    },
+    
+    _find: function (query, cb) {
+        let cdrCollection = db.cdrCollection;
+        cdrCollection.find(query).toArray(cb);
     }
 };
 

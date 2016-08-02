@@ -18,12 +18,12 @@ if (elasticConf && elasticConf.enabled.toString() == 'true') {
         if (err) {
             return log.error(err);
         };
-        initExportProcess();
+        // initExportProcess();
     });
 };
 
-function initExportProcess () {
-    var timeMSec = parseInt(elasticConf.intervalMin) * 60 * 1000;
+module.exports.initExportProcess = function initExportProcess (sec) {
+    var timeMSec = parseInt(sec) * 1000;
     var timerId = setTimeout(function tick() {
 
         var child = child_process.fork(
@@ -35,8 +35,12 @@ function initExportProcess () {
         });
 
         child.on('exit', function () {
-            log.trace('Next sync with %s min', elasticConf.intervalMin);
-            timerId = setTimeout(tick, timeMSec);
+            if (timeMSec) {
+                log.trace('Next sync with %s msec', timeMSec);
+                timerId = setTimeout(tick, timeMSec);
+            } else {
+                log.info(`End export process.`);
+            }
         });
 
     }, 2000);

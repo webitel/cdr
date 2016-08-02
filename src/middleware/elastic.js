@@ -6,7 +6,8 @@
 var elasticsearch = require('elasticsearch'),
     checkPermission = require('../middleware/acl'),
     log = require('../libs/log')(module),
-    config = require('../config').get('elastic')
+    config = require('../config').get('elastic'),
+    setCustomAttribute = require('../utils/cdr').setCustomAttribute
     ;
 
 const CDR_NAME = 'cdr*',
@@ -127,5 +128,20 @@ module.exports = {
             },
             cb
         );
+    },
+    
+    _insert: function (doc, cb) {
+        let currentDate = new Date();
+        let indexName = 'cdr' + '-' + (currentDate.getMonth() + 1) + '.' + currentDate.getFullYear();
+        let _record = setCustomAttribute(doc);
+        let _id = _record._id.toString();
+        delete _record._id;
+        elastic.create({
+            index: (indexName + (doc.variables.domain_name ? '-' + doc.variables.domain_name : '')).toLowerCase(),
+            type: 'collection',
+            id: _id,
+            body: _record
+        }, cb);
+
     }
-}
+};

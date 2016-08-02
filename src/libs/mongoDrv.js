@@ -1,8 +1,8 @@
-var MongoDb = require("mongodb")
-    , MongoClient = MongoDb.MongoClient
-    , format = require('util').format
-    , config = require('../config')
-    , log = require('../libs/log')(module);
+var MongoDb = require("mongodb"),
+    MongoClient = MongoDb.MongoClient,
+    format = require('util').format,
+    config = require('../config'),
+    log = require('../libs/log')(module);
 
 var mongoClient = new MongoClient();
 
@@ -26,6 +26,7 @@ mongoClient.connect(config.get('mongodb:uri') ,function(err, db) {
     drv.cdrCollection = db.collection(config.get("mongodb:collectionCDR"));
     drv.fileCollection = db.collection(config.get("mongodb:collectionFile"));
     log.info('Connected db %s ', config.get('mongodb:uri'));
+    require('../middleware/saveCdr').processSaveToElastic();
     db.on('close', function () {
         log.error('close mongodb');
     });

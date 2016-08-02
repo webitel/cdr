@@ -1,7 +1,8 @@
-var log = require('../libs/log')(module)
-    ,url = require('url')
-    ,downloadAcl = require('../middleware/uploadAcl')
-    ,saveTypeFile = require('../config').get('recordFile:transport');
+var log = require('../libs/log')(module),
+    url = require('url'),
+    downloadAcl = require('../middleware/uploadAcl'),
+    saveTypeFile = require('../config').get('recordFile:transport'),
+    saveCdr = require('../middleware/saveCdr').post;
 
 var Transport = require('../middleware/transport');
 var transport = new Transport();
@@ -18,6 +19,8 @@ module.exports = function (app) {
     app.put('/sys/formLoadFile?:id', downloadAcl, function (req, res, next) {
         transport.SaveFile(req, res, next, saveTypeFile);
     });
+
+    app.post('/sys/cdr', downloadAcl, saveCdr);
 
     // For ACR
     app.get('/sys/media/:type/:id', downloadAcl, require('../middleware/media').stream);
