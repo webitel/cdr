@@ -23,7 +23,10 @@ let _saveCdr = module.exports._saveCdr = (cdrData, callback) => {
         [
             (cb) => {
                 if (data.callflow instanceof Array &&  /^u:/.test(data.callflow[0].caller_profile.destination_number)) {
-                   data.callflow[0].caller_profile.destination_number = data.variables.presence_id;
+                    data.callflow[0].caller_profile.destination_number = data.variables.presence_id;
+                }
+                if (data && data.variables && !data.variables.domain_name && /@/.test(data.variables.presence_id)) {
+                    data.variables.domain_name = data.variables.presence_id.split('@')[1];
                 }
                 mongoCdr.insert(data, cb);
             },
@@ -98,6 +101,7 @@ var processSaveToElastic = module.exports.processSaveToElastic = function () {
 };
 
 function replaceVariables(data) {
+
     for (let key in data.variables) {
         if (/\.|\$/.test(key)) {
             data.variables[encodeKey(key)] = data.variables[key];
