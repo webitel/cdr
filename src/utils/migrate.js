@@ -80,13 +80,14 @@ function loadCollection(collectionName, fdb, domainName, cb) {
             .stream();
     stream.on('data', (doc)=> {
         stream.pause();
+        let id = doc._id.toString();
         saveFn(doc, toCollection, (err) => {
             if (err && err.code === 11000) {
-                log.debug(`-ERR skip ${doc._id.toString()} - duplicate`);
+                log.warn(`-ERR skip ${id} - duplicate`);
             } else if (err) {
                 return cb(err);
             } else {
-                log.debug(`+OK save ${doc._id.toString()}`);
+                log.debug(`+OK save ${id}`);
             }
             return stream.resume();
         });
@@ -112,7 +113,7 @@ function getSaveFn(collectionName) {
         return saveData[collectionName]
     }
     return (doc, toCollection, cb) => {
-        log.debug(`try save ${doc._id.toString()}`);
+        log.debug(`try save ${doc._id}`);
         toCollection.insert(doc, cb);
     }
 }
