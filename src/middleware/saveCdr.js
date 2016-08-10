@@ -16,14 +16,15 @@ const log = require('../libs/log')(module),
 
 let _elasticConnect = true;
 
-module.exports.post = (req, res, next) => {
-    let data = replaceVariables(req.body),
-        uuid = req.query.uuid;
-    log.trace(`try save ${uuid}`);
+let _saveCdr = module.exports._saveCdr = (cdrData, callback) => {
+    let data = replaceVariables(cdrData);
 
     async.waterfall(
         [
             (cb) => {
+                if (data.callflow instanceof Array &&  /^u:/.test(data.callflow[0].caller_profile.destination_number)) {
+                   data.callflow[0].caller_profile.destination_number = data.variables.presence_id;
+                }
                 mongoCdr.insert(data, cb);
             },
             (result, cb) => {
@@ -47,17 +48,22 @@ module.exports.post = (req, res, next) => {
                 }
             }
         ],
-        (err) => {
-            if (err) {
-                log.error(err);
-                return next(err);
-            }
-
-            log.debug(`Ok save: ${uuid}`);
-            res.status(200).end();
-        }
+        callback
     )
+};
 
+module.exports.post = (req, res, next) => {
+    let uuid = req.query.uuid;
+    log.trace(`try save ${uuid}`);
+    _saveCdr(req.body, (err) => {
+        if (err) {
+            log.error(err);
+            return next(err);
+        }
+
+        log.debug(`Ok save: ${uuid}`);
+        res.status(200).end();
+    });
 };
 
 var processSaveToElastic = module.exports.processSaveToElastic = function () {
@@ -89,7 +95,7 @@ var processSaveToElastic = module.exports.processSaveToElastic = function () {
             log.error(`Bad response find no save elastic data`);
         }
     })
-}
+};
 
 function replaceVariables(data) {
     for (let key in data.variables) {
