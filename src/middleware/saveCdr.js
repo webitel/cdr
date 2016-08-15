@@ -103,9 +103,21 @@ var processSaveToElastic = module.exports.processSaveToElastic = function () {
 function replaceVariables(data) {
 
     for (let key in data.variables) {
+        if (isFinite(data.variables[key]))
+            data.variables[key] = +data.variables[key];
+
         if (/\.|\$/.test(key)) {
             data.variables[encodeKey(key)] = data.variables[key];
             delete data.variables[key];
+        }
+    }
+    if (data.callflow instanceof Array) {
+        for (let cf of data.callflow) {
+            if (cf.hasOwnProperty('times')) {
+                for (let key in cf.times) {
+                    cf.times[key] = +cf.times[key];
+                }
+            }
         }
     }
     return data
