@@ -21,6 +21,7 @@ module.exports = function (app) {
     });
 
     app.post('/sys/cdr', downloadAcl, saveCdr);
+    app.get('/sys/tts/:provider', require('../middleware/tts'));
 
     // For ACR
     app.get('/sys/media/:type/:id', downloadAcl, require('../middleware/media').stream);
