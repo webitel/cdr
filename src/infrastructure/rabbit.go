@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/streadway/amqp"
-	"webitel.com/cdr_service/entity"
+	"github.com/webitel/cdr/src/entity"
 )
 
 type RabbitHandler struct {

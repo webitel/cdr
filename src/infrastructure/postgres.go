@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/interfaces"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/interfaces"
 )
 
 type PostgresHandler struct {

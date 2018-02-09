@@ -1,6 +1,6 @@
 package interfaces
 
-import "webitel.com/cdr_service/entity"
+import "github.com/webitel/cdr/src/entity"
 
 type NosqlHandler interface {
 	BulkInsert(calls []entity.ElasticCdr) error

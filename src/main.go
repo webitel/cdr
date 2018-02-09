@@ -1,10 +1,10 @@
 package main
 
 import (
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/infrastructure"
-	"webitel.com/cdr_service/interfaces"
-	"webitel.com/cdr_service/usecases"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/infrastructure"
+	"github.com/webitel/cdr/src/interfaces"
+	"github.com/webitel/cdr/src/usecases"
 )
 
 func main() {
