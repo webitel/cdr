@@ -1,0 +1,439 @@
+{
+    "isArchive": false,    
+    "pg": {
+        "user": "webitel",
+        "database": "webitel",
+        "password": "webitel",
+        "host": "10.10.10.200",
+        "cdrTableA": "cdr_a",
+        "cdrTableB": "cdr_b",
+        "port": 5432,
+        "max": 100,
+        "idleTimeoutMillis": 30000
+    },
+    "broker":{
+        "publisher": {
+            "enable": true,
+            "connectionString": "amqp://webitel:secret@10.10.10.200:5672?heartbeat=0",
+            "exchangeName": "TAP.CDR-Events",
+            "exchangeType": "direct",
+            "routingKeyLegA": "cdr-leg-a",
+            "routingKeyLegB": "cdr-leg-b",
+            "bulkCount": 100,
+            "intervalMillisec": 1000
+        },
+        "receiver": {
+            "enable": false,
+            "connectionString": "amqp://webitel:ROOT_PASSWORD@172.17.0.1:5672?heartbeat=0",
+            "exchangeName": "TAP.Events",
+            "exchangeType": "topic",
+            "routingKeyLegA": "*.CHANNEL_DESTROY.*.*.*",
+            "routingKeyLegB": "*.CHANNEL_DESTROY.*.*.*",
+            "bulkCount": 10,
+            "intervalMillisec": 1000
+        }
+    },
+    "elastic":{
+        "enabled": true,
+        "host": "http://10.10.10.200:9200",
+        "keepAlive": true,
+        "requestTimeout": 500000,
+        "bulkCount": 20,
+        "indexName": "cdr-matviy",
+        "typeName": "cdr-matviy",
+        "template": {
+            "name": "matvit",
+            "body": {
+              "template": "cdr-m*",
+              "order": 2,
+              "mappings": {
+                "collection": {
+                  "dynamic_templates" : [
+                    {
+                      "string_fields" : {
+                        "match_mapping_type": "*",
+                        "match" : "*",
+                        "mapping" : {
+                          "type" : "keyword"
+                        }
+                      }
+                    },
+                    {
+                      "integers": {
+                        "match_mapping_type": "long",
+                        "path_match" : "variables.*",
+                        "mapping": {
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    {
+                      "notanalyzed": {
+                        "match": "*",
+                        "mapping": {
+                          "type": "keyword"
+                        }
+                      }
+                    }
+                  ],                 
+                  "properties": {   
+                    "uuid": {
+                      "type": "keyword"
+                    },       
+                    "direction": {
+                      "type": "keyword"
+                    },
+                    "caller_id_name": {
+                      "type": "keyword"
+                    },
+                    "caller_id_number": {
+                      "type": "keyword"
+                    },
+                    "callee_id_name": {
+                      "type": "keyword"
+                    },
+                    "callee_id_number": {
+                      "type": "keyword"
+                    },  
+                    "network_addr": {
+                      "type": "keyword"
+                    }, 
+                    "destination_number": {
+                      "type": "keyword"
+                    },      
+                    "domain_name": {
+                      "type": "keyword"
+                    },
+                    "extension": {
+                      "type": "keyword"
+                    },  
+                    "presence_id": {
+                      "type": "keyword"
+                    }, 
+                    "source": {
+                      "type": "keyword"
+                    }, 
+                    "gateway": {
+                      "type": "keyword"
+                    }, 
+                    "hangup_cause_q850": {
+                      "type": "long"
+                    },
+                    "hangup_cause": {
+                      "type": "keyword"
+                    },
+                    "originate_disposition": {
+                      "type": "keyword"
+                    },
+                    "bridged_time": {
+                      "type": "date"                      
+                    },
+                    "answered_time": {
+                      "type": "date",
+                      "format": "yyyy-MM-dd HH:mm:ss"
+                    },
+                    "progress_time": {
+                      "type": "date",
+                      "format": "yyyy-MM-dd HH:mm:ss"
+                    },
+                    "hangup_time": {
+                      "type": "date",
+                      "format": "yyyy-MM-dd HH:mm:ss"
+                    },
+                    "created_time": {
+                      "type": "date",
+                      "format": "yyyy-MM-dd HH:mm:ss"
+                    },  
+                    "duration": {
+                      "type": "long"
+                    },                    
+                    "billsec": {
+                      "type": "long"
+                    },      
+                    "progresssec": {
+                      "type": "long"
+                    },     
+                    "answersec": {
+                      "type": "long"
+                    },     
+                    "waitsec": {
+                      "type": "long"
+                    },     
+                    "holdsec": {
+                      "type": "long"
+                    }, 
+                    "quality_percentage_audio": {
+                      "type": "long"
+                    },
+                    "quality_percentage_video": {
+                      "type": "long"
+                    }, 
+                    "locations": {
+                      "type": "object",
+                      "properties": {
+                        "geo":{
+                          "type": "keyword"
+                        },
+                        "city":{
+                          "type": "keyword"
+                        },
+                        "country":{
+                          "type": "keyword"
+                        },
+                        "country_code":{
+                          "type": "keyword"
+                        },
+                        "type":{
+                          "type": "keyword"
+                        }
+                      }
+                    },
+                    "queue":{
+                      "type": "object",
+                      "properties": {
+                            "name": {
+                            "type": "keyword"
+                            },
+                            "duration": {
+                            "type": "long"
+                            },
+                            "wait_duration": {
+                            "type": "long"
+                            },
+                            "cancel_reason": {
+                            "type": "keyword"
+                            },
+                            "cause": {
+                            "type": "keyword"
+                            },
+                            "answered_time": {
+                            "type": "date"
+                            },
+                            "hangup_time": {
+                            "type": "date"
+                            },  
+                            "joined_time": {
+                            "type": "date"
+                            },
+                            "stop_side": {
+                            "type": "keyword"
+                            }   
+                        }       
+                    },                   
+                    "variables": {
+                      "type": "object",
+                      "properties": {
+                        "conference_member_id": {
+                          "type": "long"
+                        },  
+                        "sip_invite_failure_status": {
+                          "type": "long"
+                        },
+                        "video_read_rate": {
+                          "type": "long"
+                        },
+                        "video_write_rate": {
+                          "type": "long"
+                        }       
+                      }
+                    }                    
+                  }
+                }
+              }
+            }
+          }
+    }   
+}  ,  
+"legs_b":{
+  "type": "object",
+  "dynamic_templates" : [
+    {
+      "string_fields" : {
+        "match_mapping_type": "*",
+        "match" : "*",
+        "mapping" : {
+          "type" : "keyword"
+        }
+      }
+    },
+    {
+      "integers": {
+        "match_mapping_type": "long",
+        "path_match" : "variables.*",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "notanalyzed": {
+        "match": "*",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    }
+  ],
+  "properties": {
+    "uuid": {
+      "type": "keyword"
+    },       
+    "direction": {
+      "type": "keyword"
+    },
+    "caller_id_name": {
+      "type": "keyword"
+    },
+    "caller_id_number": {
+      "type": "keyword"
+    },
+    "callee_id_name": {
+      "type": "keyword"
+    },
+    "callee_id_number": {
+      "type": "keyword"
+    },  
+    "network_addr": {
+      "type": "keyword"
+    }, 
+    "destination_number": {
+      "type": "keyword"
+    },      
+    "domain_name": {
+      "type": "keyword"
+    },
+    "extension": {
+      "type": "keyword"
+    },  
+    "presence_id": {
+      "type": "keyword"
+    }, 
+    "source": {
+      "type": "keyword"
+    }, 
+    "gateway": {
+      "type": "keyword"
+    }, 
+    "hangup_cause_q850": {
+      "type": "long"
+    },
+    "hangup_cause": {
+      "type": "keyword"
+    },
+    "originate_disposition": {
+      "type": "keyword"
+    },
+    "bridged_time": {
+      "type": "date"                      
+    },
+    "answered_time": {
+      "type": "date",
+      "format": "yyyy-MM-dd HH:mm:ss"
+    },
+    "progress_time": {
+      "type": "date",
+      "format": "yyyy-MM-dd HH:mm:ss"
+    },
+    "hangup_time": {
+      "type": "date",
+      "format": "yyyy-MM-dd HH:mm:ss"
+    },
+    "created_time": {
+      "type": "date",
+      "format": "yyyy-MM-dd HH:mm:ss"
+    },  
+    "duration": {
+      "type": "long"
+    },                    
+    "billsec": {
+      "type": "long"
+    },      
+    "progresssec": {
+      "type": "long"
+    },     
+    "answersec": {
+      "type": "long"
+    },     
+    "waitsec": {
+      "type": "long"
+    },     
+    "holdsec": {
+      "type": "long"
+    }, 
+    "quality_percentage_audio": {
+      "type": "long"
+    },
+    "quality_percentage_video": {
+      "type": "long"
+    }, 
+    "locations": {
+      "type": "object",
+      "properties": {
+        "geo":{
+          "type": "keyword"
+        },
+        "city":{
+          "type": "keyword"
+        },
+        "country":{
+          "type": "keyword"
+        },
+        "country_code":{
+          "type": "keyword"
+        },
+        "type":{
+          "type": "keyword"
+        }
+      }
+    },
+    "queue":{
+      "type": "object",
+      "properties": {
+            "name": {
+            "type": "keyword"
+            },
+            "duration": {
+            "type": "long"
+            },
+            "wait_duration": {
+            "type": "long"
+            },
+            "cancel_reason": {
+            "type": "keyword"
+            },
+            "cause": {
+            "type": "keyword"
+            },
+            "answered_time": {
+            "type": "date"
+            },
+            "hangup_time": {
+            "type": "date"
+            },  
+            "joined_time": {
+            "type": "date"
+            },
+            "stop_side": {
+            "type": "keyword"
+            }   
+        }       
+    },                   
+    "variables": {
+      "type": "object",
+      "properties": {
+        "conference_member_id": {
+          "type": "long"
+        },  
+        "sip_invite_failure_status": {
+          "type": "long"
+        },
+        "video_read_rate": {
+          "type": "long"
+        },
+        "video_write_rate": {
+          "type": "long"
+        }       
+      }
+    }
+  }
+}   
