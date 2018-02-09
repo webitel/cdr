@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/entity"
 	elastic "gopkg.in/olivere/elastic.v5"
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/entity"
 )
 
 type ElasticHandler struct {

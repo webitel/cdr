@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/entity"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/entity"
 )
 
 type Legs struct {
