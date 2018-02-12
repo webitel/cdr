@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/webitel/cdr/src/conf"
 	"github.com/webitel/cdr/src/entity"
@@ -37,24 +38,35 @@ func (handler *ElasticHandler) Init() error {
 		return err
 	}
 	ctx := context.Background()
-	eClient, err := elastic.NewClient(elastic.SetURL(elasticConfig.Url), elastic.SetSniff(false))
-	if err != nil {
-		return err
+	ticker := time.NewTicker(5 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			eClient, err := elastic.NewClient(elastic.SetURL(elasticConfig.Url), elastic.SetSniff(false))
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+			info, code, err := eClient.Ping(elasticConfig.Url).Do(ctx)
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+			handler.Client = eClient
+			handler.Ctx = ctx
+			logger.Info("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
+			if err := handler.templatePrepare(templateMap); err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+			if err := handler.indexPrepare(); err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+			ticker.Stop()
+			return nil
+		}
 	}
-	info, code, err := eClient.Ping(elasticConfig.Url).Do(ctx)
-	if err != nil {
-		return err
-	}
-	handler.Client = eClient
-	handler.Ctx = ctx
-	logger.Info("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
-	if err := handler.templatePrepare(templateMap); err != nil {
-		return err
-	}
-	if err := handler.indexPrepare(); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (handler *ElasticHandler) templatePrepare(templateMap string) error {

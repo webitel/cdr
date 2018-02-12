@@ -5,8 +5,8 @@
       "database": "webitel",
       "password": "webitel",
       "host": "10.10.10.200",
-      "cdrTableA": "cdr_a",
-      "cdrTableB": "cdr_b",
+      "cdrTableA": "cdr_a1",
+      "cdrTableB": "cdr_b1",
       "port": 5432
   },
   "broker":{

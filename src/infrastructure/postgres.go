@@ -3,10 +3,12 @@ package infrastructure
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/webitel/cdr/src/conf"
 	"github.com/webitel/cdr/src/interfaces"
+	"github.com/webitel/cdr/src/logger"
 )
 
 type PostgresHandler struct {
@@ -20,17 +22,28 @@ func NewPostgresHandler() (*PostgresHandler, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		pgConfig.Host, pgConfig.Port, pgConfig.User, pgConfig.Password, pgConfig.Database)
-	var err error
-	dbConnection, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		return nil, fmt.Errorf("PostgreSQL Connection: %s", err)
+	//var err error
+	ticker := time.NewTicker(5 * time.Second)
+	//quit := make(chan struct{})
+	for {
+		select {
+		case <-ticker.C:
+			dbConnection, err := sql.Open("postgres", psqlInfo)
+			if err != nil {
+				logger.Error("PostgreSQL Connection: " + err.Error())
+				continue
+			}
+			if err = dbConnection.Ping(); err != nil {
+				logger.Error("PostgreSQL Ping: " + err.Error())
+				continue
+			}
+			pgHandler := new(PostgresHandler)
+			pgHandler.Conn = dbConnection
+			ticker.Stop()
+			return pgHandler, nil
+		}
 	}
-	if err = dbConnection.Ping(); err != nil {
-		return nil, fmt.Errorf("PostgreSQL Ping: %s", err)
-	}
-	pgHandler := new(PostgresHandler)
-	pgHandler.Conn = dbConnection
-	return pgHandler, nil
+
 }
 
 func (handler *PostgresHandler) ExecuteQuery(query string, params ...interface{}) error {
