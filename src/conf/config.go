@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
-	"github.com/kelseyhightower/envconfig"
+	"strconv"
 )
 
 type Configuration struct {
@@ -114,6 +113,107 @@ func (conf *Configuration) readFromFile() error {
 }
 
 func (conf *Configuration) readFromEnviroment() error {
-	err := envconfig.Process("", conf)
-	return err
+	// var c *gonfig.Gonfig
+	// c = gonfig.NewConfig(nil)
+	// a := c.Use("env", gonfig.NewEnvConfig(""))
+	// for k, v := range a.All() {
+	// 	fmt.Sprintf("%s - %s", k, v)
+	// }
+	// return nil
+	//var a map[string]interface{}
+	// err := envconfig.Process("", conf)
+	// return err
+	if value := os.Getenv("pg:user"); value != "" {
+		conf.Postgres.User = value
+	}
+	if value := os.Getenv("pg:database"); value != "" {
+		conf.Postgres.Database = value
+	}
+	if value := os.Getenv("pg:password"); value != "" {
+		conf.Postgres.Password = value
+	}
+	if value := os.Getenv("pg:tableA"); value != "" {
+		conf.Postgres.TableA = value
+	}
+	if value := os.Getenv("pg:tableB"); value != "" {
+		conf.Postgres.TableB = value
+	}
+	if value := os.Getenv("pg:host"); value != "" {
+		conf.Postgres.Host = value
+	}
+	if value := os.Getenv("pg:port"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.Postgres.Port = int32(i)
+	}
+	// if value := os.Getenv("elastic:enabled"); value != "" {
+	// 	conf.Elastic.Enabled = bool(value)
+	// }
+	if value := os.Getenv("elastic:bulkCount"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.Elastic.BulkCount = uint32(i)
+	}
+	if value := os.Getenv("elastic:intervalMillisec"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.Elastic.RequestTimeout = uint32(i)
+	}
+	if value := os.Getenv("elastic:host"); value != "" {
+		conf.Elastic.Url = value
+	}
+	if value := os.Getenv("elastic:indexName"); value != "" {
+		conf.Elastic.IndexName = value
+	}
+	if value := os.Getenv("broker:publisher:connectionString"); value != "" {
+		conf.Rabbit.Publisher.ConnectionString = value
+	}
+	// if value := os.Getenv("broker:publisher:enable"); value != "" {
+	// 	conf.Rabbit.Publisher.ConnectionString = value
+	// }
+	if value := os.Getenv("broker:publisher:exchangeName"); value != "" {
+		conf.Rabbit.Publisher.ExchangeName = value
+	}
+	if value := os.Getenv("broker:publisher:exchangeType"); value != "" {
+		conf.Rabbit.Publisher.ExchangeType = value
+	}
+	if value := os.Getenv("broker:publisher:routingKeyLegA"); value != "" {
+		conf.Rabbit.Publisher.RoutingKeyA = value
+	}
+	if value := os.Getenv("broker:publisher:routingKeyLegB"); value != "" {
+		conf.Rabbit.Publisher.RoutingKeyB = value
+	}
+	if value := os.Getenv("broker:publisher:bulkCount"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.Rabbit.Publisher.BulkCount = uint32(i)
+	}
+	if value := os.Getenv("broker:publisher:intervalMillisec"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.Rabbit.Publisher.IntervalMillisec = uint32(i)
+	}
+
+	if value := os.Getenv("broker:receiver:connectionString"); value != "" {
+		conf.Rabbit.Receiver.ConnectionString = value
+	}
+	// if value := os.Getenv("broker:publisher:enable"); value != "" {
+	// 	conf.Rabbit.Publisher.ConnectionString = value
+	// }
+	if value := os.Getenv("broker:receiver:exchangeName"); value != "" {
+		conf.Rabbit.Receiver.ExchangeName = value
+	}
+	if value := os.Getenv("broker:receiver:exchangeType"); value != "" {
+		conf.Rabbit.Receiver.ExchangeType = value
+	}
+	if value := os.Getenv("broker:receiver:routingKeyLegA"); value != "" {
+		conf.Rabbit.Receiver.RoutingKeyA = value
+	}
+	if value := os.Getenv("broker:receiver:routingKeyLegB"); value != "" {
+		conf.Rabbit.Receiver.RoutingKeyB = value
+	}
+	if value := os.Getenv("broker:receiver:bulkCount"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.Rabbit.Receiver.BulkCount = uint32(i)
+	}
+	if value := os.Getenv("broker:receiver:intervalMillisec"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.Rabbit.Receiver.IntervalMillisec = uint32(i)
+	}
+	return nil
 }
