@@ -27,6 +27,9 @@ func NewElasticHandler() (*ElasticHandler, error) {
 
 func (handler *ElasticHandler) Init() error {
 	elasticConfig = conf.GetElastic()
+	if !elasticConfig.Enabled {
+		return nil
+	}
 	var templateMap string
 	if bytes, err := json.Marshal(elasticConfig.ElasticTemplate.Body); err == nil {
 		templateMap = string(bytes)
