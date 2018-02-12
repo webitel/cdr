@@ -1,6 +1,6 @@
 package interfaces
 
-import "github.com/webitel/cdr/src/entity"
+import "webitel.com/cdr_service/entity"
 
 // type AmqpHandler interface {
 // 	InitRabbitConn(connectionString, exchangeName, exchangeType string)

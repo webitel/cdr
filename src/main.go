@@ -1,14 +1,18 @@
 package main
 
 import (
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/infrastructure"
-	"github.com/webitel/cdr/src/interfaces"
-	"github.com/webitel/cdr/src/usecases"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/infrastructure"
+	"webitel.com/cdr_service/interfaces"
+	"webitel.com/cdr_service/logger"
+	"webitel.com/cdr_service/usecases"
 )
 
 func main() {
-	conf.InitConfig()
+	if err := conf.InitConfig(); err != nil {
+		logger.Error(err.Error())
+		return
+	}
 	if conf.IsArchive() {
 		archiveServer()
 	} else {
@@ -39,7 +43,7 @@ func defaultServer() {
 		CdrInteractor.SqlCdrARepository = interfaces.NewDbCdrARepo(dbHandlers)
 		CdrInteractor.SqlCdrBRepository = interfaces.NewDbCdrBRepo(dbHandlers)
 		go CdrInteractor.Run()
-		go CdrInteractor.RunArchivePublisher()
+		//go CdrInteractor.RunArchivePublisher()
 	}
 
 	docHandler, err := infrastructure.NewElasticHandler()

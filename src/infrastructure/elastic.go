@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/entity"
 	elastic "gopkg.in/olivere/elastic.v5"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 type ElasticHandler struct {
@@ -44,7 +44,7 @@ func (handler *ElasticHandler) Init() error {
 	}
 	handler.Client = eClient
 	handler.Ctx = ctx
-	log.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
+	logger.Info("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
 	if err := handler.templatePrepare(templateMap); err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (handler *ElasticHandler) templatePrepare(templateMap string) error {
 			// Not acknowledged
 		}
 	}
-	log.Printf("Elastic: put template")
+	logger.Notice("Elastic: put template")
 	return nil
 }
 
@@ -90,7 +90,7 @@ func (handler *ElasticHandler) indexPrepare() error {
 			// Not acknowledged
 		}
 	}
-	log.Printf("Elastic: put index")
+	logger.Notice("Elastic: put index")
 	return nil
 }
 

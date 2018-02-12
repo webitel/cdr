@@ -1,11 +1,11 @@
 package usecases
 
 import (
-	"log"
 	"time"
 
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/entity"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 type Legs struct {
@@ -24,7 +24,7 @@ func (interactor *CdrInteractor) RunElastic() {
 	}
 	go LegListener(interactor.CheckCallsFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount)
 	go LegListener(interactor.CheckLegsFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount)
-	log.Println("Elastic module: start listening...")
+	logger.Notice("Elastic module: start listening...")
 }
 
 func LegListener(checkCalls CheckCalls, timeout uint32, bulkCount uint32) {
@@ -40,7 +40,7 @@ func (interactor *CdrInteractor) CheckCallsFromSql(bulkCount uint32) {
 	var calls []entity.ElasticCdr
 	cdr, err := interactor.SqlCdrARepository.SelectPackByState(bulkCount, 0, "stored")
 	if err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return
 	}
 	if len(cdr) == 0 {
@@ -48,7 +48,7 @@ func (interactor *CdrInteractor) CheckCallsFromSql(bulkCount uint32) {
 		return
 	}
 	if err := interactor.SqlCdrARepository.UpdateState(cdr, 1, 0, "stored"); err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return
 	}
 	var (
@@ -59,22 +59,22 @@ func (interactor *CdrInteractor) CheckCallsFromSql(bulkCount uint32) {
 		iCall, err = readBytes(item.Event)
 		if err != nil {
 			interactor.SqlCdrARepository.UpdateState(cdr, 0, 0, "stored")
-			log.Println(err)
+			logger.Error(err.Error())
 			return
 		}
 		eCall, err = ParseToCdr(iCall)
 		if err != nil {
 			interactor.SqlCdrARepository.UpdateState(cdr, 0, 0, "stored")
-			log.Println(err)
+			logger.Error(err.Error())
 			return
 		}
 		calls = append(calls, eCall)
 	}
 	if err := interactor.ElasticCdrARepository.InsertDocs(calls); err != nil {
 		interactor.SqlCdrARepository.UpdateState(cdr, 0, 0, "stored")
-		log.Println(err)
+		logger.Error(err.Error())
 	} else {
-		log.Printf("Elastic: items stored [%s, %v]", "Leg A", len(calls))
+		logger.Notice("Elastic: items stored [%s, %v]", "Leg A", len(calls))
 		interactor.SqlCdrARepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
 	//log.Println("Elastic module: listening Leg A from pg...")
@@ -84,7 +84,7 @@ func (interactor *CdrInteractor) CheckLegsFromSql(bulkCount uint32) {
 	var calls []entity.ElasticCdr
 	cdr, err := interactor.SqlCdrBRepository.SelectPackByState(bulkCount, 0, "stored")
 	if err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return
 	}
 	if len(cdr) == 0 {
@@ -92,7 +92,7 @@ func (interactor *CdrInteractor) CheckLegsFromSql(bulkCount uint32) {
 		return
 	}
 	if err := interactor.SqlCdrBRepository.UpdateState(cdr, 1, 0, "stored"); err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return
 	}
 	var (
@@ -103,22 +103,22 @@ func (interactor *CdrInteractor) CheckLegsFromSql(bulkCount uint32) {
 		iCall, err = readBytes(item.Event)
 		if err != nil {
 			interactor.SqlCdrBRepository.UpdateState(cdr, 0, 0, "stored")
-			log.Println(err)
+			logger.Error(err.Error())
 			return
 		}
 		eCall, err = ParseToCdr(iCall)
 		if err != nil {
 			interactor.SqlCdrBRepository.UpdateState(cdr, 0, 0, "stored")
-			log.Println(err)
+			logger.Error(err.Error())
 			return
 		}
 		calls = append(calls, eCall)
 	}
 	if err := interactor.ElasticCdrBRepository.InsertDocs(calls); err != nil {
 		interactor.SqlCdrBRepository.UpdateState(cdr, 0, 0, "stored")
-		log.Println(err)
+		logger.Error(err.Error())
 	} else {
-		log.Printf("Elastic: items stored [%s, %v]", "Leg B", len(calls))
+		logger.Notice("Elastic: items stored [%s, %v]", "Leg B", len(calls))
 		interactor.SqlCdrBRepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
 	//log.Println("Elastic module: listening Leg B from pg...")

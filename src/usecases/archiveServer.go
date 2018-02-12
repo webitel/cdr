@@ -2,11 +2,11 @@ package usecases
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/entity"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 type ElasticProcess func(deliveries []entity.Delivery) error
@@ -22,17 +22,17 @@ func (interactor *CdrInteractor) RunArchiveServer() {
 		interactor.AmqPublisherRepository.CreateAmqConnection(publisher.ConnectionString, publisher.ExchangeName, publisher.ExchangeType)
 		msgsA, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyA)
 		if err != nil {
-			log.Println(err)
+			logger.Error(err.Error())
 		}
 		msgsB, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyB)
 		if err != nil {
-			log.Println(err)
+			logger.Error(err.Error())
 		}
 		go interactor.ArchiveListenEvents(msgsA, size, interval, done, interactor.AddToElasticA, "Leg A")
 		go interactor.ArchiveListenEvents(msgsB, size, interval, done, interactor.AddToElasticB, "Leg B")
-		log.Println("RabbitMQ: start listening...")
+		logger.Notice("RabbitMQ: start listening...")
 		err = <-done
-		log.Println(err)
+		logger.Error(err.Error())
 	}
 }
 
@@ -74,16 +74,16 @@ func (interactor *CdrInteractor) ArchiveListenEvents(msgs <-chan entity.Delivery
 
 func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery, elasticProcess ElasticProcess, key string) {
 	if err := elasticProcess(batch); err != nil {
-		log.Printf("ERROR. %s: %s", key, err)
+		logger.Error("ERROR. %s: %s", key, err)
 		for i := 0; i < len(batch); i++ {
 			batch[i].Nack(false, true)
 		}
-		log.Printf("Elastic: failed to store items [%s, %v]", key, len(batch))
+		logger.Error("Elastic: failed to store items [%s, %v]", key, len(batch))
 	} else {
 		for i := 0; i < len(batch); i++ {
 			batch[i].Ack(false)
 		}
-		log.Printf("Elastic: items stored [%s, %v]", key, len(batch))
+		logger.Notice("Elastic: items stored [%s, %v]", key, len(batch))
 	}
 	//log.Printf("RabbitMQ: listening [%s]...\n", key)
 }

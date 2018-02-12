@@ -2,11 +2,11 @@ package infrastructure
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/streadway/amqp"
-	"github.com/webitel/cdr/src/entity"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 type RabbitHandler struct {
@@ -27,7 +27,7 @@ func NewRabbitReceiverHandler() *ReceiverHandler {
 }
 
 func dial(connectionString string) (*amqp.Connection, error) {
-	log.Printf("rabbit dialing %q", connectionString)
+	logger.Info("rabbit dialing %q", connectionString)
 	connection, err := amqp.Dial(connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("Dial: %s", err)
@@ -37,13 +37,13 @@ func dial(connectionString string) (*amqp.Connection, error) {
 
 func createChannel(c *amqp.Connection, exchangeName, exchangeType string) (*amqp.Channel, error) {
 	//return nil, fmt.Errorf("Channel:")
-	log.Printf("got Connection, getting Channel")
+	logger.Info("got Connection, getting Channel")
 	channel, err := c.Channel()
 	if err != nil {
 		return nil, fmt.Errorf("Channel: %s", err)
 	}
 
-	log.Printf("got Channel, declaring %q Exchange (%q)", exchangeType, exchangeName)
+	logger.Info("got Channel, declaring %q Exchange (%q)", exchangeType, exchangeName)
 	if err := channel.ExchangeDeclare(
 		exchangeName, // name
 		exchangeType, // type
@@ -65,13 +65,13 @@ func (handler *PublisherHandler) InitRabbitConn(connectionString, exchangeName, 
 		select {
 		case <-ticker.C:
 			if conn, err := dial(connectionString); err != nil {
-				log.Println(err)
-				log.Println("Publisher: node will only be able to respond to local connections")
-				log.Println("Publisher: trying to reconnect in 5 seconds...")
+				logger.Error(err.Error())
+				logger.Info("Publisher: node will only be able to respond to local connections")
+				logger.Info("Publisher: trying to reconnect in 5 seconds...")
 			} else {
 				handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
 				if err != nil {
-					log.Println(err)
+					logger.Error(err.Error())
 					continue
 				}
 				close(quit)
@@ -90,13 +90,13 @@ func (handler *ReceiverHandler) InitRabbitConn(connectionString, exchangeName, e
 		select {
 		case <-ticker.C:
 			if conn, err := dial(connectionString); err != nil {
-				log.Println(err)
-				log.Println("Receiver: node will only be able to respond to local connections")
-				log.Println("Receiver: trying to reconnect in 5 seconds...")
+				logger.Error(err.Error())
+				logger.Info("Receiver: node will only be able to respond to local connections")
+				logger.Info("Receiver: trying to reconnect in 5 seconds...")
 			} else {
 				handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
 				if err != nil {
-					log.Println(err)
+					logger.Error(err.Error())
 					continue
 				}
 				close(quit)

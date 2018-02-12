@@ -3,11 +3,11 @@ package usecases
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/entity"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 type CdrInteractor struct {
@@ -35,19 +35,19 @@ func (interactor *CdrInteractor) Run() {
 		interactor.AmqPublisherRepository.CreateAmqConnection(publisher.ConnectionString, publisher.ExchangeName, publisher.ExchangeType)
 		msgsA, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyA)
 		if err != nil {
-			log.Println(err)
+			logger.Error(err.Error())
 			continue
 		}
 		msgsB, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyB)
 		if err != nil {
-			log.Println(err)
+			logger.Error(err.Error())
 			continue
 		}
 		go interactor.ListenEvents(msgsA, size, interval, done, interactor.AddToSqlA, "Leg A")
 		go interactor.ListenEvents(msgsB, size, interval, done, interactor.AddToSqlB, "Leg B")
-		log.Println("RabbitMQ: start listening...")
+		logger.Notice("RabbitMQ: start listening...")
 		err = <-done
-		log.Println(err)
+		logger.Error(err.Error())
 	}
 }
 
@@ -88,16 +88,16 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 
 func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlProcess SqlProcess, key string) {
 	if err := sqlProcess(batch); err != nil {
-		log.Printf("ERROR. %s: %s", key, err)
+		logger.Error("ERROR. %s: %s", key, err)
 		for i := 0; i < len(batch); i++ {
 			batch[i].Nack(false, true)
 		}
-		log.Printf("PostgreSQL: failed to store items [%s, %v]", key, len(batch))
+		logger.Error("PostgreSQL: failed to store items [%s, %v]", key, len(batch))
 	} else {
 		for i := 0; i < len(batch); i++ {
 			batch[i].Ack(false)
 		}
-		log.Printf("PostgreSQL: items stored [%s, %v]", key, len(batch))
+		logger.Notice("PostgreSQL: items stored [%s, %v]", key, len(batch))
 	}
 	//log.Printf("RabbitMQ: listening [%s]...\n", key)
 }
@@ -137,7 +137,7 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) error {
 		if err != nil {
 			return err
 		}
-		log.Printf("Count of LegB in LegA channel [%v]", len(callsB))
+		logger.Notice("Count of LegB in LegA channel [%v]", len(callsB))
 	}
 	return nil
 }

@@ -2,8 +2,10 @@ package conf
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -98,7 +100,12 @@ func GetReceiverConfig() (uint32, uint32) {
 }
 
 func (conf *Configuration) readFromFile() error {
-	file, err := ioutil.ReadFile("./conf/config.json")
+	filePath := flag.String("c", "./conf/config.json", "Config file path")
+	flag.Parse()
+	if _, err := os.Stat(*filePath); os.IsNotExist(err) {
+		return fmt.Errorf("No found config file: %s", *filePath)
+	}
+	file, err := ioutil.ReadFile(*filePath)
 	if err != nil {
 		return err
 	}

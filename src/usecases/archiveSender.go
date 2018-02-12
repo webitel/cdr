@@ -1,11 +1,11 @@
 package usecases
 
 import (
-	"log"
 	"time"
 
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/entity"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 func (interactor *CdrInteractor) RunArchivePublisher() {
@@ -22,7 +22,7 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 			errChanA := make(chan bool)
 			interactor.AmqReceiverRepositoryA.CreateAmqConnection(receiver.ConnectionString, receiver.ExchangeName, receiver.ExchangeType)
 			go interactor.ArchiveListener(interactor.AmqReceiverRepositoryA, interactor.SqlCdrARepository, interval, size, receiver.ExchangeName, receiver.RoutingKeyA, errChanA)
-			log.Println("Archive module: start listening A...")
+			logger.Notice("Archive module: start listening A...")
 			<-errChanA
 		}
 	}(receiver, size, interval)
@@ -31,7 +31,7 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 			errChanB := make(chan bool)
 			interactor.AmqReceiverRepositoryB.CreateAmqConnection(receiver.ConnectionString, receiver.ExchangeName, receiver.ExchangeType)
 			go interactor.ArchiveListener(interactor.AmqReceiverRepositoryB, interactor.SqlCdrBRepository, interval, size, receiver.ExchangeName, receiver.RoutingKeyB, errChanB)
-			log.Println("Archive module: start listening B...")
+			logger.Notice("Archive module: start listening B...")
 			<-errChanB
 		}
 	}(receiver, size, interval)
@@ -49,22 +49,22 @@ func (interactor *CdrInteractor) ArchiveListener(amqpRepo entity.AmqReceiverRepo
 func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, exchName, routingKey string, errChan chan bool) {
 	cdr, err := repo.SelectPackByState(bulkCount, 0, "archived")
 	if err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return
 	}
 	if len(cdr) == 0 {
 		return
 	}
 	if err := repo.UpdateState(cdr, 1, 0, "archived"); err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 		return
 	}
 	if err := amqpRepo.SendMessage(cdr, routingKey, exchName); err != nil {
 		repo.UpdateState(cdr, 0, 0, "archived")
-		log.Println(err)
+		logger.Error(err.Error())
 		errChan <- true
 	} else {
-		log.Printf("Archive: items stored [%s, %v]", routingKey, len(cdr))
+		logger.Notice("Archive: items stored [%s, %v]", routingKey, len(cdr))
 		repo.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "archived")
 	}
 }
