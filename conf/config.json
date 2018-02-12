@@ -4,7 +4,7 @@
       "user": "webitel",
       "database": "webitel",
       "password": "webitel",
-      "host": "10.10.10.200",
+      "host": "postgres",
       "cdrTableA": "cdr_a",
       "cdrTableB": "cdr_b",
       "port": 5432
@@ -33,15 +33,15 @@
   },
   "elastic":{
       "enabled": true,
-      "host": "http://10.10.10.200:9200",    
+      "host": "http://elasticsearch:9200",    
       "intervalMillisec": 1000,
       "bulkCount": 100,
       "indexName": "matviy-cdr",
       "typeName": "collection",
       "template": {
-          "name": "matvit",
+          "name": "webitel",
           "body": {
-            "template": "matviy*",
+            "template": "cdr-*",
             "order": 2,
             "mappings": {
               "collection": {
