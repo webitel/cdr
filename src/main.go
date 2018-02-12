@@ -70,12 +70,14 @@ func archiveServer() {
 	CdrInteractor.AmqPublisherRepository = interfaces.NewPublisherRepo(amqpPublisherHandler)
 
 	docHandler, err := infrastructure.NewElasticHandler()
-	if err == nil {
-		docHandlers := make(map[string]interfaces.NosqlHandler)
-		docHandlers["DocCdrARepo"] = docHandler
-		docHandlers["DocCdrBRepo"] = docHandler
-		CdrInteractor.ElasticCdrARepository = interfaces.NewDocCdrARepo(docHandlers)
-		CdrInteractor.ElasticCdrBRepository = interfaces.NewDocCdrBRepo(docHandlers)
-		go CdrInteractor.RunArchiveServer()
+	if err != nil {
+		logger.Error(err.Error())
+		return
 	}
+	docHandlers := make(map[string]interfaces.NosqlHandler)
+	docHandlers["DocCdrARepo"] = docHandler
+	docHandlers["DocCdrBRepo"] = docHandler
+	CdrInteractor.ElasticCdrARepository = interfaces.NewDocCdrARepo(docHandlers)
+	CdrInteractor.ElasticCdrBRepository = interfaces.NewDocCdrBRepo(docHandlers)
+	go CdrInteractor.RunArchiveServer()
 }
