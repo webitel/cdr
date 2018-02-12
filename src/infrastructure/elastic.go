@@ -114,11 +114,6 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 }
 
 func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) error {
-	//var a []Huy
-	// for index, _ := range calls {
-	// 	a = append(a, Huy{calls[index].Uuid, index})
-	// 	calls[index].Parent_uuid = "044a2714-be51-4476-b602-9a43188db08f"
-	// }
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
 		req := elastic.NewBulkUpdateRequest().Index(elasticConfig.IndexName).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
@@ -133,8 +128,3 @@ func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) error {
 	}
 	return nil
 }
-
-// type Huy struct {
-// 	Uuid string `json:"uuid"`
-// 	Huy  int    `json:"huy"`
-// }

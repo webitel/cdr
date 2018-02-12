@@ -115,8 +115,5 @@ func (conf *Configuration) readFromFile() error {
 
 func (conf *Configuration) readFromEnviroment() error {
 	err := envconfig.Process("", conf)
-	if err != nil {
-		return err
-	}
 	return err
 }
