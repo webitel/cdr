@@ -1,11 +1,11 @@
 package main
 
 import (
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/infrastructure"
-	"webitel.com/cdr_service/interfaces"
-	"webitel.com/cdr_service/logger"
-	"webitel.com/cdr_service/usecases"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/infrastructure"
+	"github.com/webitel/cdr/src/interfaces"
+	"github.com/webitel/cdr/src/logger"
+	"github.com/webitel/cdr/src/usecases"
 )
 
 func main() {
@@ -36,25 +36,31 @@ func defaultServer() {
 	CdrInteractor.AmqReceiverRepositoryB = interfaces.NewReceiverRepo(amqpReceiverHandlerB)
 
 	dbHandler, err := infrastructure.NewPostgresHandler()
-	if err == nil {
-		dbHandlers := make(map[string]interfaces.DbHandler)
-		dbHandlers["DbCdrARepo"] = dbHandler
-		dbHandlers["DbCdrBRepo"] = dbHandler
-		CdrInteractor.SqlCdrARepository = interfaces.NewDbCdrARepo(dbHandlers)
-		CdrInteractor.SqlCdrBRepository = interfaces.NewDbCdrBRepo(dbHandlers)
-		go CdrInteractor.Run()
-		//go CdrInteractor.RunArchivePublisher()
+	if err != nil {
+		logger.Error(err.Error())
+		return
 	}
+	dbHandlers := make(map[string]interfaces.DbHandler)
+	dbHandlers["DbCdrARepo"] = dbHandler
+	dbHandlers["DbCdrBRepo"] = dbHandler
+	CdrInteractor.SqlCdrARepository = interfaces.NewDbCdrARepo(dbHandlers)
+	CdrInteractor.SqlCdrBRepository = interfaces.NewDbCdrBRepo(dbHandlers)
+	CdrInteractor.InitTables()
+	go CdrInteractor.Run()
+	go CdrInteractor.RunArchivePublisher()
 
 	docHandler, err := infrastructure.NewElasticHandler()
-	if err == nil {
-		docHandlers := make(map[string]interfaces.NosqlHandler)
-		docHandlers["DocCdrARepo"] = docHandler
-		docHandlers["DocCdrBRepo"] = docHandler
-		CdrInteractor.ElasticCdrARepository = interfaces.NewDocCdrARepo(docHandlers)
-		CdrInteractor.ElasticCdrBRepository = interfaces.NewDocCdrBRepo(docHandlers)
-		go CdrInteractor.RunElastic()
+	if err != nil {
+		logger.Error(err.Error())
+		return
 	}
+	docHandlers := make(map[string]interfaces.NosqlHandler)
+	docHandlers["DocCdrARepo"] = docHandler
+	docHandlers["DocCdrBRepo"] = docHandler
+	CdrInteractor.ElasticCdrARepository = interfaces.NewDocCdrARepo(docHandlers)
+	CdrInteractor.ElasticCdrBRepository = interfaces.NewDocCdrBRepo(docHandlers)
+	go CdrInteractor.RunElastic()
+
 }
 
 func archiveServer() {

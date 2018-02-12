@@ -3,7 +3,7 @@ package usecases
 import (
 	"strings"
 
-	"webitel.com/cdr_service/entity"
+	"github.com/webitel/cdr/src/entity"
 )
 
 func getString(i interface{}) (s string) {

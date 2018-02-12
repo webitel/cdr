@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/entity"
-	"webitel.com/cdr_service/logger"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/entity"
+	"github.com/webitel/cdr/src/logger"
 )
 
 type CdrInteractor struct {
@@ -22,12 +22,21 @@ type CdrInteractor struct {
 
 type SqlProcess func(deliveries []entity.Delivery) error
 
+func (interactor *CdrInteractor) InitTables() error {
+	if err := interactor.SqlCdrARepository.CreateTableIfNotExist(); err != nil {
+		return fmt.Errorf("PostgreSQL. Table A creating error: " + err.Error())
+	}
+	if err := interactor.SqlCdrBRepository.CreateTableIfNotExist(); err != nil {
+		return fmt.Errorf("PostgreSQL. Table B creating error: " + err.Error())
+	}
+	return nil
+}
+
 func (interactor *CdrInteractor) Run() {
 	if interactor.AmqPublisherRepository == nil || interactor.SqlCdrBRepository == nil || interactor.SqlCdrARepository == nil {
 		return
 	}
-	// interactor.SqlCdrARepository.CreateTableIfNotExist()
-	// interactor.SqlCdrBRepository.CreateTableIfNotExist()
+
 	publisher := conf.GetPublisher()
 	size, interval := conf.GetListenerConfig()
 	for {

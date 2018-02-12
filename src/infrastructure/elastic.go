@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/entity"
+	"github.com/webitel/cdr/src/logger"
 	elastic "gopkg.in/olivere/elastic.v5"
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/entity"
-	"webitel.com/cdr_service/logger"
 )
 
 type ElasticHandler struct {

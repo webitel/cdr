@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/entity"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/entity"
 )
 
 const (
@@ -19,9 +19,9 @@ const (
 	cdrUuid             = "uuid=%v OR "
 	cdrUpdateStateQuery = "UPDATE #table# SET #state#_state=$1, #state#_at=$2 WHERE "
 	cdrCreateTableA     = `
-							CREATE TABLE IF NOT EXISTS $1
+							CREATE TABLE IF NOT EXISTS #table#
 							(
-								uuid character varying(255)[] COLLATE pg_catalog."default" NOT NULL,								
+								uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,								
 								created_at bigint,
 								stored_at bigint,
 								archived_at bigint,
@@ -29,7 +29,7 @@ const (
 								event bytea,
 								stored_state smallint,
 								archived_state smallint,
-								CONSTRAINT $1_pkey PRIMARY KEY (uuid)
+								CONSTRAINT #table#_pkey PRIMARY KEY (uuid)
 							)
 							WITH (
 								OIDS = FALSE
@@ -40,10 +40,10 @@ const (
 								OWNER to #user#;	
 						` //$1 - public.cdr $2 - webitel
 	cdrCreateTableB = `
-						CREATE TABLE IF NOT EXISTS $1
+						CREATE TABLE IF NOT EXISTS #table#
 						(
-							uuid character varying(255)[] COLLATE pg_catalog."default" NOT NULL,
-							parent_uuid character varying(255)[] COLLATE pg_catalog."default",
+							uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,
+							parent_uuid character varying(255) COLLATE pg_catalog."default",
 							created_at bigint,
 							stored_at bigint,
 							archived_at bigint,
@@ -51,7 +51,7 @@ const (
 							event bytea,
 							stored_state smallint,
 							archived_state smallint,
-							CONSTRAINT $1_pkey PRIMARY KEY (uuid)
+							CONSTRAINT #table#_pkey PRIMARY KEY (uuid)
 						)
 						WITH (
 							OIDS = FALSE
