@@ -36,7 +36,7 @@
       "host": "http://elasticsearch:9200",    
       "intervalMillisec": 1000,
       "bulkCount": 100,
-      "indexName": "webitel-cdr",
+      "indexName": "cdr-webitel",
       "typeName": "collection",
       "template": {
           "name": "webitel",
