@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/entity"
-	"github.com/webitel/cdr/src/logger"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 type CdrInteractor struct {
@@ -137,13 +137,13 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) error {
 			}
 		}
 	}
-	err := interactor.SqlCdrARepository.InsertPack(calls)
-	if err != nil {
-		return err
+	if len(calls) > 0 {
+		if err := interactor.SqlCdrARepository.InsertPack(calls); err != nil {
+			return err
+		}
 	}
 	if len(callsB) > 0 {
-		err := interactor.SqlCdrBRepository.InsertPack(callsB)
-		if err != nil {
+		if err := interactor.SqlCdrBRepository.InsertPack(callsB); err != nil {
 			return err
 		}
 		logger.Notice("Count of LegB in LegA channel [%v]", len(callsB))
@@ -161,16 +161,17 @@ func (interactor *CdrInteractor) AddToSqlB(deliveries []entity.Delivery) error {
 		uuid, ok := call.(map[string]interface{})["variables"].(map[string]interface{})["uuid"].(string)
 		parent := getParentUuid(call)
 		if ok {
-			sql_call, err := parseToSqlB(item.GetBody(), uuid, parent) //e_call.Variables["uuid"])
+			sql_call, err := parseToSqlB(item.GetBody(), uuid, parent)
 			if err != nil {
 				return err
 			}
 			calls = append(calls, sql_call)
 		}
 	}
-	err := interactor.SqlCdrBRepository.InsertPack(calls)
-	if err != nil {
-		return err
+	if len(calls) > 0 {
+		if err := interactor.SqlCdrBRepository.InsertPack(calls); err != nil {
+			return err
+		}
 	}
 	return nil
 }
