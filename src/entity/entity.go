@@ -76,11 +76,11 @@ type ElasticCdr struct {
 	HangupCause          string `json:"hangup_cause,omitempty"`
 	OriginateDisposition string `json:"originate_disposition,omitempty"`
 	//times
-	BridgedTime     string `json:"bridged_time,omitempty"`
-	CallAnswerTime  string `json:"answered_time,omitempty"`
-	ProgressTime    string `json:"progress_time,omitempty"`
-	CallHangupTime  string `json:"hangup_time,omitempty"`
-	CallCreatedTime string `json:"created_time,omitempty"`
+	BridgedTime     uint64 `json:"bridged_time,omitempty"`
+	CallAnswerTime  uint64 `json:"answered_time,omitempty"`
+	ProgressTime    uint64 `json:"progress_time,omitempty"`
+	CallHangupTime  uint64 `json:"hangup_time,omitempty"`
+	CallCreatedTime uint64 `json:"created_time,omitempty"`
 	///////
 	Duration              uint32 `json:"duration"`
 	ConnectedCallDuration uint32 `json:"billsec"`
@@ -115,9 +115,9 @@ type Queue struct {
 	Queue_WaitingDuration  uint32 `json:"wait_duration"`
 	CC_CancelReason        string `json:"cancel_reason,omitempty"`
 	CC_Cause               string `json:"cause,omitempty"`
-	CC_Queue_AnsweredEpoch string `json:"answered_time,omitempty"`
-	CC_Queue_Hangup        string `json:"hangup_time,omitempty"`
-	CC_Queue_JoinedEpoch   string `json:"joined_time,omitempty"`
+	CC_Queue_AnsweredEpoch uint64 `json:"answered_time,omitempty"`
+	CC_Queue_Hangup        uint64 `json:"hangup_time,omitempty"`
+	CC_Queue_JoinedEpoch   uint64 `json:"joined_time,omitempty"`
 	CC_Side                string `json:"stop_side,omitempty"`
 	//Queue_AnswerDelay      uint32 `json:"asa"`
 }

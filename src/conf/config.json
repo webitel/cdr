@@ -1,12 +1,12 @@
 {
-  "isArchive": false,    
+  "isArchive": false,     
   "pg": {
       "user": "webitel",
       "database": "webitel",
       "password": "webitel",
       "host": "10.10.10.200",
-      "cdrTableA": "cdr_a1",
-      "cdrTableB": "cdr_b1",
+      "cdrTableA": "cdr_a",
+      "cdrTableB": "cdr_b",
       "port": 5432
   },
   "broker":{
@@ -33,18 +33,19 @@
   },
   "elastic":{
       "enabled": true,
+      "deleteTemplate": true,
       "host": "http://10.10.10.200:9200",    
       "intervalMillisec": 1000,
       "bulkCount": 100,
       "indexName": "matviy-cdr",
-      "typeName": "collection",
+      "typeName": "cdr",
       "template": {
           "name": "matvit",
           "body": {
             "template": "matviy*",
             "order": 2,
             "mappings": {
-              "collection": {
+              "cdr": {
                 "dynamic_templates" : [
                   {
                     "string_fields" : {
@@ -73,7 +74,7 @@
                     }
                   }
                 ],                 
-                "properties": {   
+                "properties": {
                   "uuid": {
                     "type": "keyword"
                   },       
@@ -123,19 +124,19 @@
                     "type": "keyword"
                   },
                   "bridged_time": {
-                    "type": "date"                      
+                    "type": "date"                                       
                   },
                   "answered_time": {
-                    "type": "date"                    
+                    "type": "date"                                        
                   },
                   "progress_time": {
-                    "type": "date"                    
+                    "type": "date"                                     
                   },
                   "hangup_time": {
-                    "type": "date"                   
+                    "type": "date"                                       
                   },
                   "created_time": {
-                    "type": "date"                    
+                    "type": "date"                                       
                   },  
                   "duration": {
                     "type": "long"
@@ -200,13 +201,13 @@
                           "type": "keyword"
                           },
                           "answered_time": {
-                          "type": "date"
+                          "type": "date"                          
                           },
                           "hangup_time": {
-                          "type": "date"
+                          "type": "date"                          
                           },  
                           "joined_time": {
-                          "type": "date"
+                          "type": "date"                          
                           },
                           "stop_side": {
                           "type": "keyword"
@@ -229,7 +230,42 @@
                         "type": "long"
                       }       
                     }
-                  },         
+                  }, 
+                  "recordings": {
+                    "type": "nested",
+                    "include_in_parent": true,
+                    "properties": {
+                        "content-type": {
+                          "type": "keyword"
+                        },
+                        "createdOn": {
+                          "type": "date",
+                          "format": "strict_date_optional_time||epoch_millis"
+                        },
+                        "domain": {
+                          "type": "keyword"
+                        },
+                        "name": {
+                          "type": "keyword"
+                        },
+                        "path": {
+                          "type": "keyword"
+                        },
+                        "private": {
+                          "type": "boolean",
+                          "store": true
+                        },
+                        "size": {
+                          "type": "long"
+                        },
+                        "type": {
+                          "type": "integer"
+                        },
+                        "uuid": {
+                          "type": "keyword"
+                        }
+                      }
+                  },        
                   "legs_b":{
                     "type": "object",                        
                     "properties": {
@@ -282,19 +318,19 @@
                         "type": "keyword"
                       },
                       "bridged_time": {
-                        "type": "date"                      
+                        "type": "date"                     
                       },
                       "answered_time": {
-                        "type": "date"                    
+                        "type": "date"                                         
                       },
                       "progress_time": {
-                        "type": "date"                    
+                        "type": "date"                                           
                       },
                       "hangup_time": {
-                        "type": "date"                   
+                        "type": "date"                                          
                       },
                       "created_time": {
-                        "type": "date"                    
+                        "type": "date"                                        
                       },  
                       "duration": {
                         "type": "long"
@@ -359,13 +395,13 @@
                               "type": "keyword"
                               },
                               "answered_time": {
-                              "type": "date"
+                              "type": "date"                              
                               },
                               "hangup_time": {
-                              "type": "date"
+                              "type": "date"                             
                               },  
                               "joined_time": {
-                              "type": "date"
+                              "type": "date"                              
                               },
                               "stop_side": {
                               "type": "keyword"

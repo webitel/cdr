@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/webitel/cdr/src/entity"
@@ -12,7 +13,15 @@ func getString(i interface{}) (s string) {
 }
 
 func getUint(i interface{}) (s uint32) {
-	s, _ = i.(uint32)
+	str, _ := i.(string)
+	integer, _ := strconv.Atoi(str)
+	s = uint32(integer)
+	return
+}
+
+func getUintFromFloat64(i interface{}) (s uint64) {
+	fl, _ := i.(float64)
+	s = uint64(fl)
 	return
 }
 
@@ -33,10 +42,12 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		variables, _                                                                = call["variables"].(map[string]interface{})
 		callerIdNumber, destinationNumber, callerIdName, source, networkAddr string = getFromProfile(call, variables)
 		qualityPercentageAudio, qualityPercentageVideo                       uint32 = getFromStats(call)
-		createdTime, progressTime, answeredTime, bridgedTime, hangupTime     string = getFromTimes(call)
+		createdTime, progressTime, answeredTime, bridgedTime, hangupTime     uint64 = getFromTimes(call)
 		queue_name                                                           string = getQueueName(variables)
 		extension                                                            string = getExtension(variables)
-		queue_hangup                                                         string = getQueueHangup(variables)
+		queue_hangup                                                         uint64 = getQueueHangup(variables)
+		queue_answered_epoch                                                 uint64 = getQueueAnswered(variables)
+		queue_joined_epoch                                                   uint64 = getQueueJoined(variables)
 		queue_waiting                                                        uint32 = getQueueWaiting(variables)
 		queue_call_duration                                                  uint32 = getQueueCallDuration(variables)
 	)
@@ -89,9 +100,9 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 			Queue_WaitingDuration:  queue_waiting,
 			CC_CancelReason:        getString(variables["cc_cancel_reason"]),
 			CC_Cause:               getString(variables["cc_cause"]),
-			CC_Queue_AnsweredEpoch: getString(variables["cc_queue_answered_epoch"]),
+			CC_Queue_AnsweredEpoch: queue_answered_epoch,
 			CC_Queue_Hangup:        queue_hangup,
-			CC_Queue_JoinedEpoch:   getString(variables["cc_queue_joined_epoch"]),
+			CC_Queue_JoinedEpoch:   queue_joined_epoch,
 			CC_Side:                getString(variables["cc_side"]),
 		},
 	}
@@ -168,15 +179,35 @@ func getFromStats(call map[string]interface{}) (qualityPercentageAudio, qualityP
 	return
 }
 
-func getFromTimes(call map[string]interface{}) (createdTime, progressTime, answeredTime, bridgedTime, hangupTime string) {
+func getFromTimes(call map[string]interface{}) (createdTime, progressTime, answeredTime, bridgedTime, hangupTime uint64) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
 		times, ok := c[0].(map[string]interface{})["times"].(map[string]interface{})
 		if ok {
-			createdTime, _ = times["created_time"].(string)
-			progressTime, _ = times["progress_time"].(string)
-			answeredTime, _ = times["answered_time"].(string)
-			bridgedTime, _ = times["bridged_time"].(string)
-			hangupTime, _ = times["hangup_time"].(string)
+			createdTime = getUintFromFloat64(times["created_time"]) / 1000 //sqlStr[0 : len(sqlStr)-3]
+			progressTime = getUintFromFloat64(times["progress_time"]) / 1000
+			answeredTime = getUintFromFloat64(times["answered_time"]) / 1000
+			bridgedTime = getUintFromFloat64(times["bridged_time"]) / 1000
+			hangupTime = getUintFromFloat64(times["hangup_time"]) / 1000
+			// createdTime = createdTimeStr / 1000
+			// progressTime = progressTimeStr / 1000
+			// answeredTime = answeredTimeStr / 1000
+			// bridgedTime = bridgedTimeStr / 1000
+			// hangupTime = hangupTimeStr / 1000
+			// if len(createdTimeStr) > 3 {
+			// 	createdTime, _ = strconv.ParseUint(createdTimeStr[0:len(createdTimeStr)-3], 10, 64)
+			// }
+			// if len(progressTimeStr) > 3 {
+			// 	progressTime, _ = strconv.ParseUint(progressTimeStr[0:len(progressTimeStr)-3], 10, 64)
+			// }
+			// if len(answeredTimeStr) > 3 {
+			// 	answeredTime, _ = strconv.ParseUint(answeredTimeStr[0:len(answeredTimeStr)-3], 10, 64)
+			// }
+			// if len(bridgedTimeStr) > 3 {
+			// 	bridgedTime, _ = strconv.ParseUint(bridgedTimeStr[0:len(bridgedTimeStr)-3], 10, 64)
+			// }
+			// if len(hangupTimeStr) > 3 {
+			// 	hangupTime, _ = strconv.ParseUint(hangupTimeStr[0:len(hangupTimeStr)-3], 10, 64)
+			// }
 		}
 	}
 	return
@@ -199,25 +230,45 @@ func getExtension(variables map[string]interface{}) (extension string) {
 	return
 }
 
-func getQueueHangup(variables map[string]interface{}) (queue_hangup string) {
-	if c, ok := variables["cc_queue_canceled_epoch"].(string); ok {
-		queue_hangup = c
-	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok {
-		queue_hangup = t
+func getQueueHangup(variables map[string]interface{}) (queue_hangup uint64) {
+	if c, ok := variables["cc_queue_canceled_epoch"].(string); ok && len(c) > 3 {
+		queue_hangup, _ = strconv.ParseUint(c[0:len(c)-3], 10, 64)
+	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok && len(c) > 3 {
+		queue_hangup, _ = strconv.ParseUint(t[0:len(t)-3], 10, 64)
+	}
+	return
+}
+
+func getQueueAnswered(variables map[string]interface{}) (queue_answered_epoch uint64) {
+	if c, ok := variables["cc_queue_answered_epoch"].(string); ok && len(c) > 3 {
+		queue_answered_epoch, _ = strconv.ParseUint(c[0:len(c)-3], 10, 64)
+	}
+	return
+}
+
+func getQueueJoined(variables map[string]interface{}) (queue_joined_epoch uint64) {
+	if c, ok := variables["cc_queue_joined_epoch"].(string); ok && len(c) > 3 {
+		queue_joined_epoch, _ = strconv.ParseUint(c[0:len(c)-3], 10, 64)
 	}
 	return
 }
 
 func getQueueWaiting(variables map[string]interface{}) (queue_waiting uint32) {
 	var first, second uint32
-	if a, ok := variables["cc_queue_answered_epoch"].(uint32); ok {
-		first = a
-	} else if c, ok := variables["cc_queue_canceled_epoch"].(uint32); ok {
-		first = c
-	} else if t, ok := variables["cc_queue_terminated_epoch"].(uint32); ok {
-		first = t
+	if a, ok := variables["cc_queue_answered_epoch"].(string); ok {
+		first64, _ := strconv.ParseUint(a, 10, 32)
+		first = uint32(first64)
+	} else if c, ok := variables["cc_queue_canceled_epoch"].(string); ok {
+		first64, _ := strconv.ParseUint(c, 10, 32)
+		first = uint32(first64)
+	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok {
+		first64, _ := strconv.ParseUint(t, 10, 32)
+		first = uint32(first64)
 	}
-	second, _ = variables["cc_queue_joined_epoch"].(uint32)
+	if sec, ok := variables["cc_queue_joined_epoch"].(string); ok {
+		second64, _ := strconv.ParseUint(sec, 10, 32)
+		second = uint32(second64)
+	}
 	if first > second {
 		queue_waiting = first - second
 	}
@@ -226,14 +277,21 @@ func getQueueWaiting(variables map[string]interface{}) (queue_waiting uint32) {
 
 func getQueueCallDuration(variables map[string]interface{}) (queue_call_duration uint32) {
 	var first, second uint32
-	if c, ok := variables["cc_queue_canceled_epoch"].(uint32); ok {
-		first = c
-	} else if t, ok := variables["cc_queue_terminated_epoch"].(uint32); ok {
-		first = t
-	} else if e, ok := variables["end_epoch"].(uint32); ok {
-		first = e
+	if c, ok := variables["cc_queue_canceled_epoch"].(string); ok {
+		first64, _ := strconv.ParseUint(c, 10, 32)
+		first = uint32(first64)
+	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok {
+		first64, _ := strconv.ParseUint(t, 10, 32)
+		first = uint32(first64)
+	} else if e, ok := variables["end_epoch"].(string); ok {
+		first64, _ := strconv.ParseUint(e, 10, 32)
+		first = uint32(first64)
 	}
-	second, _ = variables["cc_queue_joined_epoch"].(uint32)
+	//second, _ = variables["cc_queue_joined_epoch"].(uint32)
+	if sec, ok := variables["cc_queue_joined_epoch"].(string); ok {
+		second64, _ := strconv.ParseUint(sec, 10, 32)
+		second = uint32(second64)
+	}
 	if first > second {
 		queue_call_duration = first - second
 	}
@@ -241,9 +299,11 @@ func getQueueCallDuration(variables map[string]interface{}) (queue_call_duration
 }
 
 func getQueueAnswerDelay(variables map[string]interface{}) (queue_answer_delay uint32) {
-	if a, ok := variables["cc_queue_answered_epoch"].(uint32); ok {
-		if b, ok := variables["cc_queue_joined_epoch"].(uint32); ok && a > b {
-			queue_answer_delay = a - b
+	if a, ok := variables["cc_queue_answered_epoch"].(string); ok {
+		if b, ok := variables["cc_queue_joined_epoch"].(string); ok && a > b {
+			a64, _ := strconv.ParseUint(a, 10, 32)
+			b64, _ := strconv.ParseUint(b, 10, 32)
+			queue_answer_delay = uint32(a64 - b64)
 		}
 	}
 	return

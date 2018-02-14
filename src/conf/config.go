@@ -18,6 +18,7 @@ type Configuration struct {
 
 type Elastic struct {
 	Enabled         bool   `json:"enabled" envconfig:"elastic:enabled"`
+	DeleteTemplate  bool   `json:"deleteTemplate"`
 	BulkCount       uint32 `json:"bulkCount" envconfig:"elastic:bulkCount"`
 	RequestTimeout  uint32 `json:"intervalMillisec" envconfig:"elastic:intervalMillisec"`
 	Url             string `json:"host" envconfig:"elastic:host"`
@@ -151,7 +152,13 @@ func (conf *Configuration) readFromEnviroment() error {
 		} else if value == "0" || value == "false" {
 			conf.Elastic.Enabled = false
 		}
-
+	}
+	if value := os.Getenv("elastic:deleteTemplate"); value != "" {
+		if value == "1" || value == "true" {
+			conf.Elastic.DeleteTemplate = true
+		} else if value == "0" || value == "false" {
+			conf.Elastic.DeleteTemplate = false
+		}
 	}
 	if value := os.Getenv("elastic:bulkCount"); value != "" {
 		i, _ := strconv.Atoi(value)

@@ -76,16 +76,34 @@ func (handler *ElasticHandler) templatePrepare(templateMap string) error {
 	}
 	if !exists {
 		// Create a new index.
-		createTemplate, err := handler.Client.IndexPutTemplate(elasticConfig.ElasticTemplate.Name).Name(elasticConfig.ElasticTemplate.Name).BodyString(templateMap).Do(handler.Ctx)
+		if err := handler.createTemplate(templateMap); err != nil {
+			return err
+		}
+	} else if elasticConfig.DeleteTemplate {
+		deleteTemplate, err := handler.Client.IndexDeleteTemplate(elasticConfig.ElasticTemplate.Name).Name(elasticConfig.ElasticTemplate.Name).Do(handler.Ctx)
 		if err != nil {
 			return err
 		}
-		if !createTemplate.Acknowledged || createTemplate == nil {
+		if !deleteTemplate.Acknowledged || deleteTemplate == nil {
 			return fmt.Errorf("Template is not acknowledged")
-			// Not acknowledged
 		}
-		logger.Info("Elastic: put template")
+		if err := handler.createTemplate(templateMap); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+func (handler *ElasticHandler) createTemplate(templateMap string) error {
+	createTemplate, err := handler.Client.IndexPutTemplate(elasticConfig.ElasticTemplate.Name).Name(elasticConfig.ElasticTemplate.Name).BodyString(templateMap).Do(handler.Ctx)
+	if err != nil {
+		return err
+	}
+	if !createTemplate.Acknowledged || createTemplate == nil {
+		return fmt.Errorf("Template is not acknowledged")
+		// Not acknowledged
+	}
+	logger.Info("Elastic: put template")
 	return nil
 }
 
@@ -112,7 +130,6 @@ func (handler *ElasticHandler) templatePrepare(templateMap string) error {
 func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
-		//logger.Debug(fmt.Sprintf("%s-%v-%v", elasticConfig.IndexName, time.Now().UTC().Year(), item.DomainName))
 		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v-%v", elasticConfig.IndexName, time.Now().UTC().Year(), item.DomainName)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})
 		bulkRequest = bulkRequest.Add(req)
 	}
