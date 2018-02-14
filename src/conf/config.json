@@ -37,12 +37,12 @@
       "host": "http://10.10.10.200:9200",    
       "intervalMillisec": 1000,
       "bulkCount": 100,
-      "indexName": "matviy-cdr",
+      "indexName": "cdr",
       "typeName": "cdr",
       "template": {
-          "name": "matvit",
+          "name": "webitel",
           "body": {
-            "template": "matviy*",
+            "index_patterns": ["cdr-*"],
             "order": 2,
             "mappings": {
               "cdr": {

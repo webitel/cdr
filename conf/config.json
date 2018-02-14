@@ -42,7 +42,7 @@
       "template": {
           "name": "webitel",
           "body": {
-            "template": "cdr-*",
+            "index_patterns": ["cdr-*"],
             "order": 2,
             "mappings": {
               "cdr": {
