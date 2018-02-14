@@ -145,9 +145,14 @@ func (conf *Configuration) readFromEnviroment() error {
 		i, _ := strconv.Atoi(value)
 		conf.Postgres.Port = int32(i)
 	}
-	// if value := os.Getenv("elastic:enabled"); value != "" {
-	// 	conf.Elastic.Enabled = bool(value)
-	// }
+	if value := os.Getenv("elastic:enabled"); value != "" {
+		if value == "1" || value == "true" {
+			conf.Elastic.Enabled = true
+		} else if value == "0" || value == "false" {
+			conf.Elastic.Enabled = false
+		}
+
+	}
 	if value := os.Getenv("elastic:bulkCount"); value != "" {
 		i, _ := strconv.Atoi(value)
 		conf.Elastic.BulkCount = uint32(i)
@@ -165,9 +170,13 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("broker:publisher:connectionString"); value != "" {
 		conf.Rabbit.Publisher.ConnectionString = value
 	}
-	// if value := os.Getenv("broker:publisher:enable"); value != "" {
-	// 	conf.Rabbit.Publisher.ConnectionString = value
-	// }
+	if value := os.Getenv("broker:publisher:enable"); value != "" {
+		if value == "1" || value == "true" {
+			conf.Rabbit.Publisher.Enable = true
+		} else if value == "0" || value == "false" {
+			conf.Rabbit.Publisher.Enable = false
+		}
+	}
 	if value := os.Getenv("broker:publisher:exchangeName"); value != "" {
 		conf.Rabbit.Publisher.ExchangeName = value
 	}
@@ -192,9 +201,13 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("broker:receiver:connectionString"); value != "" {
 		conf.Rabbit.Receiver.ConnectionString = value
 	}
-	// if value := os.Getenv("broker:publisher:enable"); value != "" {
-	// 	conf.Rabbit.Publisher.ConnectionString = value
-	// }
+	if value := os.Getenv("broker:publisher:enable"); value != "" {
+		if value == "1" || value == "true" {
+			conf.Rabbit.Receiver.Enable = true
+		} else if value == "0" || value == "false" {
+			conf.Rabbit.Receiver.Enable = false
+		}
+	}
 	if value := os.Getenv("broker:receiver:exchangeName"); value != "" {
 		conf.Rabbit.Receiver.ExchangeName = value
 	}
@@ -214,6 +227,13 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("broker:receiver:intervalMillisec"); value != "" {
 		i, _ := strconv.Atoi(value)
 		conf.Rabbit.Receiver.IntervalMillisec = uint32(i)
+	}
+	if value := os.Getenv("cdr:isArchive"); value != "" {
+		if value == "1" || value == "true" {
+			conf.ArchiveServer = true
+		} else if value == "0" || value == "false" {
+			conf.ArchiveServer = false
+		}
 	}
 	return nil
 }

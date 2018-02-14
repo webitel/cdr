@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/entity"
-	"webitel.com/cdr_service/logger"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/entity"
+	"github.com/webitel/cdr/src/logger"
 )
 
 type CdrInteractor struct {
