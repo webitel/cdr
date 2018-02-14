@@ -59,10 +59,10 @@ func (handler *ElasticHandler) Init() error {
 				logger.Error(err.Error())
 				continue
 			}
-			if err := handler.indexPrepare(); err != nil {
-				logger.Error(err.Error())
-				continue
-			}
+			// if err := handler.indexPrepare(); err != nil {
+			// 	logger.Error(err.Error())
+			// 	continue
+			// }
 			ticker.Stop()
 			return nil
 		}
@@ -84,35 +84,36 @@ func (handler *ElasticHandler) templatePrepare(templateMap string) error {
 			return fmt.Errorf("Template is not acknowledged")
 			// Not acknowledged
 		}
+		logger.Info("Elastic: put template")
 	}
-	logger.Notice("Elastic: put template")
 	return nil
 }
 
-func (handler *ElasticHandler) indexPrepare() error {
-	exists, err := handler.Client.IndexExists(elasticConfig.IndexName).Do(handler.Ctx)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		// Create a new index.
-		createIndex, err := handler.Client.CreateIndex(elasticConfig.IndexName).Do(handler.Ctx)
-		if err != nil {
-			return err
-		}
-		if !createIndex.Acknowledged || createIndex == nil {
-			return fmt.Errorf("Index is not acknowledged")
-			// Not acknowledged
-		}
-	}
-	logger.Notice("Elastic: put index")
-	return nil
-}
+// func (handler *ElasticHandler) indexPrepare() error {
+// 	exists, err := handler.Client.IndexExists(elasticConfig.IndexName).Do(handler.Ctx)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if !exists {
+// 		// Create a new index.
+// 		createIndex, err := handler.Client.CreateIndex(elasticConfig.IndexName).Do(handler.Ctx)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		if !createIndex.Acknowledged || createIndex == nil {
+// 			return fmt.Errorf("Index is not acknowledged")
+// 			// Not acknowledged
+// 		}
+// 	}
+// 	logger.Notice("Elastic: put index")
+// 	return nil
+// }
 
 func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
-		req := elastic.NewBulkUpdateRequest().Index(elasticConfig.IndexName).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})
+		//logger.Debug(fmt.Sprintf("%s-%v-%v", elasticConfig.IndexName, time.Now().UTC().Year(), item.DomainName))
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v-%v", elasticConfig.IndexName, time.Now().UTC().Year(), item.DomainName)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
@@ -128,7 +129,7 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) error {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
-		req := elastic.NewBulkUpdateRequest().Index(elasticConfig.IndexName).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v-%v", elasticConfig.IndexName, time.Now().UTC().Year(), item.DomainName)).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
