@@ -111,8 +111,8 @@ type Locations struct {
 
 type Queue struct {
 	CC_Queue_Name          string `json:"name,omitempty"`
-	Queue_CallDuration     uint32 `json:"duration"`
-	Queue_WaitingDuration  uint32 `json:"wait_duration"`
+	Queue_CallDuration     uint32 `json:"duration,omitempty"`
+	Queue_WaitingDuration  uint32 `json:"wait_duration,omitempty"`
 	CC_CancelReason        string `json:"cancel_reason,omitempty"`
 	CC_Cause               string `json:"cause,omitempty"`
 	CC_Queue_AnsweredEpoch uint64 `json:"answered_time,omitempty"`

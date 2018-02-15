@@ -130,7 +130,11 @@ func (handler *ElasticHandler) createTemplate(templateMap string) error {
 func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v-%v", elasticConfig.IndexName, time.Now().UTC().Year(), item.DomainName)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})
+		var tmpDomain string
+		if item.DomainName != "" {
+			tmpDomain = "-" + item.DomainName
+		}
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
@@ -138,6 +142,11 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 		return err
 	}
 	if res.Errors {
+		for _, item := range res.Items {
+			if item["update"].Error != nil {
+				logger.Error(fmt.Sprintf("LEG A. ID: %v; ERROR TYPE: %v; REASON: %v", item["update"].Id, item["update"].Error.Type, item["update"].Error.Reason))
+			}
+		}
 		return fmt.Errorf("Leg A: Bad response. Request has errors.")
 	}
 	return nil
@@ -146,7 +155,11 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) error {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v-%v", elasticConfig.IndexName, time.Now().UTC().Year(), item.DomainName)).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
+		var tmpDomain string
+		if item.DomainName != "" {
+			tmpDomain = "-" + item.DomainName
+		}
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
@@ -154,6 +167,11 @@ func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) error {
 		return err
 	}
 	if res.Errors {
+		for _, item := range res.Items {
+			if item["update"].Error != nil {
+				logger.Error(fmt.Sprintf("LEG B. ID: %v; ERROR TYPE: %v; REASON: %v", item["update"].Id, item["update"].Error.Type, item["update"].Error.Reason))
+			}
+		}
 		return fmt.Errorf("Leg B: Bad response. Request has errors.")
 	}
 	return nil

@@ -283,10 +283,11 @@ func getQueueCallDuration(variables map[string]interface{}) (queue_call_duration
 	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok {
 		first64, _ := strconv.ParseUint(t, 10, 32)
 		first = uint32(first64)
-	} else if e, ok := variables["end_epoch"].(string); ok {
-		first64, _ := strconv.ParseUint(e, 10, 32)
-		first = uint32(first64)
 	}
+	// else if e, ok := variables["end_epoch"].(string); ok {
+	// 	first64, _ := strconv.ParseUint(e, 10, 32)
+	// 	first = uint32(first64)
+	// }
 	//second, _ = variables["cc_queue_joined_epoch"].(uint32)
 	if sec, ok := variables["cc_queue_joined_epoch"].(string); ok {
 		second64, _ := strconv.ParseUint(sec, 10, 32)

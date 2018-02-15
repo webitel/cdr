@@ -267,7 +267,8 @@
                       }
                   },        
                   "legs_b":{
-                    "type": "object",                        
+                    "type": "nested",
+                    "include_in_parent": true,                        
                     "properties": {
                       "uuid": {
                         "type": "keyword"
