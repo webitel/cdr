@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -38,18 +39,18 @@ func getUintFromFloat64(i interface{}) (s uint64) {
 
 func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 	var (
-		call, _                                                                     = callInterface.(map[string]interface{})
-		variables, _                                                                = call["variables"].(map[string]interface{})
-		callerIdNumber, destinationNumber, callerIdName, source, networkAddr string = getFromProfile(call, variables)
-		qualityPercentageAudio, qualityPercentageVideo                       uint32 = getFromStats(call)
-		createdTime, progressTime, answeredTime, bridgedTime, hangupTime     uint64 = getFromTimes(call)
-		queue_name                                                           string = getQueueName(variables)
-		extension                                                            string = getExtension(variables)
-		queue_hangup                                                         uint64 = getQueueHangup(variables)
-		queue_answered_epoch                                                 uint64 = getQueueAnswered(variables)
-		queue_joined_epoch                                                   uint64 = getQueueJoined(variables)
-		queue_waiting                                                        uint32 = getQueueWaiting(variables)
-		queue_call_duration                                                  uint32 = getQueueCallDuration(variables)
+		call, _                                                                               = callInterface.(map[string]interface{})
+		variables, _                                                                          = call["variables"].(map[string]interface{})
+		callerIdNumber, destinationNumber, callerIdName, source, networkAddr           string = getFromProfile(call, variables)
+		qualityPercentageAudio, qualityPercentageVideo                                 uint32 = getFromStats(call)
+		createdTime, progressTime, answeredTime, bridgedTime, hangupTime, transferTime uint64 = getFromTimes(call)
+		queue_name                                                                     string = getQueueName(variables)
+		extension                                                                      string = getExtension(variables)
+		queue_hangup                                                                   uint64 = getQueueHangup(variables)
+		queue_answered_epoch                                                           uint64 = getQueueAnswered(variables)
+		queue_joined_epoch                                                             uint64 = getQueueJoined(variables)
+		queue_waiting                                                                  uint32 = getQueueWaiting(variables)
+		queue_call_duration                                                            uint32 = getQueueCallDuration(variables)
 	)
 
 	e_entity := entity.ElasticCdr{
@@ -76,6 +77,7 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		ProgressTime:          progressTime,
 		CallHangupTime:        hangupTime,
 		CallCreatedTime:       createdTime,
+		TransferTime:          transferTime,
 		Duration:              getUint(variables["duration"]),
 		ConnectedCallDuration: getUint(variables["billsec"]),
 		ProgressSeconds:       getUint(variables["progresssec"]),
@@ -120,7 +122,33 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 	if *e_entity.Locations == (entity.Locations{}) {
 		e_entity.Locations = nil
 	}
+	if e_entity.Parent_uuid == "" {
+		byteArr, _ := json.Marshal(call["callflow"])
+		var tmpCf []entity.Callflow
+		json.Unmarshal(byteArr, &tmpCf)
+		if len(tmpCf) > 0 {
+			e_entity.Callflow = &tmpCf
+			setMillis(e_entity.Callflow)
+		}
+	}
 	return e_entity, nil
+}
+
+func setMillis(cf *[]entity.Callflow) {
+	for i, _ := range *cf {
+		(*cf)[i].CreatedTime = (*cf)[i].CreatedTime / 1000
+		(*cf)[i].ProfileCreatedTime = (*cf)[i].ProfileCreatedTime / 1000
+		(*cf)[i].ProgressTime = (*cf)[i].ProgressTime / 1000
+		(*cf)[i].ProgressMediaTime = (*cf)[i].ProgressMediaTime / 1000
+		(*cf)[i].AnsweredTime = (*cf)[i].AnsweredTime / 1000
+		(*cf)[i].BridgedTime = (*cf)[i].BridgedTime / 1000
+		(*cf)[i].LastHoldTime = (*cf)[i].LastHoldTime / 1000
+		(*cf)[i].HoldAccumTime = (*cf)[i].HoldAccumTime / 1000
+		(*cf)[i].HangupTime = (*cf)[i].HangupTime / 1000
+		(*cf)[i].ResurrectTime = (*cf)[i].ResurrectTime / 1000
+		(*cf)[i].TransferTime = (*cf)[i].TransferTime / 1000
+	}
+
 }
 
 func getQueueName(variables map[string]interface{}) (queue_name string) {
@@ -132,25 +160,9 @@ func getQueueName(variables map[string]interface{}) (queue_name string) {
 	return
 }
 
-// func getBridgeEpoch(variables map[string]interface{}) (bridgedEpoch uint64) {
-// 	if b, ok := variables["bridge_epoch"].(uint64); ok {
-// 		bridgedEpoch = b
-// 	} else if c, ok := variables["cc_queue_answered_epoch"].(uint64); ok {
-// 		bridgedEpoch = c
-// 	}
-// 	return
-// }
-
-// func getAnswered(variables map[string]interface{}) (answered bool) {
-// 	if a, ok := variables["answer_epoch"].(uint32); ok {
-// 		answered = a > 0
-// 	}
-// 	return
-// }
-
 func getFromProfile(call, variables map[string]interface{}) (callerIdNumber, destinationNumber, callerIdName, source, networkAddr string) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
-		callflow, ok := c[0].(map[string]interface{})["caller_profile"].(map[string]interface{})
+		callflow, ok := c[len(c)-1].(map[string]interface{})["caller_profile"].(map[string]interface{})
 		if ok {
 			callerIdNumber, _ = callflow["caller_id_number"].(string)
 			callerIdName, _ = callflow["caller_id_name"].(string)
@@ -179,35 +191,16 @@ func getFromStats(call map[string]interface{}) (qualityPercentageAudio, qualityP
 	return
 }
 
-func getFromTimes(call map[string]interface{}) (createdTime, progressTime, answeredTime, bridgedTime, hangupTime uint64) {
+func getFromTimes(call map[string]interface{}) (createdTime, progressTime, answeredTime, bridgedTime, hangupTime, transferTime uint64) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
-		times, ok := c[0].(map[string]interface{})["times"].(map[string]interface{})
+		times, ok := c[len(c)-1].(map[string]interface{})["times"].(map[string]interface{})
 		if ok {
 			createdTime = getUintFromFloat64(times["created_time"]) / 1000 //sqlStr[0 : len(sqlStr)-3]
 			progressTime = getUintFromFloat64(times["progress_time"]) / 1000
 			answeredTime = getUintFromFloat64(times["answered_time"]) / 1000
 			bridgedTime = getUintFromFloat64(times["bridged_time"]) / 1000
 			hangupTime = getUintFromFloat64(times["hangup_time"]) / 1000
-			// createdTime = createdTimeStr / 1000
-			// progressTime = progressTimeStr / 1000
-			// answeredTime = answeredTimeStr / 1000
-			// bridgedTime = bridgedTimeStr / 1000
-			// hangupTime = hangupTimeStr / 1000
-			// if len(createdTimeStr) > 3 {
-			// 	createdTime, _ = strconv.ParseUint(createdTimeStr[0:len(createdTimeStr)-3], 10, 64)
-			// }
-			// if len(progressTimeStr) > 3 {
-			// 	progressTime, _ = strconv.ParseUint(progressTimeStr[0:len(progressTimeStr)-3], 10, 64)
-			// }
-			// if len(answeredTimeStr) > 3 {
-			// 	answeredTime, _ = strconv.ParseUint(answeredTimeStr[0:len(answeredTimeStr)-3], 10, 64)
-			// }
-			// if len(bridgedTimeStr) > 3 {
-			// 	bridgedTime, _ = strconv.ParseUint(bridgedTimeStr[0:len(bridgedTimeStr)-3], 10, 64)
-			// }
-			// if len(hangupTimeStr) > 3 {
-			// 	hangupTime, _ = strconv.ParseUint(hangupTimeStr[0:len(hangupTimeStr)-3], 10, 64)
-			// }
+			transferTime = getUintFromFloat64(times["transfer_time"]) / 1000
 		}
 	}
 	return
@@ -309,3 +302,16 @@ func getQueueAnswerDelay(variables map[string]interface{}) (queue_answer_delay u
 	}
 	return
 }
+
+// const (
+// 	timestamp = int64(1518700970102406)
+// 	precision = int64(time.Microsecond)
+// )
+
+// func FromTimestamp(timestamp, precision uint64) time.Time {
+// 	if precision == 0 {
+// 		precision = int64(time.Second)
+// 	}
+// 	timestamp = timestamp * precision
+// 	return time.Unix(timestamp / int64(time.Second), timestamp % int64(time.Second))
+// }

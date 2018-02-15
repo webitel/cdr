@@ -58,13 +58,13 @@ type SqlCdr struct {
 }
 
 type ElasticCdr struct {
-	Parent_uuid          string `json:"-"`
-	Uuid                 string `json:"uuid"`
-	Direction            string `json:"direction,omitempty"`
-	CallerIdName         string `json:"caller_id_name,omitempty"`
-	CallerIdNumber       string `json:"caller_id_number,omitempty"`
-	CalleeIdName         string `json:"callee_id_name,omitempty"`   //???????????????????????
-	CalleeIdNumber       string `json:"callee_id_number,omitempty"` //???????????????????????
+	Parent_uuid    string `json:"-"`
+	Uuid           string `json:"uuid"`
+	Direction      string `json:"direction,omitempty"`
+	CallerIdName   string `json:"caller_id_name,omitempty"`
+	CallerIdNumber string `json:"caller_id_number,omitempty"`
+	//CalleeIdName         string `json:"callee_id_name,omitempty"`   //???????????????????????
+	//CalleeIdNumber       string `json:"callee_id_number,omitempty"` //???????????????????????
 	NetworkAddr          string `json:"network_addr,omitempty"`
 	DestinationNumber    string `json:"destination_number,omitempty"`
 	DomainName           string `json:"domain_name,omitempty"`
@@ -81,6 +81,7 @@ type ElasticCdr struct {
 	ProgressTime    uint64 `json:"progress_time,omitempty"`
 	CallHangupTime  uint64 `json:"hangup_time,omitempty"`
 	CallCreatedTime uint64 `json:"created_time,omitempty"`
+	TransferTime    uint64 `json:"transfer_time,omitempty"`
 	///////
 	Duration              uint32 `json:"duration"`
 	ConnectedCallDuration uint32 `json:"billsec"`
@@ -94,12 +95,41 @@ type ElasticCdr struct {
 	Variables              map[string]interface{} `json:"variables"`
 	*Locations             `json:"locations,omitempty"`
 	*Queue                 `json:"queue,omitempty"`
+	Callflow               *[]Callflow `json:"callflow,omitempty"`
 	//LegB                   []interface{} `json:"leg_b,omitempty"`
 }
 
-// func (e *ElasticCdr) GetUuid() string {
-// 	return e.Uuid
-// }
+type Callflow struct {
+	CallerProfile `json:"caller_profile,omitempty"`
+	Times         `json:"times,omitempty"`
+}
+
+type CallerProfile struct {
+	Username          string `json:"username,omitempty"`
+	CallerIdName      string `json:"caller_id_name,omitempty"`
+	Ani               string `json:"ani,omitempty"`
+	Aniii             string `json:"aniii,omitempty"`
+	CallerIdNumber    string `json:"caller_id_number,omitempty"`
+	NetworkAddr       string `json:"network_addr,omitempty"`
+	Rdnis             string `json:"rdnis,omitempty"`
+	DestinationNumber string `json:"destination_number,omitempty"`
+	Uuid              string `json:"uuid,omitempty"`
+	Source            string `json:"source,omitempty"`
+}
+
+type Times struct {
+	CreatedTime        uint64 `json:"created_time,omitempty"`
+	ProfileCreatedTime uint64 `json:"profile_created_time,omitempty"`
+	ProgressTime       uint64 `json:"progress_time,omitempty"`
+	ProgressMediaTime  uint64 `json:"progress_media_time,omitempty"`
+	AnsweredTime       uint64 `json:"answered_time,omitempty"`
+	BridgedTime        uint64 `json:"bridged_time,omitempty"`
+	LastHoldTime       uint64 `json:"last_hold_time,omitempty"`
+	HoldAccumTime      uint64 `json:"hold_accum_time,omitempty"`
+	HangupTime         uint64 `json:"hangup_time,omitempty"`
+	ResurrectTime      uint64 `json:"resurrect_time,omitempty"`
+	TransferTime       uint64 `json:"transfer_time,omitempty"`
+}
 
 type Locations struct {
 	Geo         string `json:"geo,omitempty"`
@@ -124,6 +154,27 @@ type Queue struct {
 
 var (
 	IgnoredList = [...]string{
+		"rtp_use_codec_string",
+		"rtp_has_crypto",
+		"media_webrtc",
+		"event_channel_cookie",
+		"jsock_uuid_str",
+		"ignore_early_media",
+		"send_silence_when_idle",
+		"record_post_process_exec_app",
+		"Core-UUID",
+		"Event-Calling-File",
+		"Event-Calling-Function",
+		"Event-Calling-Line-Number",
+		"Event-Date-GMT",
+		"Event-Date-Local",
+		"Event-Date-Timestamp",
+		"Event-Name",
+		"Event-Sequence",
+		"FreeSWITCH-Hostname",
+		"FreeSWITCH-IPv4",
+		"FreeSWITCH-IPv6",
+		"FreeSWITCH-Switchname",
 		"direction",
 		"uuid",
 		"session_id",

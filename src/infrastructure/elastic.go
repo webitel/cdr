@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/webitel/cdr/src/conf"
@@ -131,7 +132,7 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
 		var tmpDomain string
-		if item.DomainName != "" {
+		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
 			tmpDomain = "-" + item.DomainName
 		}
 		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})

@@ -265,9 +265,89 @@
                           "type": "keyword"
                         }
                       }
-                  },        
+                  },     
+                  "callflow": {
+                    "type": "nested",
+                    "include_in_parent": true,                        
+                    "properties": {
+                      "caller_profile":{
+                        "type":"object",
+                        "properties": {
+                          "username": {
+                            "type": "keyword"
+                          },
+                          "caller_id_name": {
+                            "type": "keyword"
+                          },
+                          "ani": {
+                            "type": "keyword"
+                          },
+                          "aniii": {
+                            "type": "keyword"
+                          },
+                          "caller_id_number": {
+                            "type": "keyword"
+                          },
+                          "network_addr": {
+                            "type": "keyword"
+                          },
+                          "rdnis": {
+                            "type": "keyword"
+                          },
+                          "destination_number": {
+                            "type": "keyword"
+                          },
+                          "uuid": {
+                            "type": "keyword"
+                          },
+                          "source": {
+                            "type": "keyword"
+                          }
+                        }
+                      },
+                      "times":{
+                        "type":"object",
+                        "properties": {
+                          "created_time": {
+                            "type": "date"                          
+                          },
+                          "profile_created_time": {
+                            "type": "date"                          
+                          },
+                          "progress_time": {
+                            "type": "date"                          
+                          },
+                          "progress_media_time": {
+                            "type": "date"                          
+                          },
+                          "answered_time": {
+                            "type": "date"                          
+                          },
+                          "bridged_time": {
+                            "type": "date"                          
+                          },
+                          "last_hold_time": {
+                            "type": "date"                          
+                          },
+                          "hold_accum_time": {
+                            "type": "date"                          
+                          },
+                          "hangup_time": {
+                            "type": "date"                          
+                          },
+                          "resurrect_time": {
+                            "type": "date"                          
+                          },
+                          "transfer_time": {
+                            "type": "date"                          
+                          }
+                        }
+                      }
+                    }
+                  },   
                   "legs_b":{
-                    "type": "object",                        
+                    "type": "nested",
+                    "include_in_parent": true,                        
                     "properties": {
                       "uuid": {
                         "type": "keyword"
@@ -276,7 +356,8 @@
                         "type": "keyword"
                       },
                       "caller_id_name": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       },
                       "caller_id_number": {
                         "type": "keyword"
