@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	elastic "gopkg.in/olivere/elastic.v5"
 	"github.com/webitel/cdr/src/conf"
 	"github.com/webitel/cdr/src/entity"
 	"github.com/webitel/cdr/src/logger"
-	elastic "gopkg.in/olivere/elastic.v5"
 )
 
 type ElasticHandler struct {

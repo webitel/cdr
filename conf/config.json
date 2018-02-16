@@ -34,7 +34,7 @@
   "elastic":{
       "enabled": true,
       "deleteTemplate": false,
-      "host": "http://elasticsearch:9200",    
+      "host": "http://10.10.10.200:9200",    
       "intervalMillisec": 1000,
       "bulkCount": 100,
       "indexName": "cdr",
@@ -166,7 +166,7 @@
                     "type": "object",
                     "properties": {
                       "geo":{
-                        "type": "keyword"
+                        "type": "geo_point"
                       },
                       "city":{
                         "type": "keyword"
@@ -186,34 +186,34 @@
                     "type": "object",
                     "properties": {
                           "name": {
-                          "type": "keyword"
+                            "type": "keyword"
                           },
                           "duration": {
-                          "type": "long"
+                            "type": "long"
                           },
                           "wait_duration": {
-                          "type": "long"
+                            "type": "long"
                           },
                           "cancel_reason": {
-                          "type": "keyword"
+                            "type": "keyword"
                           },
                           "cause": {
-                          "type": "keyword"
+                            "type": "keyword"
                           },
                           "answered_time": {
-                          "type": "date"                          
+                            "type": "date"                          
                           },
                           "hangup_time": {
-                          "type": "date"                          
+                            "type": "date"                          
                           },  
                           "joined_time": {
-                          "type": "date"                          
+                            "type": "date"                          
                           },
                           "stop_side": {
-                          "type": "keyword"
+                            "type": "keyword"
                           }   
                       }       
-                  },                   
+                  },                                 
                   "variables": {
                     "type": "object",
                     "properties": {
@@ -274,34 +274,44 @@
                         "type":"object",
                         "properties": {
                           "username": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "caller_id_name": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "ani": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "aniii": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "caller_id_number": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "network_addr": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "rdnis": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "destination_number": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "uuid": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           },
                           "source": {
-                            "type": "keyword"
+                            "type": "keyword",
+                            "store": true
                           }
                         }
                       },
@@ -309,37 +319,37 @@
                         "type":"object",
                         "properties": {
                           "created_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "profile_created_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "progress_time": {
-                            "type": "date"                          
+                            "type": "date"                       
                           },
                           "progress_media_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "answered_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "bridged_time": {
-                            "type": "date"                          
+                            "type": "date"                         
                           },
                           "last_hold_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "hold_accum_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "hangup_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "resurrect_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           },
                           "transfer_time": {
-                            "type": "date"                          
+                            "type": "date"                        
                           }
                         }
                       }
@@ -350,92 +360,108 @@
                     "include_in_parent": true,                        
                     "properties": {
                       "uuid": {
-                        "type": "keyword"
+                        "type": "keyword"                       
                       },       
                       "direction": {
-                        "type": "keyword"
+                        "type": "keyword"                      
                       },
                       "caller_id_name": {
                         "type": "keyword",
                         "store": true
                       },
                       "caller_id_number": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       },
                       "callee_id_name": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       },
                       "callee_id_number": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       },  
                       "network_addr": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       }, 
                       "destination_number": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       },      
                       "domain_name": {
-                        "type": "keyword"
+                        "type": "keyword"                       
                       },
                       "extension": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true                        
                       },  
                       "presence_id": {
-                        "type": "keyword"
+                        "type": "keyword"                        
                       }, 
                       "source": {
-                        "type": "keyword"
+                        "type": "keyword"                     
                       }, 
                       "gateway": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       }, 
                       "hangup_cause_q850": {
-                        "type": "long"
+                        "type": "long",
+                        "store": true
                       },
                       "hangup_cause": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       },
                       "originate_disposition": {
-                        "type": "keyword"
+                        "type": "keyword",
+                        "store": true
                       },
                       "bridged_time": {
-                        "type": "date"                     
+                        "type": "date"                                      
                       },
                       "answered_time": {
-                        "type": "date"                                         
+                        "type": "date"                     
                       },
                       "progress_time": {
-                        "type": "date"                                           
+                        "type": "date"                       
                       },
                       "hangup_time": {
-                        "type": "date"                                          
+                        "type": "date"                       
                       },
                       "created_time": {
-                        "type": "date"                                        
+                        "type": "date"                                                            
                       },  
                       "duration": {
-                        "type": "long"
+                        "type": "long",
+                        "store": true
                       },                    
                       "billsec": {
-                        "type": "long"
+                        "type": "long",
+                        "store": true
                       },      
                       "progresssec": {
-                        "type": "long"
+                        "type": "long",
+                        "store": true
                       },     
                       "answersec": {
-                        "type": "long"
+                        "type": "long",
+                        "store": true
                       },     
                       "waitsec": {
-                        "type": "long"
+                        "type": "long",
+                        "store": true
                       },     
                       "holdsec": {
-                        "type": "long"
+                        "type": "long",
+                        "store": true
                       }, 
                       "quality_percentage_audio": {
-                        "type": "long"
+                        "type": "long"                        
                       },
                       "quality_percentage_video": {
-                        "type": "long"
+                        "type": "long"                        
                       }, 
                       "locations": {
                         "type": "object",

@@ -44,6 +44,7 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		callerIdNumber, destinationNumber, callerIdName, source, networkAddr           string = getFromProfile(call, variables)
 		qualityPercentageAudio, qualityPercentageVideo                                 uint32 = getFromStats(call)
 		createdTime, progressTime, answeredTime, bridgedTime, hangupTime, transferTime uint64 = getFromTimes(call)
+		domain_name                                                                    string = getDomainName(variables)
 		queue_name                                                                     string = getQueueName(variables)
 		extension                                                                      string = getExtension(variables)
 		queue_hangup                                                                   uint64 = getQueueHangup(variables)
@@ -63,7 +64,7 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		//CalleeIdNumber       string `json:"callee_id_number"` //???????????????????????
 		NetworkAddr:          networkAddr,
 		DestinationNumber:    destinationNumber,
-		DomainName:           getString(variables["domain_name"]),
+		DomainName:           domain_name,
 		Extension:            extension,
 		PresenceId:           getString(variables["presence_id"]),
 		Source:               source,
@@ -90,11 +91,11 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		Variables:              variables,
 
 		Locations: &entity.Locations{
-			Geo:         "",
-			City:        "",
-			Country:     "",
-			CountryCode: "",
-			Type:        "",
+			Geo:         getString(variables["webitel_location"]),
+			City:        getString(variables["webitel_location_city"]),
+			Country:     getString(variables["webitel_location_country"]),
+			CountryCode: getString(variables["webitel_location_country_code"]),
+			Type:        getString(variables["webitel_location_type"]),
 		},
 		Queue: &entity.Queue{
 			CC_Queue_Name:          queue_name,
@@ -153,9 +154,27 @@ func setMillis(cf *[]entity.Callflow) {
 
 func getQueueName(variables map[string]interface{}) (queue_name string) {
 	if q, ok := variables["cc_queue"].(string); ok {
-		queue_name = q
+		s := strings.Split(q, "@")
+		if len(s) > 0 {
+			queue_name = s[0]
+		}
 	} else if q, ok := variables["dlr_queue"].(string); ok {
-		queue_name = q
+		s := strings.Split(q, "@")
+		if len(s) > 0 {
+			queue_name = s[0]
+		}
+	}
+	return
+}
+
+func getDomainName(variables map[string]interface{}) (domain_name string) {
+	if d, ok := variables["domain_name"].(string); ok {
+		domain_name = d
+	} else if p, ok := variables["presence_id"].(string); ok {
+		s := strings.Split(p, "@")
+		if len(s) > 0 {
+			domain_name = s[len(s)-1]
+		}
 	}
 	return
 }
@@ -180,11 +199,11 @@ func getFromStats(call map[string]interface{}) (qualityPercentageAudio, qualityP
 	if c, ok := call["callStats"].(map[string]interface{}); ok {
 		if audio, ok := c["audio"].(map[string]interface{}); ok {
 			if inbound, ok := audio["inbound"].(map[string]interface{}); ok {
-				qualityPercentageAudio, _ = inbound["quality_percentage"].(uint32)
+				qualityPercentageAudio = uint32(getUintFromFloat64(inbound["quality_percentage"]))
 			}
 		} else if video, ok := c["video"].(map[string]interface{}); ok {
 			if inbound, ok := video["inbound"].(map[string]interface{}); ok {
-				qualityPercentageVideo, _ = inbound["quality_percentage"].(uint32)
+				qualityPercentageVideo = uint32(getUintFromFloat64(inbound["quality_percentage"]))
 			}
 		}
 	}
@@ -208,7 +227,10 @@ func getFromTimes(call map[string]interface{}) (createdTime, progressTime, answe
 
 func getExtension(variables map[string]interface{}) (extension string) {
 	if a, ok := variables["cc_agent"].(string); ok {
-		extension = a
+		s := strings.Split(a, "@")
+		if len(s) > 0 {
+			extension = s[0]
+		}
 	} else if u, ok := variables["presence_id"].(string); ok {
 		s := strings.Split(u, "@")
 		if len(s) > 0 {
@@ -225,23 +247,23 @@ func getExtension(variables map[string]interface{}) (extension string) {
 
 func getQueueHangup(variables map[string]interface{}) (queue_hangup uint64) {
 	if c, ok := variables["cc_queue_canceled_epoch"].(string); ok && len(c) > 3 {
-		queue_hangup, _ = strconv.ParseUint(c[0:len(c)-3], 10, 64)
+		queue_hangup, _ = strconv.ParseUint(c, 10, 64)
 	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok && len(c) > 3 {
-		queue_hangup, _ = strconv.ParseUint(t[0:len(t)-3], 10, 64)
+		queue_hangup, _ = strconv.ParseUint(t, 10, 64)
 	}
 	return
 }
 
 func getQueueAnswered(variables map[string]interface{}) (queue_answered_epoch uint64) {
 	if c, ok := variables["cc_queue_answered_epoch"].(string); ok && len(c) > 3 {
-		queue_answered_epoch, _ = strconv.ParseUint(c[0:len(c)-3], 10, 64)
+		queue_answered_epoch, _ = strconv.ParseUint(c, 10, 64)
 	}
 	return
 }
 
 func getQueueJoined(variables map[string]interface{}) (queue_joined_epoch uint64) {
 	if c, ok := variables["cc_queue_joined_epoch"].(string); ok && len(c) > 3 {
-		queue_joined_epoch, _ = strconv.ParseUint(c[0:len(c)-3], 10, 64)
+		queue_joined_epoch, _ = strconv.ParseUint(c, 10, 64)
 	}
 	return
 }

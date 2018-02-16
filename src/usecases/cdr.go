@@ -182,13 +182,14 @@ func getParentUuid(call interface{}) string {
 		ok bool
 	)
 	if s, ok = call.(map[string]interface{})["variables"].(map[string]interface{})["ent_originate_aleg_uuid"].(string); !ok {
-		s, ok = call.(map[string]interface{})["variables"].(map[string]interface{})["originating_leg_uuid"].(string)
-		if !ok {
-			if callflow, ok := call.(map[string]interface{})["callflow"].([]interface{}); ok && len(callflow) > 0 {
-				if caller_profile, ok := callflow[0].(map[string]interface{})["caller_profile"].(map[string]interface{}); ok {
-					if originator, ok := caller_profile["originator"].(map[string]interface{}); ok {
-						if arr, ok := originator["originator_caller_profiles"].([]interface{}); ok && len(arr) > 0 {
-							s, _ = arr[0].(map[string]interface{})["uuid"].(string)
+		if s, ok = call.(map[string]interface{})["variables"].(map[string]interface{})["originating_leg_uuid"].(string); !ok {
+			if s, ok = call.(map[string]interface{})["variables"].(map[string]interface{})["cc_member_session_uuid"].(string); !ok {
+				if callflow, ok := call.(map[string]interface{})["callflow"].([]interface{}); ok && len(callflow) > 0 {
+					if caller_profile, ok := callflow[0].(map[string]interface{})["caller_profile"].(map[string]interface{}); ok {
+						if originator, ok := caller_profile["originator"].(map[string]interface{}); ok {
+							if arr, ok := originator["originator_caller_profiles"].([]interface{}); ok && len(arr) > 0 {
+								s, _ = arr[0].(map[string]interface{})["uuid"].(string)
+							}
 						}
 					}
 				}
