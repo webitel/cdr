@@ -20,7 +20,7 @@ type CdrInteractor struct {
 	AmqReceiverRepositoryB entity.AmqReceiverRepository
 }
 
-type SqlProcess func(deliveries []entity.Delivery) error
+type SqlProcess func(deliveries []entity.Delivery) (error, int)
 
 func (interactor *CdrInteractor) InitTables() error {
 	if err := interactor.SqlCdrARepository.CreateTableIfNotExist(); err != nil {
@@ -96,7 +96,7 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 }
 
 func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlProcess SqlProcess, key string) {
-	if err := sqlProcess(batch); err != nil {
+	if err, countB := sqlProcess(batch); err != nil {
 		logger.Error("ERROR. %s: %s", key, err)
 		for i := 0; i < len(batch); i++ {
 			batch[i].Nack(false, true)
@@ -106,18 +106,18 @@ func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlPro
 		for i := 0; i < len(batch); i++ {
 			batch[i].Ack(false)
 		}
-		logger.Notice("PostgreSQL: items stored [%s, %v]", key, len(batch))
+		logger.Notice("PostgreSQL: items stored [%s, %v]", key, len(batch)-countB)
 	}
 	//log.Printf("RabbitMQ: listening [%s]...\n", key)
 }
 
-func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) error {
+func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error, int) {
 	var calls []entity.SqlCdr
 	var callsB []entity.SqlCdr
 	for _, item := range deliveries {
 		call, err := readBytes(item.GetBody())
 		if err != nil {
-			return err
+			return err, 0
 		}
 		uuid, ok := call.(map[string]interface{})["variables"].(map[string]interface{})["uuid"].(string)
 		parent := getParentUuid(call)
@@ -125,13 +125,13 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) error {
 			if parent == "" {
 				sql_call, err := parseToSqlA(item.GetBody(), uuid)
 				if err != nil {
-					return err
+					return err, 0
 				}
 				calls = append(calls, sql_call)
 			} else {
 				sql_call, err := parseToSqlB(item.GetBody(), uuid, parent)
 				if err != nil {
-					return err
+					return err, 0
 				}
 				callsB = append(callsB, sql_call)
 			}
@@ -139,41 +139,41 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) error {
 	}
 	if len(calls) > 0 {
 		if err := interactor.SqlCdrARepository.InsertPack(calls); err != nil {
-			return err
+			return err, 0
 		}
 	}
 	if len(callsB) > 0 {
 		if err := interactor.SqlCdrBRepository.InsertPack(callsB); err != nil {
-			return err
+			return err, 0
 		}
-		logger.Notice("Count of LegB in LegA channel [%v]", len(callsB))
+		logger.Notice("PostgreSQL: Legs B from Leg A channel stored [%v]", len(callsB))
 	}
-	return nil
+	return nil, len(callsB)
 }
 
-func (interactor *CdrInteractor) AddToSqlB(deliveries []entity.Delivery) error {
+func (interactor *CdrInteractor) AddToSqlB(deliveries []entity.Delivery) (error, int) {
 	var calls []entity.SqlCdr
 	for _, item := range deliveries {
 		call, err := readBytes(item.GetBody())
 		if err != nil {
-			return err
+			return err, 0
 		}
 		uuid, ok := call.(map[string]interface{})["variables"].(map[string]interface{})["uuid"].(string)
 		parent := getParentUuid(call)
 		if ok {
 			sql_call, err := parseToSqlB(item.GetBody(), uuid, parent)
 			if err != nil {
-				return err
+				return err, 0
 			}
 			calls = append(calls, sql_call)
 		}
 	}
 	if len(calls) > 0 {
 		if err := interactor.SqlCdrBRepository.InsertPack(calls); err != nil {
-			return err
+			return err, 0
 		}
 	}
-	return nil
+	return nil, 0
 }
 
 func getParentUuid(call interface{}) string {

@@ -47,11 +47,12 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		domain_name                                                                    string = getDomainName(variables)
 		queue_name                                                                     string = getQueueName(variables)
 		extension                                                                      string = getExtension(variables)
-		queue_hangup                                                                   uint64 = getQueueHangup(variables)
-		queue_answered_epoch                                                           uint64 = getQueueAnswered(variables)
-		queue_joined_epoch                                                             uint64 = getQueueJoined(variables)
+		queue_hangup                                                                   uint64 = getQueueHangup(variables) * 1000
+		queue_answered_epoch                                                           uint64 = getQueueAnswered(variables) * 1000
+		queue_joined_epoch                                                             uint64 = getQueueJoined(variables) * 1000
 		queue_waiting                                                                  uint32 = getQueueWaiting(variables)
 		queue_call_duration                                                            uint32 = getQueueCallDuration(variables)
+		hangup_disposition                                                             string = getHangupDisposition(variables)
 	)
 
 	e_entity := entity.ElasticCdr{
@@ -71,7 +72,9 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		Gateway:              getString(variables["webitel_gateway"]),
 		Q850HangupCode:       getUint(variables["hangup_cause_q850"]),
 		HangupCause:          getString(variables["hangup_cause"]),
+		HangupDisposition:    hangup_disposition,
 		OriginateDisposition: getString(variables["originate_disposition"]),
+		TransferDisposition:  getString(variables["transfer_disposition"]),
 		//times
 		BridgedTime:           bridgedTime,
 		CallAnswerTime:        answeredTime,
@@ -241,6 +244,17 @@ func getExtension(variables map[string]interface{}) (extension string) {
 		if len(s) > 0 {
 			extension = s[0]
 		}
+	}
+	return
+}
+
+func getHangupDisposition(variables map[string]interface{}) (hangup_disposition string) {
+	if s, ok := variables["hangup_disposition"].(string); ok {
+		hangup_disposition = s
+	} else if s, ok := variables["sip_hangup_disposition"].(string); ok {
+		hangup_disposition = s
+	} else if s, ok := variables["verto_hangup_disposition"].(string); ok {
+		hangup_disposition = s
 	}
 	return
 }

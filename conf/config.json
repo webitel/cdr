@@ -120,6 +120,12 @@
                   "hangup_cause": {
                     "type": "keyword"
                   },
+                  "hangup_disposition": {
+                    "type": "keyword"                    
+                  },
+                  "transfer_disposition": {
+                    "type": "keyword"                    
+                  },
                   "originate_disposition": {
                     "type": "keyword"
                   },
@@ -209,7 +215,7 @@
                           "joined_time": {
                             "type": "date"                          
                           },
-                          "stop_side": {
+                          "side": {
                             "type": "keyword"
                           }   
                       }       
@@ -414,6 +420,14 @@
                         "type": "keyword",
                         "store": true
                       },
+                      "hangup_disposition": {
+                        "type": "keyword",
+                        "store": true
+                      },
+                      "transfer_disposition": {
+                        "type": "keyword",
+                        "store": true                    
+                      },
                       "originate_disposition": {
                         "type": "keyword",
                         "store": true
@@ -467,7 +481,7 @@
                         "type": "object",
                         "properties": {
                           "geo":{
-                            "type": "keyword"
+                            "type": "geo_point"
                           },
                           "city":{
                             "type": "keyword"
@@ -510,7 +524,7 @@
                               "joined_time": {
                               "type": "date"                              
                               },
-                              "stop_side": {
+                              "side": {
                               "type": "keyword"
                               }   
                           }       

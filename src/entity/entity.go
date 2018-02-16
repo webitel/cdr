@@ -74,7 +74,9 @@ type ElasticCdr struct {
 	Gateway              string `json:"gateway,omitempty"`
 	Q850HangupCode       uint32 `json:"hangup_cause_q850"`
 	HangupCause          string `json:"hangup_cause,omitempty"`
+	HangupDisposition    string `json:"hangup_disposition,omitempty"`
 	OriginateDisposition string `json:"originate_disposition,omitempty"`
+	TransferDisposition  string `json:"transfer_disposition,omitempty"`
 	//times
 	BridgedTime     uint64 `json:"bridged_time,omitempty"`
 	CallAnswerTime  uint64 `json:"answered_time,omitempty"`
@@ -148,7 +150,7 @@ type Queue struct {
 	CC_Queue_AnsweredEpoch uint64 `json:"answered_time,omitempty"`
 	CC_Queue_Hangup        uint64 `json:"hangup_time,omitempty"`
 	CC_Queue_JoinedEpoch   uint64 `json:"joined_time,omitempty"`
-	CC_Side                string `json:"stop_side,omitempty"`
+	CC_Side                string `json:"side,omitempty"`
 	//Queue_AnswerDelay      uint32 `json:"asa"`
 }
 
