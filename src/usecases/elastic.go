@@ -8,10 +8,6 @@ import (
 	"github.com/webitel/cdr/src/logger"
 )
 
-type Legs struct {
-	LegsB []entity.ElasticCdr "json:legs_b"
-}
-
 type CheckCalls func(bulkCount uint32, state uint8)
 
 func (interactor *CdrInteractor) RunElastic() {
@@ -47,7 +43,7 @@ func LegListener(checkCalls CheckCalls, timeout uint32, bulkCount uint32) {
 }
 
 func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8) {
-	var calls []entity.ElasticCdr
+
 	cdr, err := interactor.SqlCdrARepository.SelectPackByState(bulkCount, state, "stored")
 	if err != nil {
 		logger.Error(err.Error())
@@ -61,31 +57,18 @@ func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8
 		logger.Error(err.Error())
 		return
 	}
-	var (
-		eCall entity.ElasticCdr
-		iCall interface{}
-	)
-	for _, item := range cdr {
-		iCall, err = readBytes(item.Event)
-		if err != nil {
-			interactor.SqlCdrARepository.UpdateState(cdr, 4, 0, "stored")
-			logger.Error(err.Error())
-			return
-		}
-		eCall, err = ParseToCdr(iCall)
-		if err != nil {
-			interactor.SqlCdrARepository.UpdateState(cdr, 4, 0, "stored")
-			logger.Error(err.Error())
-			return
-		}
-		calls = append(calls, eCall)
+	calls, err := getCalls(interactor.SqlCdrARepository, cdr)
+	if err != nil {
+		return
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrARepository.InsertDocs(calls); err != nil {
 		if errCalls != nil && len(errCalls) > 0 {
 			interactor.SqlCdrARepository.UpdateState(errCalls, 4, 0, "stored")
 			if succCalls != nil && len(succCalls) > 0 {
 				interactor.SqlCdrARepository.UpdateState(succCalls, 2, uint64(time.Now().UnixNano()/1000000), "stored")
+				logger.Notice("Elastic: items stored [%s, %v]", "Leg A", len(succCalls))
 			}
+			logger.Error("Elastic: failed to store items [%s, %v]", "Leg A", len(errCalls))
 		} else {
 			interactor.SqlCdrARepository.UpdateState(cdr, 4, 0, "stored")
 		}
@@ -98,7 +81,7 @@ func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8
 }
 
 func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8) {
-	var calls []entity.ElasticCdr
+
 	cdr, err := interactor.SqlCdrBRepository.SelectPackByState(bulkCount, state, "stored")
 	if err != nil {
 		logger.Error(err.Error())
@@ -112,31 +95,18 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 		logger.Error(err.Error())
 		return
 	}
-	var (
-		eCall entity.ElasticCdr
-		iCall interface{}
-	)
-	for _, item := range cdr {
-		iCall, err = readBytes(item.Event)
-		if err != nil {
-			interactor.SqlCdrBRepository.UpdateState(cdr, 4, 0, "stored")
-			logger.Error(err.Error())
-			return
-		}
-		eCall, err = ParseToCdr(iCall)
-		if err != nil {
-			interactor.SqlCdrBRepository.UpdateState(cdr, 4, 0, "stored")
-			logger.Error(err.Error())
-			return
-		}
-		calls = append(calls, eCall)
+	calls, err := getCalls(interactor.SqlCdrBRepository, cdr)
+	if err != nil {
+		return
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrBRepository.InsertDocs(calls); err != nil {
 		if errCalls != nil && len(errCalls) > 0 {
 			interactor.SqlCdrBRepository.UpdateState(errCalls, 4, 0, "stored")
 			if succCalls != nil && len(succCalls) > 0 {
 				interactor.SqlCdrBRepository.UpdateState(succCalls, 2, uint64(time.Now().UnixNano()/1000000), "stored")
+				logger.Notice("Elastic: items stored [%s, %v]", "Leg B", len(succCalls))
 			}
+			logger.Error("Elastic: failed to store items [%s, %v]", "Leg B", len(errCalls))
 		} else {
 			interactor.SqlCdrBRepository.UpdateState(cdr, 4, 0, "stored")
 		}
@@ -146,4 +116,29 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 		interactor.SqlCdrBRepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
 	//log.Println("Elastic module: listening Leg B from pg...")
+}
+
+func getCalls(repo entity.SqlCdrRepository, cdr []entity.SqlCdr) ([]entity.ElasticCdr, error) {
+	var calls []entity.ElasticCdr
+	var (
+		eCall entity.ElasticCdr
+		iCall interface{}
+		err   error
+	)
+	for _, item := range cdr {
+		iCall, err = readBytes(item.Event)
+		if err != nil {
+			repo.UpdateState(cdr, 4, 0, "stored")
+			logger.Error(err.Error())
+			return nil, err
+		}
+		eCall, err = ParseToCdr(iCall)
+		if err != nil {
+			repo.UpdateState(cdr, 4, 0, "stored")
+			logger.Error(err.Error())
+			return nil, err
+		}
+		calls = append(calls, eCall)
+	}
+	return calls, nil
 }
