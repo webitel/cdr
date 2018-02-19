@@ -9,7 +9,13 @@ import (
 	"github.com/webitel/cdr/src/logger"
 )
 
-type ElasticProcess func(deliveries []entity.Delivery) error
+type ElasticProcess func(deliveries []entity.Delivery) (error, []DeliveryResponse)
+
+type DeliveryResponse struct {
+	entity.Delivery
+	Success bool
+	Uuid    string
+}
 
 func (interactor *CdrInteractor) RunArchiveServer() {
 	if interactor.AmqPublisherRepository == nil || interactor.ElasticCdrARepository == nil || interactor.ElasticCdrBRepository == nil {
@@ -73,10 +79,20 @@ func (interactor *CdrInteractor) ArchiveListenEvents(msgs <-chan entity.Delivery
 }
 
 func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery, elasticProcess ElasticProcess, key string) {
-	if err := elasticProcess(batch); err != nil {
+	if err, dResponse := elasticProcess(batch); err != nil {
 		logger.Error("ERROR. %s: %s", key, err)
-		for i := 0; i < len(batch); i++ {
-			batch[i].Nack(false, true)
+		if dResponse != nil && len(dResponse) > 0 {
+			for i, _ := range dResponse {
+				if dResponse[i].Success {
+					dResponse[i].Delivery.Ack(false)
+				} else {
+					dResponse[i].Delivery.Nack(false, true)
+				}
+			}
+		} else {
+			for i := 0; i < len(batch); i++ {
+				batch[i].Nack(false, true)
+			}
 		}
 		logger.Error("Elastic: failed to store items [%s, %v]", key, len(batch))
 	} else {
@@ -88,38 +104,68 @@ func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery,
 	//log.Printf("RabbitMQ: listening [%s]...\n", key)
 }
 
-func (interactor *CdrInteractor) AddToElasticA(deliveries []entity.Delivery) error {
+func (interactor *CdrInteractor) AddToElasticA(deliveries []entity.Delivery) (error, []DeliveryResponse) {
 	var calls []entity.ElasticCdr
+	var deliveriesResponse []DeliveryResponse
 	for _, item := range deliveries {
 		call, err := readBytes(item.GetBody())
 		if err != nil {
-			return err
+			return err, nil
 		}
 		eCall, err := ParseToCdr(call)
 		if err != nil {
 			//	interactor.SqlCdrARepository.UpdateState(cdr, 0, 0, "stored")
-			return err
+			return err, nil
 		}
 		calls = append(calls, eCall)
+		deliveriesResponse = append(deliveriesResponse, DeliveryResponse{Delivery: item, Uuid: eCall.Uuid})
 	}
-	err, _, _ := interactor.ElasticCdrARepository.InsertDocs(calls)
-	return err
+	if err, errCalls, succCalls := interactor.ElasticCdrARepository.InsertDocs(calls); err != nil {
+		if succCalls != nil && len(errCalls) > 0 {
+			for i, _ := range deliveriesResponse {
+				for _, item := range succCalls {
+					if deliveriesResponse[i].Uuid == item.Uuid {
+						deliveriesResponse[i].Success = true
+					}
+				}
+			}
+			return err, deliveriesResponse
+		} else {
+			return err, nil
+		}
+	}
+	return nil, nil
 }
 
-func (interactor *CdrInteractor) AddToElasticB(deliveries []entity.Delivery) error {
+func (interactor *CdrInteractor) AddToElasticB(deliveries []entity.Delivery) (error, []DeliveryResponse) {
 	var calls []entity.ElasticCdr
+	var deliveriesResponse []DeliveryResponse
 	for _, item := range deliveries {
 		call, err := readBytes(item.GetBody())
 		if err != nil {
-			return err
+			return err, nil
 		}
 		eCall, err := ParseToCdr(call)
 		if err != nil {
 			//	interactor.SqlCdrARepository.UpdateState(cdr, 0, 0, "stored")
-			return err
+			return err, nil
 		}
 		calls = append(calls, eCall)
+		deliveriesResponse = append(deliveriesResponse, DeliveryResponse{Delivery: item, Uuid: eCall.Uuid})
 	}
-	err, _, _ := interactor.ElasticCdrBRepository.InsertDocs(calls)
-	return err
+	if err, errCalls, succCalls := interactor.ElasticCdrBRepository.InsertDocs(calls); err != nil {
+		if succCalls != nil && len(errCalls) > 0 {
+			for i, _ := range deliveriesResponse {
+				for _, item := range succCalls {
+					if deliveriesResponse[i].Uuid == item.Uuid {
+						deliveriesResponse[i].Success = true
+					}
+				}
+			}
+			return err, deliveriesResponse
+		} else {
+			return err, nil
+		}
+	}
+	return nil, nil
 }
