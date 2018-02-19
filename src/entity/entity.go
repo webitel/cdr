@@ -13,7 +13,7 @@ type SqlCdrBRepository SqlCdrRepository
 
 type ElasticCdrRepository interface {
 	//AddCdrToElastic(call ElasticCdr) error
-	InsertDocs(calls []ElasticCdr) error
+	InsertDocs(calls []ElasticCdr) (error, []SqlCdr, []SqlCdr)
 }
 
 type ElasticCdrARepository ElasticCdrRepository

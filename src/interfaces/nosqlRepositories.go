@@ -3,8 +3,8 @@ package interfaces
 import "github.com/webitel/cdr/src/entity"
 
 type NosqlHandler interface {
-	BulkInsert(calls []entity.ElasticCdr) error
-	BulkUpdateLegs(calls []entity.ElasticCdr) error
+	BulkInsert(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr)
+	BulkUpdateLegs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr)
 }
 
 type DocRepo struct {
@@ -29,12 +29,10 @@ func NewDocCdrBRepo(nosqlHandlers map[string]NosqlHandler) *DocCdrBRepo {
 	return DocCdrBRepo
 }
 
-func (repo *DocCdrARepo) InsertDocs(calls []entity.ElasticCdr) error {
-	err := repo.nosqlHandler.BulkInsert(calls)
-	return err
+func (repo *DocCdrARepo) InsertDocs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
+	return repo.nosqlHandler.BulkInsert(calls)
 }
 
-func (repo *DocCdrBRepo) InsertDocs(calls []entity.ElasticCdr) error {
-	err := repo.nosqlHandler.BulkUpdateLegs(calls)
-	return err
+func (repo *DocCdrBRepo) InsertDocs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
+	return repo.nosqlHandler.BulkUpdateLegs(calls)
 }

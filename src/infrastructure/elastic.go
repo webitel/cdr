@@ -128,7 +128,7 @@ func (handler *ElasticHandler) createTemplate(templateMap string) error {
 // 	return nil
 // }
 
-func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
+func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
 		var tmpDomain string
@@ -140,20 +140,24 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) error {
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
 	if err != nil {
-		return err
+		return err, nil, nil
 	}
 	if res.Errors {
+		var successCalls, errorCalls []entity.SqlCdr
 		for _, item := range res.Items {
 			if item["update"].Error != nil {
+				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
 				logger.Error(fmt.Sprintf("LEG A. ID: %v; ERROR TYPE: %v; REASON: %v", item["update"].Id, item["update"].Error.Type, item["update"].Error.Reason))
+			} else {
+				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
 			}
 		}
-		return fmt.Errorf("Leg A: Bad response. Request has errors.")
+		return fmt.Errorf("Leg B: Bad response. Request has errors."), errorCalls, successCalls
 	}
-	return nil
+	return nil, nil, nil
 }
 
-func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) error {
+func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
 		var tmpDomain string
@@ -165,15 +169,19 @@ func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) error {
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
 	if err != nil {
-		return err
+		return err, nil, nil
 	}
 	if res.Errors {
+		var successCalls, errorCalls []entity.SqlCdr
 		for _, item := range res.Items {
 			if item["update"].Error != nil {
+				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
 				logger.Error(fmt.Sprintf("LEG B. ID: %v; ERROR TYPE: %v; REASON: %v", item["update"].Id, item["update"].Error.Type, item["update"].Error.Reason))
+			} else {
+				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
 			}
 		}
-		return fmt.Errorf("Leg B: Bad response. Request has errors.")
+		return fmt.Errorf("Leg B: Bad response. Request has errors."), errorCalls, successCalls
 	}
-	return nil
+	return nil, nil, nil
 }

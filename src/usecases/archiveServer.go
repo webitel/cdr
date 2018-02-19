@@ -102,7 +102,7 @@ func (interactor *CdrInteractor) AddToElasticA(deliveries []entity.Delivery) err
 		}
 		calls = append(calls, eCall)
 	}
-	err := interactor.ElasticCdrARepository.InsertDocs(calls)
+	err, _, _ := interactor.ElasticCdrARepository.InsertDocs(calls)
 	return err
 }
 
@@ -120,6 +120,6 @@ func (interactor *CdrInteractor) AddToElasticB(deliveries []entity.Delivery) err
 		}
 		calls = append(calls, eCall)
 	}
-	err := interactor.ElasticCdrBRepository.InsertDocs(calls)
+	err, _, _ := interactor.ElasticCdrBRepository.InsertDocs(calls)
 	return err
 }
