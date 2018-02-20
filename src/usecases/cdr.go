@@ -73,22 +73,21 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 					batch = make([]entity.Delivery, 0, size)
 				}
 				tmr.Reset(promise)
-				//log.Printf("RabbitMQ: listening [%s]...\n", key)
 			}
 		case d, ok := <-msgs:
 			{
-				batch = append(batch, d)
-				if len(batch) == cap(batch) {
-					go interactor.DeliveryProcess(batch, sqlProcess, key)
-					batch = make([]entity.Delivery, 0, size)
-					tmr.Reset(promise)
-				}
 				if !ok {
 					if len(batch) > 0 && len(batch) != cap(batch) {
 						go interactor.DeliveryProcess(batch, sqlProcess, key)
 					}
 					done <- fmt.Errorf("ERROR: Deliveries channel closed")
 					return
+				}
+				batch = append(batch, d)
+				if len(batch) == cap(batch) {
+					go interactor.DeliveryProcess(batch, sqlProcess, key)
+					batch = make([]entity.Delivery, 0, size)
+					tmr.Reset(promise)
 				}
 			}
 		}
@@ -108,7 +107,6 @@ func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlPro
 		}
 		logger.Notice("PostgreSQL: items stored [%s, %v]", key, len(batch)-countB)
 	}
-	//log.Printf("RabbitMQ: listening [%s]...\n", key)
 }
 
 func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error, int) {

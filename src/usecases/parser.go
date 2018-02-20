@@ -76,12 +76,12 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		OriginateDisposition: getString(variables["originate_disposition"]),
 		TransferDisposition:  getString(variables["transfer_disposition"]),
 		//times
-		BridgedTime:           bridgedTime,
-		CallAnswerTime:        answeredTime,
-		ProgressTime:          progressTime,
-		CallHangupTime:        hangupTime,
-		CallCreatedTime:       createdTime,
-		TransferTime:          transferTime,
+		// BridgedTime:           bridgedTime,
+		// CallAnswerTime:        answeredTime,
+		// ProgressTime:          progressTime,
+		// CallHangupTime:        hangupTime,
+		CallCreatedTime: createdTime,
+		// TransferTime:          transferTime,
 		Duration:              getUint(variables["duration"]),
 		ConnectedCallDuration: getUint(variables["billsec"]),
 		ProgressSeconds:       getUint(variables["progresssec"]),
@@ -134,6 +134,12 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 			e_entity.Callflow = &tmpCf
 			setMillis(e_entity.Callflow)
 		}
+	} else {
+		e_entity.BridgedTime = bridgedTime
+		e_entity.CallAnswerTime = answeredTime
+		e_entity.ProgressTime = progressTime
+		e_entity.CallHangupTime = hangupTime
+		e_entity.TransferTime = transferTime
 	}
 	return e_entity, nil
 }

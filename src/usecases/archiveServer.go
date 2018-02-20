@@ -58,18 +58,18 @@ func (interactor *CdrInteractor) ArchiveListenEvents(msgs <-chan entity.Delivery
 			}
 		case d, ok := <-msgs:
 			{
-				batch = append(batch, d)
-				if len(batch) == cap(batch) {
-					go interactor.ArchiveDeliveryProcess(batch, elasticProcess, key)
-					batch = make([]entity.Delivery, 0, size)
-					tmr.Reset(promise)
-				}
 				if !ok {
 					if len(batch) > 0 && len(batch) != cap(batch) {
 						go interactor.ArchiveDeliveryProcess(batch, elasticProcess, key)
 					}
 					done <- fmt.Errorf("ERROR: Deliveries channel closed")
 					return
+				}
+				batch = append(batch, d)
+				if len(batch) == cap(batch) {
+					go interactor.ArchiveDeliveryProcess(batch, elasticProcess, key)
+					batch = make([]entity.Delivery, 0, size)
+					tmr.Reset(promise)
 				}
 			}
 		}

@@ -181,6 +181,7 @@ func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey strin
 			select {
 			case msg, ok := <-msgs:
 				if !ok {
+					close(entries)
 					return
 				}
 				wrupup := AmqpDelivery(msg)
