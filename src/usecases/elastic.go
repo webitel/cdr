@@ -43,14 +43,12 @@ func LegListener(checkCalls CheckCalls, timeout uint32, bulkCount uint32) {
 }
 
 func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8) {
-
 	cdr, err := interactor.SqlCdrARepository.SelectPackByState(bulkCount, state, "stored")
 	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
 	if len(cdr) == 0 {
-		//log.Println("Elastic module: listening Leg A from pg...")
 		return
 	}
 	if err := interactor.SqlCdrARepository.UpdateState(cdr, 1, 0, "stored"); err != nil {
@@ -71,24 +69,21 @@ func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8
 			logger.Error("Elastic: failed to store items [%s, %v]", "Leg A", len(errCalls))
 		} else {
 			interactor.SqlCdrARepository.UpdateState(cdr, 4, 0, "stored")
+			logger.Error("Elastic: failed to store items [%s, %v]", "Leg A", len(calls))
 		}
-		logger.Error(err.Error())
 	} else {
 		logger.Notice("Elastic: items stored [%s, %v]", "Leg A", len(calls))
 		interactor.SqlCdrARepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
-	//log.Println("Elastic module: listening Leg A from pg...")
 }
 
 func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8) {
-
 	cdr, err := interactor.SqlCdrBRepository.SelectPackByState(bulkCount, state, "stored")
 	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
 	if len(cdr) == 0 {
-		//log.Println("Elastic module: listening Leg B from pg...")
 		return
 	}
 	if err := interactor.SqlCdrBRepository.UpdateState(cdr, 1, 0, "stored"); err != nil {
@@ -109,13 +104,12 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 			logger.Error("Elastic: failed to store items [%s, %v]", "Leg B", len(errCalls))
 		} else {
 			interactor.SqlCdrBRepository.UpdateState(cdr, 4, 0, "stored")
+			logger.Error("Elastic: failed to store items [%s, %v]", "Leg A", len(calls))
 		}
-		logger.Error(err.Error())
 	} else {
 		logger.Notice("Elastic: items stored [%s, %v]", "Leg B", len(calls))
 		interactor.SqlCdrBRepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
-	//log.Println("Elastic module: listening Leg B from pg...")
 }
 
 func getCalls(repo entity.SqlCdrRepository, cdr []entity.SqlCdr) ([]entity.ElasticCdr, error) {

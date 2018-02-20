@@ -152,7 +152,7 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
 			}
 		}
-		return fmt.Errorf("Leg B: Bad response. Request has errors."), errorCalls, successCalls
+		return fmt.Errorf("Leg A: Bad response. Request has errors."), errorCalls, successCalls
 	}
 	return nil, nil, nil
 }
