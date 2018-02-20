@@ -77,7 +77,10 @@
                 "properties": {
                   "uuid": {
                     "type": "keyword"
-                  },       
+                  },     
+                  "pinnedItems":{
+                    "type": "keyword"
+                  }, 
                   "direction": {
                     "type": "keyword"
                   },
@@ -128,22 +131,10 @@
                   },
                   "originate_disposition": {
                     "type": "keyword"
-                  },
-                  "bridged_time": {
-                    "type": "date"                                       
-                  },
-                  "answered_time": {
-                    "type": "date"                                        
-                  },
-                  "progress_time": {
-                    "type": "date"                                     
-                  },
-                  "hangup_time": {
-                    "type": "date"                                       
-                  },
+                  },                  
                   "created_time": {
                     "type": "date"                                       
-                  },  
+                  },                    
                   "duration": {
                     "type": "long"
                   },                    
@@ -245,8 +236,7 @@
                           "type": "keyword"
                         },
                         "createdOn": {
-                          "type": "date",
-                          "format": "strict_date_optional_time||epoch_millis"
+                          "type": "date"                          
                         },
                         "domain": {
                           "type": "keyword"
@@ -447,6 +437,9 @@
                       "created_time": {
                         "type": "date"                                                            
                       },  
+                      "transfer_time": {
+                        "type": "date"                        
+                      },
                       "duration": {
                         "type": "long",
                         "store": true
