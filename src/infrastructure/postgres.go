@@ -36,7 +36,7 @@ func NewPostgresHandler() (*PostgresHandler, error) {
 		}
 		pgHandler = new(PostgresHandler)
 		pgHandler.Conn = dbConnection
-		logger.Info(fmt.Sprintf("PostgreSQL: connect to %s:%v", pgConfig.Host, pgConfig.Port))
+		logger.Debug("PostgreSQL: connect to %s:%v", pgConfig.Host, pgConfig.Port)
 		ticker.Stop()
 		break
 	}

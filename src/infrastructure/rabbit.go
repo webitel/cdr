@@ -27,7 +27,7 @@ func NewRabbitReceiverHandler() *ReceiverHandler {
 }
 
 func dial(connectionString string) (*amqp.Connection, error) {
-	logger.Info("rabbit dialing %q", connectionString)
+	logger.Debug("rabbit dialing %q", connectionString)
 	connection, err := amqp.Dial(connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("Dial: %s", err)
@@ -36,13 +36,13 @@ func dial(connectionString string) (*amqp.Connection, error) {
 }
 
 func createChannel(c *amqp.Connection, exchangeName, exchangeType string) (*amqp.Channel, error) {
-	logger.Info("got Connection, getting Channel")
+	logger.Debug("got Connection, getting Channel")
 	channel, err := c.Channel()
 	if err != nil {
 		return nil, fmt.Errorf("Channel: %s", err)
 	}
 
-	logger.Info("got Channel, declaring %q Exchange (%q)", exchangeType, exchangeName)
+	logger.Debug("got Channel, declaring %q Exchange (%q)", exchangeType, exchangeName)
 	if err := channel.ExchangeDeclare(
 		exchangeName, // name
 		exchangeType, // type
@@ -65,8 +65,7 @@ func (handler *PublisherHandler) InitRabbitConn(connectionString, exchangeName, 
 		case <-ticker.C:
 			if conn, err := dial(connectionString); err != nil {
 				logger.Error(err.Error())
-				logger.Info("Publisher: node will only be able to respond to local connections")
-				logger.Info("Publisher: trying to reconnect in 5 seconds...")
+				logger.Debug("Publisher: trying to reconnect in 5 seconds...")
 			} else {
 				handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
 				if err != nil {
@@ -90,8 +89,7 @@ func (handler *ReceiverHandler) InitRabbitConn(connectionString, exchangeName, e
 		case <-ticker.C:
 			if conn, err := dial(connectionString); err != nil {
 				logger.Error(err.Error())
-				logger.Info("Receiver: node will only be able to respond to local connections")
-				logger.Info("Receiver: trying to reconnect in 5 seconds...")
+				logger.Debug("Receiver: trying to reconnect in 5 seconds...")
 			} else {
 				handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
 				if err != nil {

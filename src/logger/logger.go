@@ -1,44 +1,48 @@
 package logger
 
 import (
+	"flag"
 	"os"
 
-	"github.com/op/go-logging"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
-var (
-	log = logging.MustGetLogger("goesl")
-
-	// Example format string. Everything except the message has a custom color
-	// which is dependent on the log level. Many fields have a custom output
-	// formatting too, eg. the time returns the hour down to the milli second.
-	format = logging.MustStringFormatter(
-		"%{color}%{time:15:04:05.000} ▶ [%{level:.8s}%{color:reset}] %{message}",
-	)
-)
-
-func Debug(message string, args ...interface{}) {
-	log.Debugf(message, args...)
+func Fatal(message string, args ...interface{}) {
+	log.Fatal().Msgf(message, args...)
 }
 
 func Error(message string, args ...interface{}) {
-	log.Errorf(message, args...)
+	log.Error().Msgf(message, args...)
 }
 
-func Notice(message string, args ...interface{}) {
-	log.Noticef(message, args...)
-}
-
-func Info(message string, args ...interface{}) {
-	log.Infof(message, args...)
+func ErrorElastic(message, id, errType, index, reason string) {
+	log.Error().Str("Reason", reason).Str("Error type", errType).Str("Index", index).Str("Id", id).Msg(message)
 }
 
 func Warning(message string, args ...interface{}) {
-	log.Warningf(message, args...)
+	log.Warn().Msgf(message, args...)
+}
+
+func Info(message string, args ...interface{}) {
+	log.Info().Msgf(message, args...)
+}
+
+func Debug(message string, args ...interface{}) {
+	log.Debug().Msgf(message, args...)
+}
+
+func DebugElastic(message string, id, domain string) {
+	log.Debug().Str("domain", domain).Str("uuid", id).Msg(message)
 }
 
 func init() {
-	backend := logging.NewLogBackend(os.Stderr, "", 0)
-	formatter := logging.NewBackendFormatter(backend, format)
-	logging.SetBackend(formatter)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	zerolog.TimeFieldFormat = "15:04:05 Mon 02/01/2006"
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	debug := flag.Bool("debug", false, "sets log level to debug")
+	flag.Parse()
+	if *debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 }

@@ -38,7 +38,7 @@ func (interactor *CdrInteractor) RunArchiveServer() {
 		}
 		go interactor.ArchiveListenEvents(msgsA, size, interval, done, interactor.AddToElasticA, "Leg A")
 		go interactor.ArchiveListenEvents(msgsB, size, interval, done, interactor.AddToElasticB, "Leg B")
-		logger.Notice("RabbitMQ: start listening...")
+		logger.Info("RabbitMQ: start listening...")
 		err = <-done
 		logger.Error(err.Error())
 	}
@@ -64,7 +64,7 @@ func (interactor *CdrInteractor) ArchiveListenEvents(msgs <-chan entity.Delivery
 					if len(batch) > 0 && len(batch) != cap(batch) {
 						go interactor.ArchiveDeliveryProcess(batch, elasticProcess, key)
 					}
-					done <- fmt.Errorf("ERROR: Deliveries channel closed")
+					done <- fmt.Errorf("RabbitMQ: Deliveries channel closed [CONSUMER]")
 					return
 				}
 				batch = append(batch, d)
@@ -91,19 +91,19 @@ func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery,
 					dResponse[i].Delivery.Nack(false, true)
 				}
 			}
-			logger.Notice("Elastic: items stored [%s, %v]", key, successCounter)
-			logger.Error("Elastic: failed to store items [%s, %v]", key, errorCounter)
+			logger.Debug("Elastic: items stored [%s, %v]", key, successCounter)
+			logger.Warning("Elastic: failed to store items [%s, %v]", key, errorCounter)
 		} else {
 			for i := 0; i < len(batch); i++ {
 				batch[i].Nack(false, true)
 			}
-			logger.Error("Elastic: failed to store items [%s, %v]", key, len(batch))
+			logger.Warning("Elastic: failed to store items [%s, %v]", key, len(batch))
 		}
 	} else {
 		for i := 0; i < len(batch); i++ {
 			batch[i].Ack(false)
 		}
-		logger.Notice("Elastic: items stored [%s, %v]", key, len(batch))
+		logger.Debug("Elastic: items stored [%s, %v]", key, len(batch))
 	}
 }
 

@@ -144,6 +144,7 @@ type Queue struct {
 
 var (
 	IgnoredList = [...]string{
+		"presence_id",
 		"rtp_use_codec_string",
 		"rtp_has_crypto",
 		"media_webrtc",

@@ -37,7 +37,7 @@ func defaultServer() {
 
 	dbHandler, err := infrastructure.NewPostgresHandler()
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Fatal(err.Error())
 		return
 	}
 	dbHandlers := make(map[string]interfaces.DbHandler)
@@ -45,13 +45,16 @@ func defaultServer() {
 	dbHandlers["DbCdrBRepo"] = dbHandler
 	CdrInteractor.SqlCdrARepository = interfaces.NewDbCdrARepo(dbHandlers)
 	CdrInteractor.SqlCdrBRepository = interfaces.NewDbCdrBRepo(dbHandlers)
-	CdrInteractor.InitTables()
+	if err := CdrInteractor.InitTables(); err != nil {
+		logger.Fatal(err.Error())
+		return
+	}
 	go CdrInteractor.Run()
 	go CdrInteractor.RunArchivePublisher()
 
 	docHandler, err := infrastructure.NewElasticHandler()
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Fatal(err.Error())
 		return
 	}
 	docHandlers := make(map[string]interfaces.NosqlHandler)
@@ -71,7 +74,7 @@ func archiveServer() {
 
 	docHandler, err := infrastructure.NewElasticHandler()
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Fatal(err.Error())
 		return
 	}
 	docHandlers := make(map[string]interfaces.NosqlHandler)

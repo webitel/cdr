@@ -22,7 +22,7 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 			errChanA := make(chan bool)
 			interactor.AmqReceiverRepositoryA.CreateAmqConnection(receiver.ConnectionString, receiver.ExchangeName, receiver.ExchangeType)
 			go interactor.ArchiveListener(interactor.AmqReceiverRepositoryA, interactor.SqlCdrARepository, interval, size, receiver.ExchangeName, receiver.RoutingKeyA, errChanA)
-			logger.Notice("Archive module: start listening A...")
+			logger.Info("Archive: start listening A...")
 			<-errChanA
 		}
 	}(receiver, size, interval)
@@ -31,7 +31,7 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 			errChanB := make(chan bool)
 			interactor.AmqReceiverRepositoryB.CreateAmqConnection(receiver.ConnectionString, receiver.ExchangeName, receiver.ExchangeType)
 			go interactor.ArchiveListener(interactor.AmqReceiverRepositoryB, interactor.SqlCdrBRepository, interval, size, receiver.ExchangeName, receiver.RoutingKeyB, errChanB)
-			logger.Notice("Archive module: start listening B...")
+			logger.Info("Archive: start listening B...")
 			<-errChanB
 		}
 	}(receiver, size, interval)
@@ -60,11 +60,11 @@ func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.Amq
 	}
 	if err := amqpRepo.SendMessage(cdr, routingKey, exchName); err != nil {
 		repo.UpdateState(cdr, 0, 0, "archived")
-		logger.Error(err.Error())
+		logger.Error("Archive: [%s] %s", routingKey, err.Error())
 		ticker.Stop()
 		errChan <- true
 	} else {
-		logger.Notice("Archive: items stored [%s, %v]", routingKey, len(cdr))
+		logger.Debug("Archive: items stored [%s, %v]", routingKey, len(cdr))
 		repo.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "archived")
 	}
 }

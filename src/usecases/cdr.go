@@ -54,7 +54,7 @@ func (interactor *CdrInteractor) Run() {
 		}
 		go interactor.ListenEvents(msgsA, size, interval, done, interactor.AddToSqlA, "Leg A")
 		go interactor.ListenEvents(msgsB, size, interval, done, interactor.AddToSqlB, "Leg B")
-		logger.Notice("RabbitMQ: start listening...")
+		logger.Info("RabbitMQ: start listening...")
 		err = <-done
 		logger.Error(err.Error())
 	}
@@ -80,7 +80,7 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 					if len(batch) > 0 && len(batch) != cap(batch) {
 						go interactor.DeliveryProcess(batch, sqlProcess, key)
 					}
-					done <- fmt.Errorf("ERROR: Deliveries channel closed")
+					done <- fmt.Errorf("RabbitMQ: Deliveries channel closed [PUBLISHER]")
 					return
 				}
 				batch = append(batch, d)
@@ -96,16 +96,16 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 
 func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlProcess SqlProcess, key string) {
 	if err, countB := sqlProcess(batch); err != nil {
-		logger.Error("ERROR. %s: %s", key, err)
+		logger.Error("PostgreSQL: [%s] %s", key, err)
 		for i := 0; i < len(batch); i++ {
 			batch[i].Nack(false, true)
 		}
-		logger.Error("PostgreSQL: failed to store items [%s, %v]", key, len(batch))
+		logger.Warning("PostgreSQL: failed to store items [%s, %v]", key, len(batch))
 	} else {
 		for i := 0; i < len(batch); i++ {
 			batch[i].Ack(false)
 		}
-		logger.Notice("PostgreSQL: items stored [%s, %v]", key, len(batch)-countB)
+		logger.Debug("PostgreSQL: items stored [%s, %v]", key, len(batch)-countB)
 	}
 }
 
@@ -144,7 +144,7 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error,
 		if err := interactor.SqlCdrBRepository.InsertPack(callsB); err != nil {
 			return err, 0
 		}
-		logger.Notice("PostgreSQL: Legs B from Leg A channel stored [Leg B, %v]", len(callsB))
+		logger.Debug("PostgreSQL: Legs B from Leg A channel stored [Leg B, %v]", len(callsB))
 	}
 	return nil, len(callsB)
 }

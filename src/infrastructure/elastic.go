@@ -52,7 +52,7 @@ func (handler *ElasticHandler) Init() error {
 		}
 		handler.Client = eClient
 		handler.Ctx = ctx
-		logger.Info("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
+		logger.Debug("Elasticsearch returned with code %d and version %s", code, info.Version.Number)
 		if err := handler.templatePrepare(templateMap); err != nil {
 			logger.Error(err.Error())
 			continue
@@ -97,7 +97,7 @@ func (handler *ElasticHandler) createTemplate(templateMap string) error {
 		return fmt.Errorf("Template is not acknowledged")
 		// Not acknowledged
 	}
-	logger.Info("Elastic: put template")
+	logger.Debug("Elastic: put template")
 	return nil
 }
 
@@ -108,6 +108,7 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
 			tmpDomain = "-" + item.DomainName
 		}
+		logger.DebugElastic("Elastic bulk item [Leg A]:", item.Uuid, item.DomainName)
 		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})
 		bulkRequest = bulkRequest.Add(req)
 	}
@@ -120,7 +121,7 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 		for _, item := range res.Items {
 			if item["update"].Error != nil {
 				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
-				logger.Error(fmt.Sprintf("LEG A. ID: %v; ERROR TYPE: %v; REASON: %v", item["update"].Id, item["update"].Error.Type, item["update"].Error.Reason))
+				logger.ErrorElastic("Elastic [Leg A]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
 			} else {
 				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
 			}
@@ -137,6 +138,7 @@ func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) (error,
 		if item.DomainName != "" {
 			tmpDomain = "-" + item.DomainName
 		}
+		logger.DebugElastic("Elastic bulk item [Leg B]:", item.Uuid, item.DomainName)
 		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
 		bulkRequest = bulkRequest.Add(req)
 	}
@@ -149,7 +151,7 @@ func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) (error,
 		for _, item := range res.Items {
 			if item["update"].Error != nil {
 				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
-				logger.Error(fmt.Sprintf("LEG B. ID: %v; ERROR TYPE: %v; REASON: %v", item["update"].Id, item["update"].Error.Type, item["update"].Error.Reason))
+				logger.ErrorElastic("Elastic [Leg B]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
 			} else {
 				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
 			}
