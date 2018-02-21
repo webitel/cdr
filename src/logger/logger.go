@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"flag"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -36,13 +35,20 @@ func DebugElastic(message string, id, domain string) {
 	log.Debug().Str("domain", domain).Str("uuid", id).Msg(message)
 }
 
+func SetLevel(level string) {
+	if level == "error" {
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	} else if level == "warn" {
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	} else if level == "info" {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+}
+
 func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	zerolog.TimeFieldFormat = "15:04:05 Mon 02/01/2006"
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	debug := flag.Bool("debug", false, "sets log level to debug")
-	flag.Parse()
-	if *debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
 }

@@ -33,11 +33,14 @@
   },
   "elastic":{
       "enabled": true,
-      "deleteTemplate": false,
+      "deleteTemplate": true,
       "host": "http://10.10.10.200:9200",    
       "intervalMillisec": 1000,
       "bulkCount": 100,
       "indexName": "cdr",
       "typeName": "cdr"
+  },
+  "application": {
+    "loglevel": "debug"
   }   
 }    

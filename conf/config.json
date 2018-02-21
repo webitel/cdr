@@ -39,5 +39,8 @@
       "bulkCount": 100,
       "indexName": "cdr",
       "typeName": "cdr"
+  },
+  "application": {
+    "loglevel": "debug"
   }   
 }    

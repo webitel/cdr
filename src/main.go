@@ -13,6 +13,7 @@ func main() {
 		logger.Error(err.Error())
 		return
 	}
+	logger.SetLevel(conf.GetLogLevel())
 	if conf.IsArchive() {
 		archiveServer()
 	} else {

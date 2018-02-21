@@ -14,6 +14,11 @@ type Configuration struct {
 	Postgres      `json:"pg"`
 	Rabbit        `json:"broker"`
 	Elastic       `json:"elastic"`
+	Application   `json:"application"`
+}
+
+type Application struct {
+	LogLevel string `json:"logLevel"`
 }
 
 type Elastic struct {
@@ -72,6 +77,10 @@ func InitConfig() error {
 		return fmt.Errorf("Config. Read from enviroment: %s", err)
 	}
 	return nil
+}
+
+func GetLogLevel() string {
+	return config.Application.LogLevel
 }
 
 func GetPublisher() Broker {
@@ -136,6 +145,9 @@ func (conf *Configuration) readFromEnviroment() error {
 	//var a map[string]interface{}
 	// err := envconfig.Process("", conf)
 	// return err
+	if value := os.Getenv("application:logLevel"); value != "" {
+		conf.Application.LogLevel = value
+	}
 	if value := os.Getenv("pg:user"); value != "" {
 		conf.Postgres.User = value
 	}
