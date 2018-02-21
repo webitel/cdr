@@ -29,10 +29,12 @@ func (interactor *CdrInteractor) RunArchiveServer() {
 		msgsA, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyA)
 		if err != nil {
 			logger.Error(err.Error())
+			continue
 		}
 		msgsB, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyB)
 		if err != nil {
 			logger.Error(err.Error())
+			continue
 		}
 		go interactor.ArchiveListenEvents(msgsA, size, interval, done, interactor.AddToElasticA, "Leg A")
 		go interactor.ArchiveListenEvents(msgsB, size, interval, done, interactor.AddToElasticB, "Leg B")

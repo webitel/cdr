@@ -40,13 +40,12 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 func (interactor *CdrInteractor) ArchiveListener(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, timeout uint32, bulkCount uint32, exchName, routingKey string, errChan chan bool) {
 	promise := time.Millisecond * time.Duration(timeout)
 	ticker := time.NewTicker(promise)
-	for {
-		<-ticker.C
-		go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, exchName, routingKey, errChan)
+	for range ticker.C {
+		go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, exchName, routingKey, errChan, ticker)
 	}
 }
 
-func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, exchName, routingKey string, errChan chan bool) {
+func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, exchName, routingKey string, errChan chan bool, ticker *time.Ticker) {
 	cdr, err := repo.SelectPackByState(bulkCount, 0, "archived")
 	if err != nil {
 		logger.Error(err.Error())
@@ -62,6 +61,7 @@ func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.Amq
 	if err := amqpRepo.SendMessage(cdr, routingKey, exchName); err != nil {
 		repo.UpdateState(cdr, 0, 0, "archived")
 		logger.Error(err.Error())
+		ticker.Stop()
 		errChan <- true
 	} else {
 		logger.Notice("Archive: items stored [%s, %v]", routingKey, len(cdr))

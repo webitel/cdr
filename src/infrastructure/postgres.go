@@ -22,35 +22,29 @@ func NewPostgresHandler() (*PostgresHandler, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		pgConfig.Host, pgConfig.Port, pgConfig.User, pgConfig.Password, pgConfig.Database)
-	//var err error
 	ticker := time.NewTicker(5 * time.Second)
-	//quit := make(chan struct{})
-	for {
-		select {
-		case <-ticker.C:
-			dbConnection, err := sql.Open("postgres", psqlInfo)
-			if err != nil {
-				logger.Error("PostgreSQL Connection: " + err.Error())
-				continue
-			}
-			if err = dbConnection.Ping(); err != nil {
-				logger.Error("PostgreSQL Ping: " + err.Error())
-				continue
-			}
-			pgHandler := new(PostgresHandler)
-			pgHandler.Conn = dbConnection
-			logger.Info(fmt.Sprintf("PostgreSQL: connect to %s:%v", pgConfig.Host, pgConfig.Port))
-			ticker.Stop()
-			return pgHandler, nil
+	var pgHandler *PostgresHandler
+	for range ticker.C {
+		dbConnection, err := sql.Open("postgres", psqlInfo)
+		if err != nil {
+			logger.Error("PostgreSQL Connection: " + err.Error())
+			continue
 		}
+		if err = dbConnection.Ping(); err != nil {
+			logger.Error("PostgreSQL Ping: " + err.Error())
+			continue
+		}
+		pgHandler = new(PostgresHandler)
+		pgHandler.Conn = dbConnection
+		logger.Info(fmt.Sprintf("PostgreSQL: connect to %s:%v", pgConfig.Host, pgConfig.Port))
+		ticker.Stop()
+		break
 	}
-
+	return pgHandler, nil
 }
 
 func (handler *PostgresHandler) ExecuteQuery(query string, params ...interface{}) error {
-	//params = append(params, pg.Table)
 	_, err := handler.Conn.Exec(query, params...)
-	//fmt.Println(r)
 	if err != nil {
 		return fmt.Errorf("PostgreSQL. Execute script error.\nError message: %s\nQuery: %s\n", err, query)
 	}
@@ -72,7 +66,6 @@ func (handler *PostgresHandler) CreateTable(query string) error {
 	if err != nil {
 		return fmt.Errorf("PostgreSQL. Create table error: %s", err)
 	}
-	//fmt.Println(r)
 	return err
 }
 

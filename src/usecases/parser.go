@@ -75,13 +75,8 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		HangupDisposition:    hangup_disposition,
 		OriginateDisposition: getString(variables["originate_disposition"]),
 		TransferDisposition:  getString(variables["transfer_disposition"]),
-		//times
-		// BridgedTime:           bridgedTime,
-		// CallAnswerTime:        answeredTime,
-		// ProgressTime:          progressTime,
-		// CallHangupTime:        hangupTime,
-		CallCreatedTime: createdTime,
-		// TransferTime:          transferTime,
+		CallCreatedTime:      createdTime,
+		//
 		Duration:              getUint(variables["duration"]),
 		ConnectedCallDuration: getUint(variables["billsec"]),
 		ProgressSeconds:       getUint(variables["progresssec"]),

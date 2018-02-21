@@ -36,7 +36,6 @@ func dial(connectionString string) (*amqp.Connection, error) {
 }
 
 func createChannel(c *amqp.Connection, exchangeName, exchangeType string) (*amqp.Channel, error) {
-	//return nil, fmt.Errorf("Channel:")
 	logger.Info("got Connection, getting Channel")
 	channel, err := c.Channel()
 	if err != nil {

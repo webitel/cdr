@@ -2,19 +2,6 @@ package interfaces
 
 import "github.com/webitel/cdr/src/entity"
 
-// type AmqpHandler interface {
-// 	InitRabbitConn(connectionString, exchangeName, exchangeType string)
-// 	GetAmqpMsg(exchName, exchType, routingKey string) (<-chan entity.Delivery, error)
-// 	PublishMessage(calls []entity.SqlCdr, routingKey, exchangeName string) error
-// }
-
-// type AmqpRepo struct {
-// 	amqpHandler AmqpHandler
-// }
-
-// type PublisherRepo AmqpRepo
-// type ReceiverRepo AmqpRepo
-
 type AmqpPublisherHandler interface {
 	InitRabbitConn(connectionString, exchangeName, exchangeType string)
 	GetAmqpMsg(exchName, exchType, routingKey string) (<-chan entity.Delivery, error)
@@ -31,9 +18,6 @@ type PublisherRepo struct {
 type ReceiverRepo struct {
 	amqpHandler AmqpReceiverHandler
 }
-
-// type PublisherRepo AmqpRepo
-// type ReceiverRepo AmqpRepo
 
 func NewPublisherRepo(amqpHandler AmqpPublisherHandler) *PublisherRepo {
 	AmqpRepo := new(PublisherRepo)
@@ -56,7 +40,7 @@ func (repo *PublisherRepo) GetMessages(exchName, exchType, routingKey string) (<
 	if err != nil {
 		return nil, err
 	}
-	return msgs, nil //fmt.Errorf("Channel was closed")
+	return msgs, nil
 }
 
 func (repo *ReceiverRepo) CreateAmqConnection(connectionString, exchangeName, exchangeType string) {

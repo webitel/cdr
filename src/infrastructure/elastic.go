@@ -22,7 +22,6 @@ var elasticConfig conf.Elastic
 
 func NewElasticHandler() (*ElasticHandler, error) {
 	elasticHandler := new(ElasticHandler)
-	//elasticConfig = conf.GetElastic()
 	err := elasticHandler.Init()
 	return elasticHandler, err
 }
@@ -40,34 +39,28 @@ func (handler *ElasticHandler) Init() error {
 	}
 	ctx := context.Background()
 	ticker := time.NewTicker(5 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			eClient, err := elastic.NewClient(elastic.SetURL(elasticConfig.Url), elastic.SetSniff(false))
-			if err != nil {
-				logger.Error(err.Error())
-				continue
-			}
-			info, code, err := eClient.Ping(elasticConfig.Url).Do(ctx)
-			if err != nil {
-				logger.Error(err.Error())
-				continue
-			}
-			handler.Client = eClient
-			handler.Ctx = ctx
-			logger.Info("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
-			if err := handler.templatePrepare(templateMap); err != nil {
-				logger.Error(err.Error())
-				continue
-			}
-			// if err := handler.indexPrepare(); err != nil {
-			// 	logger.Error(err.Error())
-			// 	continue
-			// }
-			ticker.Stop()
-			return nil
+	for range ticker.C {
+		eClient, err := elastic.NewClient(elastic.SetURL(elasticConfig.Url), elastic.SetSniff(false))
+		if err != nil {
+			logger.Error(err.Error())
+			continue
 		}
+		info, code, err := eClient.Ping(elasticConfig.Url).Do(ctx)
+		if err != nil {
+			logger.Error(err.Error())
+			continue
+		}
+		handler.Client = eClient
+		handler.Ctx = ctx
+		logger.Info("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
+		if err := handler.templatePrepare(templateMap); err != nil {
+			logger.Error(err.Error())
+			continue
+		}
+		ticker.Stop()
+		break
 	}
+	return nil
 }
 
 func (handler *ElasticHandler) templatePrepare(templateMap string) error {
@@ -76,7 +69,7 @@ func (handler *ElasticHandler) templatePrepare(templateMap string) error {
 		return err
 	}
 	if !exists {
-		// Create a new index.
+		// Create a new template.
 		if err := handler.createTemplate(templateMap); err != nil {
 			return err
 		}
@@ -107,26 +100,6 @@ func (handler *ElasticHandler) createTemplate(templateMap string) error {
 	logger.Info("Elastic: put template")
 	return nil
 }
-
-// func (handler *ElasticHandler) indexPrepare() error {
-// 	exists, err := handler.Client.IndexExists(elasticConfig.IndexName).Do(handler.Ctx)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if !exists {
-// 		// Create a new index.
-// 		createIndex, err := handler.Client.CreateIndex(elasticConfig.IndexName).Do(handler.Ctx)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if !createIndex.Acknowledged || createIndex == nil {
-// 			return fmt.Errorf("Index is not acknowledged")
-// 			// Not acknowledged
-// 		}
-// 	}
-// 	logger.Notice("Elastic: put index")
-// 	return nil
-// }
 
 func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
 	bulkRequest := handler.Client.Bulk()

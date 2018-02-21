@@ -65,6 +65,9 @@ func InitConfig() error {
 	if err := config.readFromFile(); err != nil {
 		return fmt.Errorf("Config. Read from file: %s", err)
 	}
+	if err := config.readTemplate(); err != nil {
+		return fmt.Errorf("Config. Read from elastic template: %s", err)
+	}
 	if err := config.readFromEnviroment(); err != nil {
 		return fmt.Errorf("Config. Read from enviroment: %s", err)
 	}
@@ -110,6 +113,15 @@ func (conf *Configuration) readFromFile() error {
 		return err
 	}
 	err = json.Unmarshal(file, conf)
+	return err
+}
+
+func (conf *Configuration) readTemplate() error {
+	file, err := ioutil.ReadFile("./conf/elastic.json")
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(file, &conf.Elastic)
 	return err
 }
 

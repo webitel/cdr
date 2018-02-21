@@ -12,21 +12,11 @@ type SqlCdrARepository SqlCdrRepository
 type SqlCdrBRepository SqlCdrRepository
 
 type ElasticCdrRepository interface {
-	//AddCdrToElastic(call ElasticCdr) error
 	InsertDocs(calls []ElasticCdr) (error, []SqlCdr, []SqlCdr)
 }
 
 type ElasticCdrARepository ElasticCdrRepository
 type ElasticCdrBRepository ElasticCdrRepository
-
-// type AmqRepository interface {
-// 	CreateAmqConnection(connectionString, exchangeName, exchangeType string)
-// 	GetMessages(exchName, exchType, routingKey string) (<-chan Delivery, error)
-// 	SendMessage(calls []SqlCdr, exchName, routingKey string) error
-// }
-
-// type AmqPublisherRepository AmqRepository
-// type AmqReceiverRepository AmqRepository
 
 type AmqPublisherRepository interface {
 	CreateAmqConnection(connectionString, exchangeName, exchangeType string)
@@ -91,14 +81,13 @@ type ElasticCdr struct {
 	AnswerSeconds         uint32 `json:"answersec"`
 	WaitSeconds           uint32 `json:"waitsec"`
 	HoldAccumSeconds      uint32 `json:"holdsec"`
-	//
+	///////
 	QualityPercentageAudio uint32                 `json:"quality_percentage_audio,omitempty"`
 	QualityPercentageVideo uint32                 `json:"quality_percentage_video,omitempty"`
 	Variables              map[string]interface{} `json:"variables"`
 	*Locations             `json:"locations,omitempty"`
 	*Queue                 `json:"queue,omitempty"`
 	Callflow               *[]Callflow `json:"callflow,omitempty"`
-	//LegB                   []interface{} `json:"leg_b,omitempty"`
 }
 
 type Callflow struct {
@@ -151,7 +140,6 @@ type Queue struct {
 	CC_Queue_Hangup        uint64 `json:"hangup_time,omitempty"`
 	CC_Queue_JoinedEpoch   uint64 `json:"joined_time,omitempty"`
 	CC_Side                string `json:"side,omitempty"`
-	//Queue_AnswerDelay      uint32 `json:"asa"`
 }
 
 var (
