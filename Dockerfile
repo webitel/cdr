@@ -20,6 +20,7 @@ COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=0 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=0 /go/src/github.com/webitel/cdr/src/cdr .
 COPY conf/config.json .
+COPY src/conf/elastic.json ./conf/
 
 EXPOSE 10030
 CMD ["./cdr", "-c", "./config.json"]
