@@ -352,8 +352,7 @@
                   "type": "keyword"
                 },
                 "extension": {
-                  "type": "keyword",
-                  "store": true
+                  "type": "keyword"                  
                 },
                 "presence_id": {
                   "type": "keyword"
@@ -424,8 +423,7 @@
                   "store": true
                 },
                 "holdsec": {
-                  "type": "long",
-                  "store": true
+                  "type": "long"                  
                 },
                 "quality_percentage_audio": {
                   "type": "long"

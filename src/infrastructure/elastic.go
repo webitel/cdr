@@ -38,8 +38,7 @@ func (handler *ElasticHandler) Init() error {
 		return err
 	}
 	ctx := context.Background()
-	ticker := time.NewTicker(5 * time.Second)
-	for range ticker.C {
+	for c := time.Tick(5 * time.Second); ; <-c {
 		eClient, err := elastic.NewClient(elastic.SetURL(elasticConfig.Url), elastic.SetSniff(false))
 		if err != nil {
 			logger.Error(err.Error())
@@ -57,7 +56,6 @@ func (handler *ElasticHandler) Init() error {
 			logger.Error(err.Error())
 			continue
 		}
-		ticker.Stop()
 		break
 	}
 	return nil
@@ -109,7 +107,7 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 			tmpDomain = "-" + item.DomainName
 		}
 		logger.DebugElastic("Elastic bulk item [Leg A]:", item.Uuid, item.DomainName)
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid). /*Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).*/ DocAsUpsert(true).Doc(item) //entity.LegA{ElasticCdr: &item, LegB: make([]bool, 0)})
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid).DocAsUpsert(true).Doc(item)
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
@@ -135,7 +133,7 @@ func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) (error,
 	bulkRequest := handler.Client.Bulk()
 	for _, item := range calls {
 		var tmpDomain string
-		if item.DomainName != "" {
+		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
 			tmpDomain = "-" + item.DomainName
 		}
 		logger.DebugElastic("Elastic bulk item [Leg B]:", item.Uuid, item.DomainName)

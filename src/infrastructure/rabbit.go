@@ -58,48 +58,32 @@ func createChannel(c *amqp.Connection, exchangeName, exchangeType string) (*amqp
 }
 
 func (handler *PublisherHandler) InitRabbitConn(connectionString, exchangeName, exchangeType string) { //done chan error
-	ticker := time.NewTicker(5 * time.Second)
-	quit := make(chan struct{})
-	for {
-		select {
-		case <-ticker.C:
-			if conn, err := dial(connectionString); err != nil {
+	for c := time.Tick(5 * time.Second); ; <-c {
+		if conn, err := dial(connectionString); err != nil {
+			logger.Error(err.Error())
+			logger.Debug("Publisher: trying to reconnect in 5 seconds...")
+		} else {
+			handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
+			if err != nil {
 				logger.Error(err.Error())
-				logger.Debug("Publisher: trying to reconnect in 5 seconds...")
-			} else {
-				handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
-				if err != nil {
-					logger.Error(err.Error())
-					continue
-				}
-				close(quit)
+				continue
 			}
-		case <-quit:
-			ticker.Stop()
 			return
 		}
 	}
 }
 
 func (handler *ReceiverHandler) InitRabbitConn(connectionString, exchangeName, exchangeType string) { //done chan error
-	ticker := time.NewTicker(5 * time.Second)
-	quit := make(chan struct{})
-	for {
-		select {
-		case <-ticker.C:
-			if conn, err := dial(connectionString); err != nil {
+	for c := time.Tick(5 * time.Second); ; <-c {
+		if conn, err := dial(connectionString); err != nil {
+			logger.Error(err.Error())
+			logger.Debug("Receiver: trying to reconnect in 5 seconds...")
+		} else {
+			handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
+			if err != nil {
 				logger.Error(err.Error())
-				logger.Debug("Receiver: trying to reconnect in 5 seconds...")
-			} else {
-				handler.Channel, err = createChannel(conn, exchangeName, exchangeType)
-				if err != nil {
-					logger.Error(err.Error())
-					continue
-				}
-				close(quit)
+				continue
 			}
-		case <-quit:
-			ticker.Stop()
 			return
 		}
 	}

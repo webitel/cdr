@@ -22,9 +22,8 @@ func NewPostgresHandler() (*PostgresHandler, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		pgConfig.Host, pgConfig.Port, pgConfig.User, pgConfig.Password, pgConfig.Database)
-	ticker := time.NewTicker(5 * time.Second)
 	var pgHandler *PostgresHandler
-	for range ticker.C {
+	for c := time.Tick(5 * time.Second); ; <-c {
 		dbConnection, err := sql.Open("postgres", psqlInfo)
 		if err != nil {
 			logger.Error("PostgreSQL Connection: " + err.Error())
@@ -37,7 +36,6 @@ func NewPostgresHandler() (*PostgresHandler, error) {
 		pgHandler = new(PostgresHandler)
 		pgHandler.Conn = dbConnection
 		logger.Debug("PostgreSQL: connect to %s:%v", pgConfig.Host, pgConfig.Port)
-		ticker.Stop()
 		break
 	}
 	return pgHandler, nil
