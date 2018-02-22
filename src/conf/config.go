@@ -18,7 +18,7 @@ type Configuration struct {
 }
 
 type Application struct {
-	LogLevel string `json:"logLevel"`
+	LogLevel string `json:"loglevel"`
 }
 
 type Elastic struct {
