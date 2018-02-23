@@ -61,7 +61,8 @@ type SqlCdr struct {
 }
 
 type ElasticCdr struct {
-	Parent_uuid    string `json:"-"`
+	Leg            string `json:"leg,omitempty"`
+	Parent_uuid    string `json:"parent_uuid,omitempty"`
 	Uuid           string `json:"uuid"`
 	Direction      string `json:"direction,omitempty"`
 	CallerIdName   string `json:"caller_id_name,omitempty"`
@@ -81,12 +82,12 @@ type ElasticCdr struct {
 	OriginateDisposition string `json:"originate_disposition,omitempty"`
 	TransferDisposition  string `json:"transfer_disposition,omitempty"`
 	//times
-	BridgedTime     uint64 `json:"bridged_time,omitempty"`
-	CallAnswerTime  uint64 `json:"answered_time,omitempty"`
-	ProgressTime    uint64 `json:"progress_time,omitempty"`
-	CallHangupTime  uint64 `json:"hangup_time,omitempty"`
+	// BridgedTime     uint64 `json:"bridged_time,omitempty"`
+	// CallAnswerTime  uint64 `json:"answered_time,omitempty"`
+	// ProgressTime    uint64 `json:"progress_time,omitempty"`
+	// CallHangupTime  uint64 `json:"hangup_time,omitempty"`
 	CallCreatedTime uint64 `json:"created_time,omitempty"`
-	TransferTime    uint64 `json:"transfer_time,omitempty"`
+	//TransferTime    uint64 `json:"transfer_time,omitempty"`
 	///////
 	Duration              uint32 `json:"duration"`
 	ConnectedCallDuration uint32 `json:"billsec"`

@@ -39,20 +39,21 @@ func getUintFromFloat64(i interface{}) (s uint64) {
 
 func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 	var (
-		call, _                                                                               = callInterface.(map[string]interface{})
-		variables, _                                                                          = call["variables"].(map[string]interface{})
-		callerIdNumber, destinationNumber, callerIdName, source, networkAddr           string = getFromProfile(call, variables)
-		qualityPercentageAudio, qualityPercentageVideo                                 uint32 = getFromStats(call)
-		createdTime, progressTime, answeredTime, bridgedTime, hangupTime, transferTime uint64 = getFromTimes(call)
-		domain_name                                                                    string = getDomainName(variables)
-		queue_name                                                                     string = getQueueName(variables)
-		extension                                                                      string = getExtension(variables)
-		queue_hangup                                                                   uint64 = getQueueHangup(variables) * 1000
-		queue_answered_epoch                                                           uint64 = getQueueAnswered(variables) * 1000
-		queue_joined_epoch                                                             uint64 = getQueueJoined(variables) * 1000
-		queue_waiting                                                                  uint32 = getQueueWaiting(variables)
-		queue_call_duration                                                            uint32 = getQueueCallDuration(variables)
-		hangup_disposition                                                             string = getHangupDisposition(variables)
+		call, _                                                                     = callInterface.(map[string]interface{})
+		variables, _                                                                = call["variables"].(map[string]interface{})
+		callerIdNumber, destinationNumber, callerIdName, source, networkAddr string = getFromProfile(call, variables)
+		qualityPercentageAudio, qualityPercentageVideo                       uint32 = getFromStats(call)
+		//createdTime, progressTime, answeredTime, bridgedTime, hangupTime, transferTime uint64 = getFromTimes(call)
+		createdTime          uint64 = getFromTimes(call)
+		domain_name          string = getDomainName(variables)
+		queue_name           string = getQueueName(variables)
+		extension            string = getExtension(variables)
+		queue_hangup         uint64 = getQueueHangup(variables) * 1000
+		queue_answered_epoch uint64 = getQueueAnswered(variables) * 1000
+		queue_joined_epoch   uint64 = getQueueJoined(variables) * 1000
+		queue_waiting        uint32 = getQueueWaiting(variables)
+		queue_call_duration  uint32 = getQueueCallDuration(variables)
+		hangup_disposition   string = getHangupDisposition(variables)
 	)
 
 	e_entity := entity.ElasticCdr{
@@ -121,21 +122,27 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 	if *e_entity.Locations == (entity.Locations{}) {
 		e_entity.Locations = nil
 	}
+	/////////////////////////////////
 	if e_entity.Parent_uuid == "" {
-		byteArr, _ := json.Marshal(call["callflow"])
-		var tmpCf []entity.Callflow
-		json.Unmarshal(byteArr, &tmpCf)
-		if len(tmpCf) > 0 {
-			e_entity.Callflow = &tmpCf
-			setMillis(e_entity.Callflow)
-		}
+		e_entity.Leg = "A"
 	} else {
-		e_entity.BridgedTime = bridgedTime
-		e_entity.CallAnswerTime = answeredTime
-		e_entity.ProgressTime = progressTime
-		e_entity.CallHangupTime = hangupTime
-		e_entity.TransferTime = transferTime
+		e_entity.Leg = "B"
 	}
+	//if e_entity.Parent_uuid == "" {
+	byteArr, _ := json.Marshal(call["callflow"])
+	var tmpCf []entity.Callflow
+	json.Unmarshal(byteArr, &tmpCf)
+	if len(tmpCf) > 0 {
+		e_entity.Callflow = &tmpCf
+		setMillis(e_entity.Callflow)
+	}
+	// } else {
+	// 	e_entity.BridgedTime = bridgedTime
+	// 	e_entity.CallAnswerTime = answeredTime
+	// 	e_entity.ProgressTime = progressTime
+	// 	e_entity.CallHangupTime = hangupTime
+	// 	e_entity.TransferTime = transferTime
+	// }
 	return e_entity, nil
 }
 
@@ -214,16 +221,16 @@ func getFromStats(call map[string]interface{}) (qualityPercentageAudio, qualityP
 	return
 }
 
-func getFromTimes(call map[string]interface{}) (createdTime, progressTime, answeredTime, bridgedTime, hangupTime, transferTime uint64) {
+func getFromTimes(call map[string]interface{}) (createdTime /*, progressTime, answeredTime, bridgedTime, hangupTime, transferTime*/ uint64) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
 		times, ok := c[len(c)-1].(map[string]interface{})["times"].(map[string]interface{})
 		if ok {
 			createdTime = getUintFromFloat64(times["created_time"]) / 1000 //sqlStr[0 : len(sqlStr)-3]
-			progressTime = getUintFromFloat64(times["progress_time"]) / 1000
-			answeredTime = getUintFromFloat64(times["answered_time"]) / 1000
-			bridgedTime = getUintFromFloat64(times["bridged_time"]) / 1000
-			hangupTime = getUintFromFloat64(times["hangup_time"]) / 1000
-			transferTime = getUintFromFloat64(times["transfer_time"]) / 1000
+			// progressTime = getUintFromFloat64(times["progress_time"]) / 1000
+			// answeredTime = getUintFromFloat64(times["answered_time"]) / 1000
+			// bridgedTime = getUintFromFloat64(times["bridged_time"]) / 1000
+			// hangupTime = getUintFromFloat64(times["hangup_time"]) / 1000
+			// transferTime = getUintFromFloat64(times["transfer_time"]) / 1000
 		}
 	}
 	return

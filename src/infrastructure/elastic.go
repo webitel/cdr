@@ -106,8 +106,8 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
 			tmpDomain = "-" + item.DomainName
 		}
-		logger.DebugElastic("Elastic bulk item [Leg A]:", item.Uuid, item.DomainName)
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid).DocAsUpsert(true).Doc(item)
+		logger.DebugElastic("Elastic bulk item [Leg "+item.Leg+"]:", item.Uuid, item.DomainName)
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%s-%v%v", elasticConfig.IndexName, strings.ToLower(item.Leg), time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid).DocAsUpsert(true).Doc(item)
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)

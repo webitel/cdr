@@ -38,7 +38,7 @@ func (interactor *CdrInteractor) RunArchiveServer() {
 		}
 		go interactor.ArchiveListenEvents(msgsA, size, interval, done, interactor.AddToElasticA, "Leg A")
 		go interactor.ArchiveListenEvents(msgsB, size, interval, done, interactor.AddToElasticB, "Leg B")
-		logger.Info("RabbitMQ: start listening...")
+		logger.Log("RabbitMQ: start listening...")
 		err = <-done
 		logger.Error(err.Error())
 	}
@@ -91,7 +91,7 @@ func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery,
 					dResponse[i].Delivery.Nack(false, true)
 				}
 			}
-			logger.Debug("Elastic: items stored [%s, %v]", key, successCounter)
+			logger.Info("Elastic: items stored [%s, %v]", key, successCounter)
 			logger.Warning("Elastic: failed to store items [%s, %v]", key, errorCounter)
 		} else {
 			for i := 0; i < len(batch); i++ {
@@ -103,7 +103,7 @@ func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery,
 		for i := 0; i < len(batch); i++ {
 			batch[i].Ack(false)
 		}
-		logger.Debug("Elastic: items stored [%s, %v]", key, len(batch))
+		logger.Info("Elastic: items stored [%s, %v]", key, len(batch))
 	}
 }
 

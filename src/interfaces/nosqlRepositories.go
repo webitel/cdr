@@ -34,5 +34,6 @@ func (repo *DocCdrARepo) InsertDocs(calls []entity.ElasticCdr) (error, []entity.
 }
 
 func (repo *DocCdrBRepo) InsertDocs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
-	return repo.nosqlHandler.BulkUpdateLegs(calls)
+	//return repo.nosqlHandler.BulkUpdateLegs(calls)
+	return repo.nosqlHandler.BulkInsert(calls)
 }

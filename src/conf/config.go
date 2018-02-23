@@ -126,7 +126,7 @@ func (conf *Configuration) readFromFile() error {
 }
 
 func (conf *Configuration) readTemplate() error {
-	file, err := ioutil.ReadFile("./conf/elastic.json")
+	file, err := ioutil.ReadFile("./conf/elastic2.json")
 	if err != nil {
 		return err
 	}

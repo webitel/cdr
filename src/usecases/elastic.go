@@ -20,7 +20,7 @@ func (interactor *CdrInteractor) RunElastic() {
 	}
 	go LegListener(interactor.CheckLegsAFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount)
 	go LegListener(interactor.CheckLegsBFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount)
-	logger.Info("Elastic: start listening...")
+	logger.Log("Elastic: start listening...")
 }
 
 func LegListener(checkCalls CheckCalls, timeout uint32, bulkCount uint32) {
@@ -64,7 +64,7 @@ func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8
 			interactor.SqlCdrARepository.UpdateState(errCalls, 4, 0, "stored")
 			if succCalls != nil && len(succCalls) > 0 {
 				interactor.SqlCdrARepository.UpdateState(succCalls, 2, uint64(time.Now().UnixNano()/1000000), "stored")
-				logger.Debug("Elastic: items stored [%s, %v]", "Leg A", len(succCalls))
+				logger.Info("Elastic: items stored [%s, %v]", "Leg A", len(succCalls))
 			}
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg A", len(errCalls))
 		} else {
@@ -72,7 +72,7 @@ func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg A", len(calls))
 		}
 	} else {
-		logger.Debug("Elastic: items stored [%s, %v]", "Leg A", len(calls))
+		logger.Info("Elastic: items stored [%s, %v]", "Leg A", len(calls))
 		interactor.SqlCdrARepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
 }
@@ -99,7 +99,7 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 			interactor.SqlCdrBRepository.UpdateState(errCalls, 4, 0, "stored")
 			if succCalls != nil && len(succCalls) > 0 {
 				interactor.SqlCdrBRepository.UpdateState(succCalls, 2, uint64(time.Now().UnixNano()/1000000), "stored")
-				logger.Debug("Elastic: items stored [%s, %v]", "Leg B", len(succCalls))
+				logger.Info("Elastic: items stored [%s, %v]", "Leg B", len(succCalls))
 			}
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg B", len(errCalls))
 		} else {
@@ -107,7 +107,7 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg A", len(calls))
 		}
 	} else {
-		logger.Debug("Elastic: items stored [%s, %v]", "Leg B", len(calls))
+		logger.Info("Elastic: items stored [%s, %v]", "Leg B", len(calls))
 		interactor.SqlCdrBRepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
 }

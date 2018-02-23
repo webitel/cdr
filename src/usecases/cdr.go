@@ -56,7 +56,7 @@ func (interactor *CdrInteractor) Run() {
 		}
 		go interactor.ListenEvents(msgsA, size, interval, done, interactor.AddToSqlA, "Leg A")
 		go interactor.ListenEvents(msgsB, size, interval, done, interactor.AddToSqlB, "Leg B")
-		logger.Info("RabbitMQ: start listening...")
+		logger.Log("RabbitMQ: start listening...")
 		err = <-done
 		logger.Error(err.Error())
 	}
@@ -107,7 +107,7 @@ func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlPro
 		for i := 0; i < len(batch); i++ {
 			batch[i].Ack(false)
 		}
-		logger.Debug("PostgreSQL: items stored [%s, %v]", key, len(batch)-countB)
+		logger.Info("PostgreSQL: items stored [%s, %v]", key, len(batch)-countB)
 	}
 }
 
@@ -146,7 +146,7 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error,
 		if err := interactor.SqlCdrBRepository.InsertPack(callsB); err != nil {
 			return err, 0
 		}
-		logger.Debug("PostgreSQL: Legs B from Leg A channel stored [Leg B, %v]", len(callsB))
+		logger.Info("PostgreSQL: Legs B from Leg A channel stored [Leg B, %v]", len(callsB))
 	}
 	return nil, len(callsB)
 }

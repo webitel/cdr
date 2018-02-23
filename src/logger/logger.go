@@ -39,6 +39,10 @@ func DebugElastic(message string, id, domain string) {
 	log.Debug().Str("domain", domain).Str("uuid", id).Msg(message)
 }
 
+func Log(message string, args ...interface{}) {
+	log.Log().Msgf(message, args...)
+}
+
 func SetLevel(level string) {
 	if level == "error" {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
