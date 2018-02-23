@@ -36,8 +36,10 @@ func (interactor *CdrInteractor) Run() {
 	if interactor.AmqPublisherRepository == nil || interactor.SqlCdrBRepository == nil || interactor.SqlCdrARepository == nil {
 		return
 	}
-
 	publisher := conf.GetPublisher()
+	if publisher.Enable == false {
+		return
+	}
 	size, interval := conf.GetListenerConfig()
 	for {
 		var done = make(chan error)

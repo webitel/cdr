@@ -19,6 +19,10 @@ func ErrorElastic(message, id, errType, index, reason string) {
 	log.Error().Str("Reason", reason).Str("Error type", errType).Str("Index", index).Str("Id", id).Msg(message)
 }
 
+func ErrorResponse(message string, code int, reason string) {
+	log.Error().Str("Reason", reason).Int("Code", code).Msg(message)
+}
+
 func Warning(message string, args ...interface{}) {
 	log.Warn().Msgf(message, args...)
 }

@@ -1,5 +1,7 @@
 package entity
 
+import "fmt"
+
 type SqlCdrRepository interface {
 	InsertPack(calls []SqlCdr) error
 	SelectPackByState(count uint32, state uint8, stateName string) ([]SqlCdr, error)
@@ -33,6 +35,17 @@ type Delivery interface {
 	Ack(multiple bool) error
 	Nack(multiple, requeue bool) error
 	GetBody() []byte
+}
+
+type AmqError struct {
+	Code   int    // constant code from the specification
+	Reason string // description of the error
+	// Server  bool   // true when initiated from the server, false when from this library
+	// Recover bool   // true when this error can be recovered by retrying later or with different parameters
+}
+
+func (e AmqError) Error() string {
+	return fmt.Sprintf("Exception (%d) Reason: %q", e.Code, e.Reason)
 }
 
 type SqlCdr struct {

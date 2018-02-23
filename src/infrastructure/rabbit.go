@@ -93,7 +93,7 @@ func (handler *ReceiverHandler) PublishMessage(calls []entity.SqlCdr, routingKey
 	if handler.Channel == nil {
 		return fmt.Errorf("Receive AMQ channel not connected")
 	}
-
+	//amqp.Error
 	var err error
 	handler.Channel.Tx()
 	for _, item := range calls {
@@ -113,10 +113,18 @@ func (handler *ReceiverHandler) PublishMessage(calls []entity.SqlCdr, routingKey
 	}
 	if err != nil {
 		handler.Channel.TxRollback()
+		if amqpError, ok := err.(*amqp.Error); ok {
+			return entity.AmqError{
+				Code:   amqpError.Code,
+				Reason: amqpError.Reason,
+			}
+		} else {
+			return err
+		}
 	} else {
 		handler.Channel.TxCommit()
 	}
-	return err
+	return nil
 }
 
 func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey string) (<-chan entity.Delivery, error) {

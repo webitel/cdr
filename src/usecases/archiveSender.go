@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/webitel/cdr/src/conf"
@@ -40,13 +41,23 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 func (interactor *CdrInteractor) ArchiveListener(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, timeout uint32, bulkCount uint32, exchName, routingKey string, errChan chan bool) {
 	promise := time.Millisecond * time.Duration(timeout)
 	ticker := time.NewTicker(promise)
-	for range ticker.C {
-		go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, exchName, routingKey, errChan, ticker)
+	errorTicker := time.NewTicker(promise * 10)
+	for {
+		select {
+		case <-ticker.C:
+			{
+				go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, 0, exchName, routingKey, errChan, ticker, errorTicker)
+			}
+		case <-errorTicker.C:
+			{
+				go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, 4, exchName, routingKey, errChan, ticker, errorTicker)
+			}
+		}
 	}
 }
 
-func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, exchName, routingKey string, errChan chan bool, ticker *time.Ticker) {
-	cdr, err := repo.SelectPackByState(bulkCount, 0, "archived")
+func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, state uint8, exchName, routingKey string, errChan chan bool, ticker, errorTicker *time.Ticker) {
+	cdr, err := repo.SelectPackByState(bulkCount, state, "archived")
 	if err != nil {
 		logger.Error(err.Error())
 		return
@@ -59,10 +70,20 @@ func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.Amq
 		return
 	}
 	if err := amqpRepo.SendMessage(cdr, routingKey, exchName); err != nil {
-		repo.UpdateState(cdr, 0, 0, "archived")
-		logger.Error("Archive: [%s] %s", routingKey, err.Error())
-		ticker.Stop()
-		errChan <- true
+		if amqpError, ok := err.(entity.AmqError); ok {
+			logger.ErrorResponse(fmt.Sprintf("Archive [%s]:", routingKey), amqpError.Code, amqpError.Reason)
+			if amqpError.Code >= 500 && amqpError.Code < 600 {
+				repo.UpdateState(cdr, 0, 0, "archived")
+				ticker.Stop()
+				errorTicker.Stop()
+				errChan <- true
+			} else {
+				repo.UpdateState(cdr, 4, 0, "archived")
+			}
+		} else {
+			logger.Error(err.Error())
+			repo.UpdateState(cdr, 4, 0, "archived")
+		}
 	} else {
 		logger.Debug("Archive: items stored [%s, %v]", routingKey, len(cdr))
 		repo.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "archived")
