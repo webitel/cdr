@@ -39,6 +39,10 @@ func DebugElastic(message string, id, domain string) {
 	log.Debug().Str("domain", domain).Str("uuid", id).Msg(message)
 }
 
+func DebugAccount(message, name, account, domain string) {
+	log.Debug().Str("domain", domain).Str("name", name).Str("account", account).Msg(message)
+}
+
 func Log(message string, args ...interface{}) {
 	log.Log().Msgf(message, args...)
 }

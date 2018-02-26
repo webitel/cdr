@@ -26,6 +26,10 @@ func (interactor *CdrInteractor) RunArchiveServer() {
 	for {
 		var done = make(chan error)
 		interactor.AmqPublisherRepository.CreateAmqConnection(publisher.ConnectionString, publisher.ExchangeName, publisher.ExchangeType)
+		if err := interactor.AmqPublisherRepository.InitExchange(publisher.ExchangeType, publisher.ExchangeName); err != nil {
+			logger.Error(err.Error())
+			continue
+		}
 		msgsA, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyA)
 		if err != nil {
 			logger.Error(err.Error())
@@ -97,6 +101,7 @@ func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery,
 			for i := 0; i < len(batch); i++ {
 				batch[i].Nack(false, true)
 			}
+			logger.Error(err.Error())
 			logger.Warning("Elastic: failed to store items [%s, %v]", key, len(batch))
 		}
 	} else {

@@ -11,13 +11,15 @@ import (
 )
 
 type CdrInteractor struct {
-	SqlCdrARepository      entity.SqlCdrARepository
-	SqlCdrBRepository      entity.SqlCdrBRepository
-	ElasticCdrARepository  entity.ElasticCdrARepository
-	ElasticCdrBRepository  entity.ElasticCdrBRepository
-	AmqPublisherRepository entity.AmqPublisherRepository
-	AmqReceiverRepositoryA entity.AmqReceiverRepository
-	AmqReceiverRepositoryB entity.AmqReceiverRepository
+	SqlCdrARepository         entity.SqlCdrARepository
+	SqlCdrBRepository         entity.SqlCdrBRepository
+	ElasticCdrARepository     entity.ElasticCdrARepository
+	ElasticCdrBRepository     entity.ElasticCdrBRepository
+	AmqPublisherRepository    entity.AmqPublisherRepository
+	AmqAccountRepository      entity.AmqPublisherRepository
+	AmqReceiverRepositoryA    entity.AmqReceiverRepository
+	AmqReceiverRepositoryB    entity.AmqReceiverRepository
+	ElasticAccountsRepository entity.ElasticAccountsRepository
 }
 
 type SqlProcess func(deliveries []entity.Delivery) (error, int)
@@ -44,6 +46,10 @@ func (interactor *CdrInteractor) Run() {
 	for {
 		var done = make(chan error)
 		interactor.AmqPublisherRepository.CreateAmqConnection(publisher.ConnectionString, publisher.ExchangeName, publisher.ExchangeType)
+		if err := interactor.AmqPublisherRepository.InitExchange(publisher.ExchangeType, publisher.ExchangeName); err != nil {
+			logger.Error(err.Error())
+			continue
+		}
 		msgsA, err := interactor.AmqPublisherRepository.GetMessages(publisher.ExchangeName, publisher.ExchangeType, publisher.RoutingKeyA)
 		if err != nil {
 			logger.Error(err.Error())

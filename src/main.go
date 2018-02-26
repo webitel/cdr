@@ -28,14 +28,23 @@ func defaultServer() {
 
 	CdrInteractor := new(usecases.CdrInteractor)
 
+	/**
+	**RABBIT HANDLERS
+	**/
 	amqpPublisherHandler := infrastructure.NewRabbitPublisherHandler()
+	amqpAccountHandler := infrastructure.NewRabbitPublisherHandler()
 	amqpReceiverHandlerA := infrastructure.NewRabbitReceiverHandler()
 	amqpReceiverHandlerB := infrastructure.NewRabbitReceiverHandler()
 
 	CdrInteractor.AmqPublisherRepository = interfaces.NewPublisherRepo(amqpPublisherHandler)
+	CdrInteractor.AmqAccountRepository = interfaces.NewPublisherRepo(amqpAccountHandler)
 	CdrInteractor.AmqReceiverRepositoryA = interfaces.NewReceiverRepo(amqpReceiverHandlerA)
 	CdrInteractor.AmqReceiverRepositoryB = interfaces.NewReceiverRepo(amqpReceiverHandlerB)
+	/*****************/
 
+	/**
+	**POSTGRE HANDLERS
+	**/
 	dbHandler, err := infrastructure.NewPostgresHandler()
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -46,13 +55,19 @@ func defaultServer() {
 	dbHandlers["DbCdrBRepo"] = dbHandler
 	CdrInteractor.SqlCdrARepository = interfaces.NewDbCdrARepo(dbHandlers)
 	CdrInteractor.SqlCdrBRepository = interfaces.NewDbCdrBRepo(dbHandlers)
+	/*INIT TABLES IN PG*/
 	if err := CdrInteractor.InitTables(); err != nil {
 		logger.Fatal(err.Error())
 		return
 	}
-	go CdrInteractor.Run()
-	go CdrInteractor.RunArchivePublisher()
+	/*********************/
 
+	go CdrInteractor.Run()                 // RUN RABBIT LISTENER
+	go CdrInteractor.RunArchivePublisher() // RUN ARCHIVE SENDER
+
+	/**
+	*ELASTIC HANDLERS
+	**/
 	docHandler, err := infrastructure.NewElasticHandler()
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -61,10 +76,14 @@ func defaultServer() {
 	docHandlers := make(map[string]interfaces.NosqlHandler)
 	docHandlers["DocCdrARepo"] = docHandler
 	docHandlers["DocCdrBRepo"] = docHandler
+	docHandlers["DocAccountRepo"] = docHandler
 	CdrInteractor.ElasticCdrARepository = interfaces.NewDocCdrARepo(docHandlers)
 	CdrInteractor.ElasticCdrBRepository = interfaces.NewDocCdrBRepo(docHandlers)
-	go CdrInteractor.RunElastic()
+	CdrInteractor.ElasticAccountsRepository = interfaces.NewDocAccountRepo(docHandlers)
+	/********************/
 
+	go CdrInteractor.RunElastic()  // RUN ELASTIC CDR PUBLISHER
+	go CdrInteractor.RunAccounts() // RUN ELASTIC ACCOUNT STATUS PUBLISHER
 }
 
 func archiveServer() {

@@ -41,19 +41,7 @@ func createChannel(c *amqp.Connection, exchangeName, exchangeType string) (*amqp
 	if err != nil {
 		return nil, fmt.Errorf("Channel: %s", err)
 	}
-
-	logger.Debug("got Channel, declaring %q Exchange (%q)", exchangeType, exchangeName)
-	if err := channel.ExchangeDeclare(
-		exchangeName, // name
-		exchangeType, // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // noWait
-		nil,          // arguments
-	); err != nil {
-		return nil, fmt.Errorf("Channel: %s", err)
-	}
+	logger.Debug("got Channel")
 	return channel, nil
 }
 
@@ -127,8 +115,31 @@ func (handler *ReceiverHandler) PublishMessage(calls []entity.SqlCdr, routingKey
 	return nil
 }
 
-func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey string) (<-chan entity.Delivery, error) {
+func (handler *PublisherHandler) DeclareExchange(exchType, exchName string) error {
+	return putExchange(handler.Channel, exchType, exchName)
+}
 
+func (handler *ReceiverHandler) DeclareExchange(exchType, exchName string) error {
+	return putExchange(handler.Channel, exchType, exchName)
+}
+
+func putExchange(channel *amqp.Channel, exchType, exchName string) error {
+	logger.Debug("Declaring %q Exchange (%q)", exchType, exchName)
+	if err := channel.ExchangeDeclare(
+		exchName, // name
+		exchType, // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // noWait
+		nil,      // arguments
+	); err != nil {
+		return fmt.Errorf("Channel: %s", err)
+	}
+	return nil
+}
+
+func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey string) (<-chan entity.Delivery, error) {
 	q, err := handler.Channel.QueueDeclare(
 		routingKey, // name
 		true,       // durable

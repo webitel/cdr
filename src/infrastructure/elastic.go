@@ -31,9 +31,15 @@ func (handler *ElasticHandler) Init() error {
 	if !elasticConfig.Enabled {
 		return nil
 	}
-	var templateMap string
-	if bytes, err := json.Marshal(elasticConfig.ElasticTemplate.Body); err == nil {
-		templateMap = string(bytes)
+	var cdrTemplateMap string
+	if bytes, err := json.Marshal(elasticConfig.CdrTemplate.Body); err == nil {
+		cdrTemplateMap = string(bytes)
+	} else {
+		return err
+	}
+	var accountsTemplateMap string
+	if bytes, err := json.Marshal(elasticConfig.AccountsTemplate.Body); err == nil {
+		accountsTemplateMap = string(bytes)
 	} else {
 		return err
 	}
@@ -52,7 +58,11 @@ func (handler *ElasticHandler) Init() error {
 		handler.Client = eClient
 		handler.Ctx = ctx
 		logger.Debug("Elasticsearch returned with code %d and version %s", code, info.Version.Number)
-		if err := handler.templatePrepare(templateMap); err != nil {
+		if err := handler.templatePrepare(elasticConfig.CdrTemplate, cdrTemplateMap); err != nil {
+			logger.Error(err.Error())
+			continue
+		}
+		if err := handler.templatePrepare(elasticConfig.AccountsTemplate, accountsTemplateMap); err != nil {
 			logger.Error(err.Error())
 			continue
 		}
@@ -61,33 +71,33 @@ func (handler *ElasticHandler) Init() error {
 	return nil
 }
 
-func (handler *ElasticHandler) templatePrepare(templateMap string) error {
-	exists, err := handler.Client.IndexTemplateExists(elasticConfig.ElasticTemplate.Name).Do(handler.Ctx)
+func (handler *ElasticHandler) templatePrepare(template conf.ElasticTemplate, templateMap string) error {
+	exists, err := handler.Client.IndexTemplateExists(template.Name).Do(handler.Ctx)
 	if err != nil {
 		return err
 	}
 	if !exists {
 		// Create a new template.
-		if err := handler.createTemplate(templateMap); err != nil {
+		if err := handler.createTemplate(template.Name, templateMap); err != nil {
 			return err
 		}
 	} else if elasticConfig.DeleteTemplate {
-		deleteTemplate, err := handler.Client.IndexDeleteTemplate(elasticConfig.ElasticTemplate.Name).Name(elasticConfig.ElasticTemplate.Name).Do(handler.Ctx)
+		deleteTemplate, err := handler.Client.IndexDeleteTemplate(template.Name).Name(template.Name).Do(handler.Ctx)
 		if err != nil {
 			return err
 		}
 		if !deleteTemplate.Acknowledged || deleteTemplate == nil {
 			return fmt.Errorf("Template is not acknowledged")
 		}
-		if err := handler.createTemplate(templateMap); err != nil {
+		if err := handler.createTemplate(template.Name, templateMap); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (handler *ElasticHandler) createTemplate(templateMap string) error {
-	createTemplate, err := handler.Client.IndexPutTemplate(elasticConfig.ElasticTemplate.Name).Name(elasticConfig.ElasticTemplate.Name).BodyString(templateMap).Do(handler.Ctx)
+func (handler *ElasticHandler) createTemplate(templateName, templateMap string) error {
+	createTemplate, err := handler.Client.IndexPutTemplate(templateName).Name(templateName).BodyString(templateMap).Do(handler.Ctx)
 	if err != nil {
 		return err
 	}
@@ -95,7 +105,7 @@ func (handler *ElasticHandler) createTemplate(templateMap string) error {
 		return fmt.Errorf("Template is not acknowledged")
 		// Not acknowledged
 	}
-	logger.Debug("Elastic: put template")
+	logger.Debug("Elastic: put template: %s", templateName)
 	return nil
 }
 
@@ -129,15 +139,15 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 	return nil, nil, nil
 }
 
-func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
+func (handler *ElasticHandler) BulkStatus(accounts []entity.Account) (error, []entity.Account, []entity.Account) {
 	bulkRequest := handler.Client.Bulk()
-	for _, item := range calls {
+	for _, item := range accounts {
 		var tmpDomain string
-		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
-			tmpDomain = "-" + item.DomainName
+		if item.Domain != "" && !strings.ContainsAny(item.Domain, ", & * & \\ & < & | & > & / & ?") {
+			tmpDomain = "-" + item.Domain
 		}
-		logger.DebugElastic("Elastic bulk item [Leg B]:", item.Uuid, item.DomainName)
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
+		logger.DebugAccount("Elastic bulk item [Accounts]:", item.Name, item.Account, item.Domain)
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid).Doc(item)
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
@@ -145,16 +155,46 @@ func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) (error,
 		return err, nil, nil
 	}
 	if res.Errors {
-		var successCalls, errorCalls []entity.SqlCdr
+		var successAcc, errorAcc []entity.Account
 		for _, item := range res.Items {
 			if item["update"].Error != nil {
-				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
-				logger.ErrorElastic("Elastic [Leg B]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
+				errorAcc = append(errorAcc, entity.Account{Uuid: item["update"].Id})
+				logger.ErrorElastic("Elastic [Accounts]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
 			} else {
-				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
+				successAcc = append(successAcc, entity.Account{Uuid: item["update"].Id})
 			}
 		}
-		return fmt.Errorf("Leg B: Bad response. Request has errors."), errorCalls, successCalls
+		return fmt.Errorf("Accounts: Bad response. Request has errors."), errorAcc, successAcc
 	}
 	return nil, nil, nil
 }
+
+// func (handler *ElasticHandler) BulkUpdateLegs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
+// 	bulkRequest := handler.Client.Bulk()
+// 	for _, item := range calls {
+// 		var tmpDomain string
+// 		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
+// 			tmpDomain = "-" + item.DomainName
+// 		}
+// 		logger.DebugElastic("Elastic bulk item [Leg B]:", item.Uuid, item.DomainName)
+// 		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).Id(item.Parent_uuid).RetryOnConflict(5).Upsert(map[string]interface{}{"legs_b": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"legs_b\")){ctx._source.legs_b.add(params.v);}else{ctx._source.legs_b = new ArrayList(); ctx._source.legs_b.add(params.v);}").Lang("painless").Param("v", item))
+// 		bulkRequest = bulkRequest.Add(req)
+// 	}
+// 	res, err := bulkRequest.Do(handler.Ctx)
+// 	if err != nil {
+// 		return err, nil, nil
+// 	}
+// 	if res.Errors {
+// 		var successCalls, errorCalls []entity.SqlCdr
+// 		for _, item := range res.Items {
+// 			if item["update"].Error != nil {
+// 				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
+// 				logger.ErrorElastic("Elastic [Leg B]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
+// 			} else {
+// 				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
+// 			}
+// 		}
+// 		return fmt.Errorf("Leg B: Bad response. Request has errors."), errorCalls, successCalls
+// 	}
+// 	return nil, nil, nil
+// }

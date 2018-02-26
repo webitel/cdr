@@ -22,6 +22,10 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 		for {
 			errChanA := make(chan bool)
 			interactor.AmqReceiverRepositoryA.CreateAmqConnection(receiver.ConnectionString, receiver.ExchangeName, receiver.ExchangeType)
+			if err := interactor.AmqReceiverRepositoryA.InitExchange(receiver.ExchangeType, receiver.ExchangeName); err != nil {
+				logger.Error(err.Error())
+				continue
+			}
 			go interactor.ArchiveListener(interactor.AmqReceiverRepositoryA, interactor.SqlCdrARepository, interval, size, receiver.ExchangeName, receiver.RoutingKeyA, errChanA)
 			logger.Log("Archive: start listening A...")
 			<-errChanA
@@ -31,6 +35,10 @@ func (interactor *CdrInteractor) RunArchivePublisher() {
 		for {
 			errChanB := make(chan bool)
 			interactor.AmqReceiverRepositoryB.CreateAmqConnection(receiver.ConnectionString, receiver.ExchangeName, receiver.ExchangeType)
+			if err := interactor.AmqReceiverRepositoryB.InitExchange(receiver.ExchangeType, receiver.ExchangeName); err != nil {
+				logger.Error(err.Error())
+				continue
+			}
 			go interactor.ArchiveListener(interactor.AmqReceiverRepositoryB, interactor.SqlCdrBRepository, interval, size, receiver.ExchangeName, receiver.RoutingKeyB, errChanB)
 			logger.Log("Archive: start listening B...")
 			<-errChanB

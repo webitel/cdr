@@ -38,7 +38,6 @@ func LegListener(checkCalls CheckCalls, timeout uint32, bulkCount uint32) {
 				go checkCalls(bulkCount, 4)
 			}
 		}
-
 	}
 }
 

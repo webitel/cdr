@@ -20,14 +20,20 @@ type ElasticCdrRepository interface {
 type ElasticCdrARepository ElasticCdrRepository
 type ElasticCdrBRepository ElasticCdrRepository
 
+type ElasticAccountsRepository interface {
+	InsertDocs(calls []Account) (error, []Account, []Account)
+}
+
 type AmqPublisherRepository interface {
 	CreateAmqConnection(connectionString, exchangeName, exchangeType string)
 	GetMessages(exchName, exchType, routingKey string) (<-chan Delivery, error)
+	InitExchange(exchName, exchType string) error
 }
 
 type AmqReceiverRepository interface {
 	CreateAmqConnection(connectionString, exchangeName, exchangeType string)
 	SendMessage(calls []SqlCdr, routingKey, exchName string) error
+	InitExchange(exchName, exchType string) error
 }
 
 // Delivery implementes a single message delivery.
@@ -61,14 +67,12 @@ type SqlCdr struct {
 }
 
 type ElasticCdr struct {
-	Leg            string `json:"leg,omitempty"`
-	Parent_uuid    string `json:"parent_uuid,omitempty"`
-	Uuid           string `json:"uuid"`
-	Direction      string `json:"direction,omitempty"`
-	CallerIdName   string `json:"caller_id_name,omitempty"`
-	CallerIdNumber string `json:"caller_id_number,omitempty"`
-	//CalleeIdName         string `json:"callee_id_name,omitempty"`   //???????????????????????
-	//CalleeIdNumber       string `json:"callee_id_number,omitempty"` //???????????????????????
+	Leg                  string `json:"leg,omitempty"`
+	Parent_uuid          string `json:"parent_uuid,omitempty"`
+	Uuid                 string `json:"uuid"`
+	Direction            string `json:"direction,omitempty"`
+	CallerIdName         string `json:"caller_id_name,omitempty"`
+	CallerIdNumber       string `json:"caller_id_number,omitempty"`
 	NetworkAddr          string `json:"network_addr,omitempty"`
 	DestinationNumber    string `json:"destination_number,omitempty"`
 	DomainName           string `json:"domain_name,omitempty"`
@@ -81,12 +85,12 @@ type ElasticCdr struct {
 	HangupDisposition    string `json:"hangup_disposition,omitempty"`
 	OriginateDisposition string `json:"originate_disposition,omitempty"`
 	TransferDisposition  string `json:"transfer_disposition,omitempty"`
+	CallCreatedTime      uint64 `json:"created_time,omitempty"`
 	//times
 	// BridgedTime     uint64 `json:"bridged_time,omitempty"`
 	// CallAnswerTime  uint64 `json:"answered_time,omitempty"`
 	// ProgressTime    uint64 `json:"progress_time,omitempty"`
 	// CallHangupTime  uint64 `json:"hangup_time,omitempty"`
-	CallCreatedTime uint64 `json:"created_time,omitempty"`
 	//TransferTime    uint64 `json:"transfer_time,omitempty"`
 	///////
 	Duration              uint32 `json:"duration"`
@@ -154,6 +158,23 @@ type Queue struct {
 	CC_Queue_Hangup        uint64 `json:"hangup_time,omitempty"`
 	CC_Queue_JoinedEpoch   uint64 `json:"joined_time,omitempty"`
 	CC_Side                string `json:"side,omitempty"`
+}
+
+type Account struct {
+	Uuid        string `json:"-,omitempty"`
+	PresenceId  string `json:"presence_id,omitempty"`
+	Domain      string `json:"domain,omitempty"`
+	Extension   string `json:"extension,omitempty"`
+	Account     string `json:"account,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Status      string `json:"status,omitempty"`
+	State       string `json:"state,omitempty"`
+	Description string `json:"description,omitempty"`
+	Online      bool   `json:"ws,omitempty"`
+	CallCenter  bool   `json:"cc,omitempty"`
+	CreatedTime uint64 `json:"created_time,omitempty"`
+	EndTime     uint64 `json:"end_time,omitempty"`
+	Duration    uint32 `json:"duration,omitempty"`
 }
 
 var (

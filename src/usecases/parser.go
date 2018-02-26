@@ -1,7 +1,9 @@
 package usecases
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -57,13 +59,11 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 	)
 
 	e_entity := entity.ElasticCdr{
-		Parent_uuid:    getParentUuid(callInterface),
-		Uuid:           getString(variables["uuid"]),
-		Direction:      getString(variables["webitel_direction"]),
-		CallerIdName:   callerIdName,
-		CallerIdNumber: callerIdNumber,
-		//CalleeIdName         string `json:"callee_id_name"`   //???????????????????????
-		//CalleeIdNumber       string `json:"callee_id_number"` //???????????????????????
+		Parent_uuid:          getParentUuid(callInterface),
+		Uuid:                 getString(variables["uuid"]),
+		Direction:            getString(variables["webitel_direction"]),
+		CallerIdName:         callerIdName,
+		CallerIdNumber:       callerIdNumber,
 		NetworkAddr:          networkAddr,
 		DestinationNumber:    destinationNumber,
 		DomainName:           domain_name,
@@ -321,11 +321,6 @@ func getQueueCallDuration(variables map[string]interface{}) (queue_call_duration
 		first64, _ := strconv.ParseUint(t, 10, 32)
 		first = uint32(first64)
 	}
-	// else if e, ok := variables["end_epoch"].(string); ok {
-	// 	first64, _ := strconv.ParseUint(e, 10, 32)
-	// 	first = uint32(first64)
-	// }
-	//second, _ = variables["cc_queue_joined_epoch"].(uint32)
 	if sec, ok := variables["cc_queue_joined_epoch"].(string); ok {
 		second64, _ := strconv.ParseUint(sec, 10, 32)
 		second = uint32(second64)
@@ -347,15 +342,12 @@ func getQueueAnswerDelay(variables map[string]interface{}) (queue_answer_delay u
 	return
 }
 
-// const (
-// 	timestamp = int64(1518700970102406)
-// 	precision = int64(time.Microsecond)
-// )
-
-// func FromTimestamp(timestamp, precision uint64) time.Time {
-// 	if precision == 0 {
-// 		precision = int64(time.Second)
-// 	}
-// 	timestamp = timestamp * precision
-// 	return time.Unix(timestamp / int64(time.Second), timestamp % int64(time.Second))
-// }
+func GenerateUuid() (uuid string) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return
+	}
+	uuid = fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	return
+}

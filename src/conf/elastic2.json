@@ -1,5 +1,5 @@
 {
-  "template": {
+  "cdr_template": {
     "name": "webitel",
     "body": {
       "index_patterns": [
@@ -314,6 +314,60 @@
                 }
               }
             }            
+          }
+        }
+      }
+    }
+  },
+  "accounts_template":{
+    "name": "accounts",
+    "body": {
+      "index_patterns": [
+        "accounts-*"
+      ],
+      "order": 3,
+      "mappings": {
+        "accounts": {
+          "properties": {
+            "created_time": {
+              "type": "date"
+            },
+            "end_time": {
+              "type": "date"
+            },
+            "duration": {
+              "type": "long"
+            },            
+            "domain": {
+              "type": "keyword"
+            },
+            "account": {
+              "type": "keyword"
+            },
+            "status": {
+              "type": "keyword"
+            },
+            "state": {
+              "type": "keyword"
+            },
+            "description": {
+              "type": "keyword"
+            },
+            "name": {
+              "type": "keyword"
+            },
+            "extension": {
+              "type": "keyword"
+            },
+            "presense_id": {
+              "type": "keyword"
+            },
+            "ws": {
+              "type": "boolean"
+            },
+            "cc": {
+              "type": "boolean"
+            }
           }
         }
       }

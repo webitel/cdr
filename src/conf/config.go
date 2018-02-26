@@ -22,14 +22,15 @@ type Application struct {
 }
 
 type Elastic struct {
-	Enabled         bool   `json:"enabled" envconfig:"elastic:enabled"`
-	DeleteTemplate  bool   `json:"deleteTemplate"`
-	BulkCount       uint32 `json:"bulkCount" envconfig:"elastic:bulkCount"`
-	RequestTimeout  uint32 `json:"intervalMillisec" envconfig:"elastic:intervalMillisec"`
-	Url             string `json:"host" envconfig:"elastic:host"`
-	IndexName       string `json:"indexName" envconfig:"elastic:indexName"`
-	TypeName        string `json:"typeName" envconfig:"elastic:typeName"`
-	ElasticTemplate `json:"template" ignored:"true"`
+	Enabled          bool            `json:"enabled" envconfig:"elastic:enabled"`
+	DeleteTemplate   bool            `json:"deleteTemplate"`
+	BulkCount        uint32          `json:"bulkCount" envconfig:"elastic:bulkCount"`
+	RequestTimeout   uint32          `json:"intervalMillisec" envconfig:"elastic:intervalMillisec"`
+	Url              string          `json:"host" envconfig:"elastic:host"`
+	IndexName        string          `json:"indexName" envconfig:"elastic:indexName"`
+	TypeName         string          `json:"typeName" envconfig:"elastic:typeName"`
+	CdrTemplate      ElasticTemplate `json:"cdr_template" ignored:"true"`
+	AccountsTemplate ElasticTemplate `json:"accounts_template" ignored:"true"`
 }
 
 type ElasticTemplate struct {
@@ -50,6 +51,7 @@ type Postgres struct {
 type Rabbit struct {
 	Publisher Broker `json:"publisher" envconfig:"publisher"`
 	Receiver  Broker `json:"receiver" envconfig:"receiver"`
+	Account   Broker `json:"account" envconfig:"receiver"`
 }
 
 type Broker struct {
@@ -57,10 +59,11 @@ type Broker struct {
 	ConnectionString string `json:"connectionString" envconfig:"broker:connectionString"`
 	ExchangeName     string `json:"exchangeName" envconfig:"broker:exchangeName"`
 	ExchangeType     string `json:"exchangeType" envconfig:"broker:exchangeType"`
-	RoutingKeyA      string `json:"routingKeyLegA" envconfig:"broker:routingKeyLegA"`
-	RoutingKeyB      string `json:"routingKeyLegB" envconfig:"broker:routingKeyLegB"`
+	RoutingKeyA      string `json:"routingKeyLegA,omitempty" envconfig:"broker:routingKeyLegA"`
+	RoutingKeyB      string `json:"routingKeyLegB,omitempty" envconfig:"broker:routingKeyLegB"`
 	BulkCount        uint32 `json:"bulkCount" envconfig:"broker:bulkCount"`
 	IntervalMillisec uint32 `json:"intervalMillisec" envconfig:"broker:intervalMillisec"`
+	RoutingKey       string `json:"routingKey,omitempty" envconfig:"broker:enable"`
 }
 
 var config *Configuration
@@ -91,6 +94,10 @@ func GetReceiver() Broker {
 	return config.Rabbit.Receiver
 }
 
+func GetAccountPublisher() Broker {
+	return config.Rabbit.Account
+}
+
 func GetPostgres() Postgres {
 	return config.Postgres
 }
@@ -109,6 +116,10 @@ func GetListenerConfig() (uint32, uint32) {
 
 func GetReceiverConfig() (uint32, uint32) {
 	return config.Rabbit.Receiver.BulkCount, config.Rabbit.Receiver.IntervalMillisec
+}
+
+func GetAccountConfig() (uint32, uint32) {
+	return config.Rabbit.Account.BulkCount, config.Rabbit.Account.IntervalMillisec
 }
 
 func (conf *Configuration) readFromFile() error {
