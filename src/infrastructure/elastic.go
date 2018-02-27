@@ -117,7 +117,7 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 			tmpDomain = "-" + item.DomainName
 		}
 		logger.DebugElastic("Elastic bulk item [Leg "+item.Leg+"]:", item.Uuid, item.DomainName)
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%s-%v%v", elasticConfig.IndexName, strings.ToLower(item.Leg), time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid).DocAsUpsert(true).Doc(item)
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%s-%v%v", elasticConfig.IndexNameCdr, strings.ToLower(item.Leg), time.Now().UTC().Year(), tmpDomain)).Type("cdr").RetryOnConflict(5).Id(item.Uuid).DocAsUpsert(true).Doc(item)
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
@@ -147,7 +147,7 @@ func (handler *ElasticHandler) BulkStatus(accounts []entity.Account) (error, []e
 			tmpDomain = "-" + item.Domain
 		}
 		logger.DebugAccount("Elastic bulk item [Accounts]:", item.Name, item.Account, item.Domain)
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexName, time.Now().UTC().Year(), tmpDomain)).Type(elasticConfig.TypeName).RetryOnConflict(5).Id(item.Uuid).Doc(item)
+		req := elastic.NewBulkIndexRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexNameAccounts, time.Now().UTC().Year(), tmpDomain)).Type("accounts").RetryOnConflict(5).Id(item.Uuid).Doc(item)
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)

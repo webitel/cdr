@@ -35,7 +35,7 @@
           "connectionString": "amqp://webitel:secret@10.10.10.200:5672?heartbeat=0",
           "exchangeName": "Storage.Commands",
           "exchangeType": "topic",
-          "routingKey": "storage.commands.inbound",          
+          "routingKey": "user.*.*.status",          
           "bulkCount": 100,
           "intervalMillisec": 1000
       }
@@ -46,8 +46,8 @@
       "host": "http://10.10.10.200:9200",    
       "intervalMillisec": 1000,
       "bulkCount": 100,
-      "indexName": "cdr",
-      "typeName": "cdr"
+      "indexNameCdr": "cdr",
+      "indexNameAccounts": "accounts"     
   },
   "application": {
     "loglevel": "debug"

@@ -50,7 +50,7 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		domain_name          string = getDomainName(variables)
 		queue_name           string = getQueueName(variables)
 		extension            string = getExtension(variables)
-		queue_hangup         uint64 = getQueueHangup(variables) * 1000
+		queue_hangup         uint64 = getQueueHangup(variables, call)
 		queue_answered_epoch uint64 = getQueueAnswered(variables) * 1000
 		queue_joined_epoch   uint64 = getQueueJoined(variables) * 1000
 		queue_waiting        uint32 = getQueueWaiting(variables)
@@ -267,11 +267,20 @@ func getHangupDisposition(variables map[string]interface{}) (hangup_disposition 
 	return
 }
 
-func getQueueHangup(variables map[string]interface{}) (queue_hangup uint64) {
-	if c, ok := variables["cc_queue_canceled_epoch"].(string); ok && len(c) > 3 {
-		queue_hangup, _ = strconv.ParseUint(c, 10, 64)
-	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok && len(c) > 3 {
-		queue_hangup, _ = strconv.ParseUint(t, 10, 64)
+func getQueueHangup(variables, call map[string]interface{}) (queue_hangup uint64) {
+	if _, ok := variables["cc_queue"].(string); ok {
+		if c, ok := variables["cc_queue_canceled_epoch"].(string); ok && len(c) > 3 {
+			queue_hangup, _ = strconv.ParseUint(c, 10, 64)
+			queue_hangup = queue_hangup * 1000
+		} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok && len(c) > 3 {
+			queue_hangup, _ = strconv.ParseUint(t, 10, 64)
+			queue_hangup = queue_hangup * 1000
+		} else if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
+			times, ok := c[len(c)-1].(map[string]interface{})["times"].(map[string]interface{})
+			if ok {
+				queue_hangup = getUintFromFloat64(times["hangup_time"]) / 1000
+			}
+		}
 	}
 	return
 }
@@ -348,6 +357,6 @@ func GenerateUuid() (uuid string) {
 	if err != nil {
 		return
 	}
-	uuid = fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	uuid = strings.ToLower(fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:]))
 	return
 }

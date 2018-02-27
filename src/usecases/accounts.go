@@ -144,17 +144,8 @@ func setName(account *entity.Account) {
 
 func getAccount(body []byte) (error, entity.Account) {
 	var acc entity.Account
-	var accD DeliveryStatus
-	if err := json.Unmarshal(body, &accD); err != nil {
-		return err, acc
-	}
-	bytes := []byte(*accD.Args)
-	if err := json.Unmarshal(bytes, &acc); err != nil {
+	if err := json.Unmarshal(body, &acc); err != nil {
 		return err, acc
 	}
 	return nil, acc
-}
-
-type DeliveryStatus struct {
-	Args *json.RawMessage `json:"exec-args,omitempty"`
 }

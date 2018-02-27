@@ -22,15 +22,15 @@ type Application struct {
 }
 
 type Elastic struct {
-	Enabled          bool            `json:"enabled" envconfig:"elastic:enabled"`
-	DeleteTemplate   bool            `json:"deleteTemplate"`
-	BulkCount        uint32          `json:"bulkCount" envconfig:"elastic:bulkCount"`
-	RequestTimeout   uint32          `json:"intervalMillisec" envconfig:"elastic:intervalMillisec"`
-	Url              string          `json:"host" envconfig:"elastic:host"`
-	IndexName        string          `json:"indexName" envconfig:"elastic:indexName"`
-	TypeName         string          `json:"typeName" envconfig:"elastic:typeName"`
-	CdrTemplate      ElasticTemplate `json:"cdr_template" ignored:"true"`
-	AccountsTemplate ElasticTemplate `json:"accounts_template" ignored:"true"`
+	Enabled           bool            `json:"enabled" envconfig:"elastic:enabled"`
+	DeleteTemplate    bool            `json:"deleteTemplate"`
+	BulkCount         uint32          `json:"bulkCount" envconfig:"elastic:bulkCount"`
+	RequestTimeout    uint32          `json:"intervalMillisec" envconfig:"elastic:intervalMillisec"`
+	Url               string          `json:"host" envconfig:"elastic:host"`
+	IndexNameCdr      string          `json:"indexNameCdr"`
+	IndexNameAccounts string          `json:"indexNameAccounts"`
+	CdrTemplate       ElasticTemplate `json:"cdr_template" ignored:"true"`
+	AccountsTemplate  ElasticTemplate `json:"accounts_template" ignored:"true"`
 }
 
 type ElasticTemplate struct {
@@ -206,9 +206,9 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("elastic:host"); value != "" {
 		conf.Elastic.Url = value
 	}
-	if value := os.Getenv("elastic:indexName"); value != "" {
-		conf.Elastic.IndexName = value
-	}
+	// if value := os.Getenv("elastic:indexName"); value != "" {
+	// 	conf.Elastic.IndexName = value
+	// }
 	if value := os.Getenv("broker:publisher:connectionString"); value != "" {
 		conf.Rabbit.Publisher.ConnectionString = value
 	}

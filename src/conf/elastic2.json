@@ -162,14 +162,25 @@
                 "answered_time": {
                   "type": "date"
                 },
-                "hangup_time": {
+                "exit_time": {
                   "type": "date"
                 },
                 "joined_time": {
                   "type": "date"
-                },
+                },                
                 "side": {
                   "type": "keyword"
+                }
+              }
+            },
+            "post_data": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "type": "keyword"
+                },
+                "vote": {
+                  "type": "long"
                 }
               }
             },

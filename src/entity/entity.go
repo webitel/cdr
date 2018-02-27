@@ -155,7 +155,7 @@ type Queue struct {
 	CC_CancelReason        string `json:"cancel_reason,omitempty"`
 	CC_Cause               string `json:"cause,omitempty"`
 	CC_Queue_AnsweredEpoch uint64 `json:"answered_time,omitempty"`
-	CC_Queue_Hangup        uint64 `json:"hangup_time,omitempty"`
+	CC_Queue_Hangup        uint64 `json:"exit_time,omitempty"`
 	CC_Queue_JoinedEpoch   uint64 `json:"joined_time,omitempty"`
 	CC_Side                string `json:"side,omitempty"`
 }
@@ -170,8 +170,8 @@ type Account struct {
 	Status      string `json:"status,omitempty"`
 	State       string `json:"state,omitempty"`
 	Description string `json:"description,omitempty"`
-	Online      bool   `json:"ws,omitempty"`
-	CallCenter  bool   `json:"cc,omitempty"`
+	Online      bool   `json:"ws"`
+	CallCenter  bool   `json:"cc"`
 	CreatedTime uint64 `json:"created_time,omitempty"`
 	EndTime     uint64 `json:"end_time,omitempty"`
 	Duration    uint32 `json:"duration,omitempty"`
