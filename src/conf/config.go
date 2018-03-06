@@ -209,6 +209,9 @@ func (conf *Configuration) readFromEnviroment() error {
 	// if value := os.Getenv("elastic:indexName"); value != "" {
 	// 	conf.Elastic.IndexName = value
 	// }
+	if value := os.Getenv("broker:account:connectionString"); value != "" {
+		conf.Rabbit.Account.ConnectionString = value
+	}
 	if value := os.Getenv("broker:publisher:connectionString"); value != "" {
 		conf.Rabbit.Publisher.ConnectionString = value
 	}
