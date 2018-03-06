@@ -21,5 +21,4 @@ COPY --from=0 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=0 /go/src/github.com/webitel/cdr/src/cdr .
 COPY src/conf /conf
 
-EXPOSE 10030
 CMD ["./cdr"]
