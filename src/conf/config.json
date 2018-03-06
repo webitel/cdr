@@ -35,7 +35,7 @@
           "connectionString": "amqp://webitel:secret@10.10.10.200:5672?heartbeat=0",
           "exchangeName": "Storage.Commands",
           "exchangeType": "topic",
-          "routingKey": "user.*.*.status",          
+          "routingKey": "log.user.*.*.status",          
           "bulkCount": 100,
           "intervalMillisec": 1000
       }
