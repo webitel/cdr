@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM golang:1.9
+FROM golang:1.10
 
 COPY src /go/src/github.com/webitel/cdr/src
 WORKDIR /go/src/github.com/webitel/cdr/src/
@@ -21,5 +21,4 @@ COPY --from=0 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=0 /go/src/github.com/webitel/cdr/src/cdr .
 COPY src/conf /conf
 
-EXPOSE 10030
 CMD ["./cdr"]

@@ -309,5 +309,5 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("application:loglevel"); value != "" {
 		conf.Application.LogLevel = value
 	}
-	return nil
+	return nil //blabla
 }
