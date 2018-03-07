@@ -44,7 +44,7 @@ func NewPostgresHandler() (*PostgresHandler, error) {
 func (handler *PostgresHandler) ExecuteQuery(query string, params ...interface{}) error {
 	_, err := handler.Conn.Exec(query, params...)
 	if err != nil {
-		return fmt.Errorf("PostgreSQL. Execute script error.\nError message: %s\nQuery: %s\n", err, query)
+		return fmt.Errorf("PostgreSQL. Execute script error.\nError message: %s\n", err)
 	}
 	return err
 }
@@ -52,7 +52,7 @@ func (handler *PostgresHandler) ExecuteQuery(query string, params ...interface{}
 func (handler *PostgresHandler) GetRows(query string, params ...interface{}) (interfaces.Row, error) {
 	rows, err := handler.Conn.Query(query, params...)
 	if err != nil {
-		return nil, fmt.Errorf("PostgreSQL. Get rows error.\nError message: %s\nQuery: %s\nParameters: %s", err, query, params)
+		return nil, fmt.Errorf("PostgreSQL. Get rows error.\nError message: %s\n", err)
 	}
 	row := new(PostgresRow)
 	row.Rows = rows
