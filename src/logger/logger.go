@@ -40,7 +40,7 @@ func DebugElastic(message string, id, domain string) {
 }
 
 func DebugAccount(message, name, account, domain string) {
-	log.Debug().Str("domain", domain).Str("name", name).Str("account", account).Msg(message)
+	log.Debug().Str("domain", domain).Str("display_status", name).Str("account", account).Msg(message)
 }
 
 func Log(message string, args ...interface{}) {

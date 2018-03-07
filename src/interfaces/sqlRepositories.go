@@ -39,6 +39,13 @@ const (
 							ALTER TABLE #table#
 								OWNER to #user#;	
 						` //$1 - public.cdr $2 - webitel
+	/*create index cdr_a_created_at_stored_state_index
+		on cdr_a (created_at, stored_state)
+	;
+
+	create index cdr_a_created_at_archived_state_index
+		on cdr_a (created_at, archived_state)
+	;*/
 	cdrCreateTableB = `
 						CREATE TABLE IF NOT EXISTS #table#
 						(

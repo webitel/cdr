@@ -15,7 +15,7 @@ func (interactor *CdrInteractor) RunElastic() {
 		return
 	}
 	elasticConfig := conf.GetElastic()
-	if !elasticConfig.Enabled {
+	if !elasticConfig.Enable {
 		return
 	}
 	go LegListener(interactor.CheckLegsAFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount)

@@ -46,7 +46,7 @@
             "leg": {
               "type": "keyword"
             },
-            "pinnedItems": {
+            "pinned_items": {
               "type": "keyword"
             },
             "direction": {
@@ -339,6 +339,16 @@
       "order": 3,
       "mappings": {
         "accounts": {
+          "dynamic_templates": [            
+            {
+              "notanalyzed": {
+                "match": "*",
+                "mapping": {
+                  "type": "keyword"
+                }
+              }
+            }
+          ],
           "properties": {
             "created_time": {
               "type": "date"
@@ -364,13 +374,13 @@
             "description": {
               "type": "keyword"
             },
-            "name": {
+            "display_status": {
               "type": "keyword"
             },
             "extension": {
               "type": "keyword"
             },
-            "presense_id": {
+            "presence_id": {
               "type": "keyword"
             },
             "ws": {

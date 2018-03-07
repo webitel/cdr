@@ -161,20 +161,20 @@ type Queue struct {
 }
 
 type Account struct {
-	Uuid        string `json:"-,omitempty"`
-	PresenceId  string `json:"presence_id,omitempty"`
-	Domain      string `json:"domain,omitempty"`
-	Extension   string `json:"extension,omitempty"`
-	Account     string `json:"account,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Status      string `json:"status,omitempty"`
-	State       string `json:"state,omitempty"`
-	Description string `json:"description,omitempty"`
-	Online      bool   `json:"ws"`
-	CallCenter  bool   `json:"cc"`
-	CreatedTime uint64 `json:"created_time,omitempty"`
-	EndTime     uint64 `json:"end_time,omitempty"`
-	Duration    uint32 `json:"duration,omitempty"`
+	Uuid          string  `json:"-"`
+	PresenceId    string  `json:"presence_id,omitempty"`
+	Domain        string  `json:"domain,omitempty"`
+	Extension     string  `json:"extension,omitempty"`
+	Account       string  `json:"account,omitempty"`
+	DisplayStatus string  `json:"display_status,omitempty"`
+	Status        string  `json:"status,omitempty"`
+	State         string  `json:"state,omitempty"`
+	Description   string  `json:"description,omitempty"`
+	Online        bool    `json:"ws"`
+	CallCenter    bool    `json:"cc"`
+	CreatedTime   float64 `json:"created_time,omitempty"`
+	EndTime       float64 `json:"end_time,omitempty"`
+	Duration      float64 `json:"duration,omitempty"`
 }
 
 var (

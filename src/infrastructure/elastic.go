@@ -28,7 +28,7 @@ func NewElasticHandler() (*ElasticHandler, error) {
 
 func (handler *ElasticHandler) Init() error {
 	elasticConfig = conf.GetElastic()
-	if !elasticConfig.Enabled {
+	if !elasticConfig.Enable {
 		return nil
 	}
 	var cdrTemplateMap string
@@ -146,7 +146,7 @@ func (handler *ElasticHandler) BulkStatus(accounts []entity.Account) (error, []e
 		if item.Domain != "" && !strings.ContainsAny(item.Domain, ", & * & \\ & < & | & > & / & ?") {
 			tmpDomain = "-" + item.Domain
 		}
-		logger.DebugAccount("Elastic bulk item [Accounts]:", item.Name, item.Account, item.Domain)
+		logger.DebugAccount("Elastic bulk item [Accounts]:", item.DisplayStatus, item.Account, item.Domain)
 		req := elastic.NewBulkIndexRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexNameAccounts, time.Now().UTC().Year(), tmpDomain)).Type("accounts").RetryOnConflict(5).Id(item.Uuid).Doc(item)
 		bulkRequest = bulkRequest.Add(req)
 	}

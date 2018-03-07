@@ -111,7 +111,6 @@ func (interactor *CdrInteractor) AccountSend(batch []entity.Delivery) (error, []
 			return err, nil
 		}
 		acc.Uuid = GenerateUuid()
-		setName(&acc)
 		accounts = append(accounts, acc)
 		deliveriesResponse = append(deliveriesResponse, DeliveryResponse{Delivery: item, Uuid: acc.Uuid})
 	}
@@ -130,16 +129,6 @@ func (interactor *CdrInteractor) AccountSend(batch []entity.Delivery) (error, []
 		}
 	}
 	return nil, nil
-}
-
-func setName(account *entity.Account) {
-	if account.Description != "" {
-		account.Name = account.Description
-	} else if account.Status != "" && account.Status != "NONE" {
-		account.Name = account.Status
-	} else if account.State != "" {
-		account.Name = account.State
-	}
 }
 
 func getAccount(body []byte) (error, entity.Account) {
