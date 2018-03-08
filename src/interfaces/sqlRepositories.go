@@ -264,9 +264,10 @@ func (repo *DbCdrBRepo) UpdateState(calls []entity.SqlCdr, state uint8, timestam
 	vals = append(vals, state, timestamp) //uint64(time.Now().UnixNano()/1000000)
 	var strValues string
 	for i, row := range calls {
-		strValues += fmt.Sprintf("$%v ", i+3)
+		strValues += fmt.Sprintf("$%v, ", i+3)
 		vals = append(vals, row.Uuid)
 	}
+	strValues = strValues[0 : len(strValues)-2]
 	sqlStr = strings.Replace(sqlStr, "#values#", strValues, -1)
 	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
 }
