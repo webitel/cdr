@@ -6,9 +6,9 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/interfaces"
-	"github.com/webitel/cdr/src/logger"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/interfaces"
+	"webitel.com/cdr_service/logger"
 )
 
 type PostgresHandler struct {
@@ -44,7 +44,7 @@ func NewPostgresHandler() (*PostgresHandler, error) {
 func (handler *PostgresHandler) ExecuteQuery(query string, params ...interface{}) error {
 	_, err := handler.Conn.Exec(query, params...)
 	if err != nil {
-		return fmt.Errorf("PostgreSQL. Execute script error.\nError message: %s\n", err)
+		return fmt.Errorf("PostgreSQL. Execute script error.\nError message: %s\n Query: %s\n", err, query)
 	}
 	return err
 }
@@ -52,7 +52,7 @@ func (handler *PostgresHandler) ExecuteQuery(query string, params ...interface{}
 func (handler *PostgresHandler) GetRows(query string, params ...interface{}) (interfaces.Row, error) {
 	rows, err := handler.Conn.Query(query, params...)
 	if err != nil {
-		return nil, fmt.Errorf("PostgreSQL. Get rows error.\nError message: %s\n", err)
+		return nil, fmt.Errorf("PostgreSQL. Get rows error.\nError message: %s\n Query: %s\n", err, query)
 	}
 	row := new(PostgresRow)
 	row.Rows = rows
