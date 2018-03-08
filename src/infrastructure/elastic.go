@@ -157,11 +157,11 @@ func (handler *ElasticHandler) BulkStatus(accounts []entity.Account) (error, []e
 	if res.Errors {
 		var successAcc, errorAcc []entity.Account
 		for _, item := range res.Items {
-			if item["update"].Error != nil {
-				errorAcc = append(errorAcc, entity.Account{Uuid: item["update"].Id})
-				logger.ErrorElastic("Elastic [Accounts]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
+			if item["index"].Error != nil {
+				errorAcc = append(errorAcc, entity.Account{Uuid: item["index"].Id})
+				logger.ErrorElastic("Elastic [Accounts]", item["index"].Id, item["index"].Error.Type, item["index"].Index, item["index"].Error.Reason)
 			} else {
-				successAcc = append(successAcc, entity.Account{Uuid: item["update"].Id})
+				successAcc = append(successAcc, entity.Account{Uuid: item["index"].Id})
 			}
 		}
 		return fmt.Errorf("Accounts: Bad response. Request has errors."), errorAcc, successAcc
