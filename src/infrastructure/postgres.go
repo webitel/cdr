@@ -46,10 +46,6 @@ func (handler *PostgresHandler) ExecuteQuery(query string, params ...interface{}
 	if err != nil {
 		return fmt.Errorf("PostgreSQL. Execute script error.\nError message: %s\n Query: %s\n", err, query)
 	}
-	_, err = handler.Conn.Exec("commit;")
-	if err != nil {
-		return fmt.Errorf("PostgreSQL. Execute script error.\nError message: %s\n Query: %s\n", err, query)
-	}
 	return err
 }
 

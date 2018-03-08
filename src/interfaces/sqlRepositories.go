@@ -13,8 +13,8 @@ const (
 	cdrInsertQueryA     = "INSERT INTO #table#(uuid, created_at, stored_at, archived_at, size, event, stored_state, archived_state) VALUES "
 	cdrValuesB          = "(%v, %v, %v, %v, %v, %v, %v, %v, %v),"
 	cdrValuesA          = "(%v, %v, %v, %v, %v, %v, %v, %v),"
-	cdrSelectByState    = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 ORDER BY created_at ASC LIMIT $2 FOR UPDATE"
-	cdrSelectByStateB   = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 AND parent_uuid != '' ORDER BY created_at ASC LIMIT $2 FOR UPDATE"
+	cdrSelectByState    = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 ORDER BY created_at ASC LIMIT $2"
+	cdrSelectByStateB   = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 AND parent_uuid != '' ORDER BY created_at ASC LIMIT $2"
 	cdrJoin             = "SELECT a.uuid as parent_uuid, b.event as event, b.uuid as uuid FROM #table_a# as a INNER JOIN #table_b# as b ON a.uuid = b.parent_uuid WHERE a.stored_state=$1 AND b.stored_state=$2 ORDER BY b.created_at ASC LIMIT $3"
 	cdrUpdateStateQuery = "UPDATE #table# SET #state#_state=$1, #state#_at=$2 WHERE uuid IN (#values#)"
 	cdrCreateTableA     = `
