@@ -6,9 +6,9 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"webitel.com/cdr_service/conf"
-	"webitel.com/cdr_service/interfaces"
-	"webitel.com/cdr_service/logger"
+	"github.com/webitel/cdr/src/conf"
+	"github.com/webitel/cdr/src/interfaces"
+	"github.com/webitel/cdr/src/logger"
 )
 
 type PostgresHandler struct {
