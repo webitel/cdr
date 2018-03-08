@@ -31,11 +31,11 @@ func LegListener(checkCalls CheckCalls, timeout uint32, bulkCount uint32) {
 		select {
 		case <-ticker.C:
 			{
-				go checkCalls(bulkCount, 0)
+				checkCalls(bulkCount, 0)
 			}
 		case <-errorTicker.C:
 			{
-				go checkCalls(bulkCount, 4)
+				checkCalls(bulkCount, 4)
 			}
 		}
 	}
