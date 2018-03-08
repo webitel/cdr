@@ -85,6 +85,7 @@ type DbHandler interface {
 type Row interface {
 	Scan(dest ...interface{}) error
 	Next() bool
+	Close() error
 }
 
 type DbRepo struct {
@@ -145,6 +146,7 @@ func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, stateName s
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	var cdr []entity.SqlCdr
 	var call entity.SqlCdr
 	for rows.Next() {
@@ -218,6 +220,7 @@ func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, stateName s
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	var cdr []entity.SqlCdr
 	var call entity.SqlCdr
 	for rows.Next() {
