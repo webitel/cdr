@@ -50,31 +50,32 @@ func (interactor *CdrInteractor) ArchiveListener(amqpRepo entity.AmqReceiverRepo
 	promise := time.Millisecond * time.Duration(timeout)
 	ticker := time.NewTicker(promise)
 	errorTicker := time.NewTicker(promise * 10)
+	maxGr := conf.MaxGoroutines()
+	sem := make(chan struct{}, maxGr)
 	for {
+		sem <- struct{}{}
 		select {
 		case <-ticker.C:
 			{
-				go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, 0, exchName, routingKey, errChan, ticker, errorTicker)
+				go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, 0, exchName, routingKey, errChan, ticker, errorTicker, sem)
 			}
 		case <-errorTicker.C:
 			{
-				go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, 4, exchName, routingKey, errChan, ticker, errorTicker)
+				go interactor.CheckCallsFromSqlByArchived(amqpRepo, repo, bulkCount, 4, exchName, routingKey, errChan, ticker, errorTicker, sem)
 			}
 		}
 	}
 }
 
-func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, state uint8, exchName, routingKey string, errChan chan bool, ticker, errorTicker *time.Ticker) {
+func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, state uint8, exchName, routingKey string, errChan chan bool, ticker, errorTicker *time.Ticker, sem chan struct{}) {
 	cdr, err := repo.SelectPackByState(bulkCount, state, "archived")
 	if err != nil {
 		logger.Error(err.Error())
+		<-sem
 		return
 	}
 	if len(cdr) == 0 {
-		return
-	}
-	if err := repo.UpdateState(cdr, 1, 0, "archived"); err != nil {
-		logger.Error(err.Error())
+		<-sem
 		return
 	}
 	if err := amqpRepo.SendMessage(cdr, routingKey, exchName); err != nil {
@@ -96,4 +97,5 @@ func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.Amq
 		logger.Info("Archive: items stored [%s, %v]", routingKey, len(cdr))
 		repo.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "archived")
 	}
+	<-sem
 }

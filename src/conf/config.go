@@ -10,7 +10,8 @@ import (
 )
 
 type Configuration struct {
-	ArchiveServer bool `json:"isArchive" envconfig:"cdr:isArchive"`
+	ArchiveServer bool   `json:"isArchive" envconfig:"cdr:isArchive"`
+	MaxGoroutines uint32 `json:"maxGoroutines" envconfig:"cdr:maxGoroutines"`
 	Postgres      `json:"pg"`
 	Rabbit        `json:"broker"`
 	Elastic       `json:"elastic"`
@@ -108,6 +109,10 @@ func GetElastic() Elastic {
 
 func IsArchive() bool {
 	return config.ArchiveServer
+}
+
+func MaxGoroutines() uint32 {
+	return config.MaxGoroutines
 }
 
 func GetListenerConfig() (uint32, uint32) {
@@ -306,8 +311,12 @@ func (conf *Configuration) readFromEnviroment() error {
 			conf.ArchiveServer = false
 		}
 	}
+	if value := os.Getenv("cdr:maxGoroutines"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.MaxGoroutines = uint32(i)
+	}
 	if value := os.Getenv("application:loglevel"); value != "" {
 		conf.Application.LogLevel = value
 	}
-	return nil //blabla
+	return nil
 }

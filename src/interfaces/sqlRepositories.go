@@ -9,15 +9,17 @@ import (
 )
 
 const (
-	cdrInsertQueryB     = "INSERT INTO #table#(uuid, parent_uuid, created_at, stored_at, archived_at, size, event, stored_state, archived_state) VALUES "
-	cdrInsertQueryA     = "INSERT INTO #table#(uuid, created_at, stored_at, archived_at, size, event, stored_state, archived_state) VALUES "
-	cdrValuesB          = "(%v, %v, %v, %v, %v, %v, %v, %v, %v),"
-	cdrValuesA          = "(%v, %v, %v, %v, %v, %v, %v, %v),"
-	cdrSelectByState    = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 ORDER BY created_at ASC LIMIT $2"
-	cdrSelectByStateB   = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 AND parent_uuid != '' ORDER BY created_at ASC LIMIT $2"
-	cdrJoin             = "SELECT a.uuid as parent_uuid, b.event as event, b.uuid as uuid FROM #table_a# as a INNER JOIN #table_b# as b ON a.uuid = b.parent_uuid WHERE a.stored_state=$1 AND b.stored_state=$2 ORDER BY b.created_at ASC LIMIT $3"
-	cdrUpdateStateQuery = "UPDATE #table# SET #state#_state=$1, #state#_at=$2 WHERE uuid IN (#values#)"
-	cdrCreateTableA     = `
+	cdrInsertQueryB = "INSERT INTO #table#(uuid, parent_uuid, created_at, stored_at, archived_at, size, event, stored_state, archived_state) VALUES "
+	cdrInsertQueryA = "INSERT INTO #table#(uuid, created_at, stored_at, archived_at, size, event, stored_state, archived_state) VALUES "
+	cdrValuesB      = "(%v, %v, %v, %v, %v, %v, %v, %v, %v),"
+	cdrValuesA      = "(%v, %v, %v, %v, %v, %v, %v, %v),"
+	// cdrSelectByState        = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 ORDER BY created_at ASC LIMIT $2"
+	// cdrSelectByStateB       = "SELECT uuid, event FROM #table# WHERE #state#_state=$1 AND parent_uuid != '' ORDER BY created_at ASC LIMIT $2"
+	cdrUpdateWithReturning  = "UPDATE #table# SET #state#_state = 1 WHERE uuid IN ( SELECT uuid FROM #table# WHERE #state#_state = $1 ORDER BY created_at LIMIT $2 ) RETURNING uuid, event"
+	cdrUpdateWithReturningB = "UPDATE #table# SET #state#_state = 1 WHERE uuid IN ( SELECT uuid FROM #table# WHERE #state#_state = $1 AND parent_uuid != '' ORDER BY created_at LIMIT $2 ) RETURNING uuid, event"
+	cdrJoin                 = "SELECT a.uuid as parent_uuid, b.event as event, b.uuid as uuid FROM #table_a# as a INNER JOIN #table_b# as b ON a.uuid = b.parent_uuid WHERE a.stored_state=$1 AND b.stored_state=$2 ORDER BY b.created_at ASC LIMIT $3"
+	cdrUpdateStateQuery     = "UPDATE #table# SET #state#_state=$1, #state#_at=$2 WHERE uuid IN (#values#)"
+	cdrCreateTableA         = `
 							CREATE TABLE IF NOT EXISTS #table#
 							(
 								uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,								
@@ -36,7 +38,7 @@ const (
 							TABLESPACE pg_default;
 
 							ALTER TABLE #table#
-								OWNER to #user#;
+								OWNER to #user#;	
 								
 							create index if not exists #table#_created_at_stored_state_index
 								on #table# (created_at, stored_state)
@@ -71,7 +73,7 @@ const (
 						create index if not exists #table#_created_at_stored_state_index
 							on #table# (created_at, stored_state)
 						;
-					
+						
 						create index if not exists #table#_created_at_archived_state_index
 							on #table# (created_at, archived_state)
 						;
@@ -150,7 +152,7 @@ func (repo *DbCdrARepo) InsertPack(calls []entity.SqlCdr) error {
 }
 
 func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, stateName string) ([]entity.SqlCdr, error) {
-	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(cdrSelectByState, "#table#", config.TableA, -1), "#state#", stateName, -1), state, count)
+	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(cdrUpdateWithReturning, "#table#", config.TableA, -1), "#state#", stateName, -1), state, count)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +226,7 @@ func (repo *DbCdrARepo) CreateTableIfNotExist() error {
 }
 
 func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, stateName string) ([]entity.SqlCdr, error) {
-	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(cdrSelectByStateB, "#table#", config.TableB, -1), "#state#", stateName, -1), state, count)
+	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(cdrUpdateWithReturningB, "#table#", config.TableB, -1), "#state#", stateName, -1), state, count)
 	if err != nil {
 		return nil, err
 	}

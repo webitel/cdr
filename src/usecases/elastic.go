@@ -8,7 +8,7 @@ import (
 	"github.com/webitel/cdr/src/logger"
 )
 
-type CheckCalls func(bulkCount uint32, state uint8)
+type CheckCalls func(bulkCount uint32, state uint8, sem chan struct{})
 
 func (interactor *CdrInteractor) RunElastic() {
 	if interactor.ElasticCdrBRepository == nil || interactor.ElasticCdrARepository == nil || interactor.SqlCdrBRepository == nil || interactor.SqlCdrARepository == nil {
@@ -18,44 +18,46 @@ func (interactor *CdrInteractor) RunElastic() {
 	if !elasticConfig.Enable {
 		return
 	}
-	go LegListener(interactor.CheckLegsAFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount)
-	go LegListener(interactor.CheckLegsBFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount)
+	maxGr := conf.MaxGoroutines()
+	go LegListener(interactor.CheckLegsAFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount, maxGr)
+	go LegListener(interactor.CheckLegsBFromSql, elasticConfig.RequestTimeout, elasticConfig.BulkCount, maxGr)
 	logger.Log("Elastic: start listening...")
 }
 
-func LegListener(checkCalls CheckCalls, timeout uint32, bulkCount uint32) {
+func LegListener(checkCalls CheckCalls, timeout, bulkCount, maxGr uint32) {
 	promise := time.Millisecond * time.Duration(timeout)
 	ticker := time.NewTicker(promise)
 	errorTicker := time.NewTicker(promise * 10)
+	sem := make(chan struct{}, maxGr)
 	for {
+		sem <- struct{}{}
 		select {
 		case <-ticker.C:
 			{
-				checkCalls(bulkCount, 0)
+				go checkCalls(bulkCount, 0, sem)
 			}
 		case <-errorTicker.C:
 			{
-				checkCalls(bulkCount, 4)
+				go checkCalls(bulkCount, 4, sem)
 			}
 		}
 	}
 }
 
-func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8) {
+func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8, sem chan struct{}) {
 	cdr, err := interactor.SqlCdrARepository.SelectPackByState(bulkCount, state, "stored")
 	if err != nil {
 		logger.Error(err.Error())
+		<-sem
 		return
 	}
 	if len(cdr) == 0 {
-		return
-	}
-	if err := interactor.SqlCdrARepository.UpdateState(cdr, 1, 0, "stored"); err != nil {
-		logger.Error(err.Error())
+		<-sem
 		return
 	}
 	calls, err := getCalls(interactor.SqlCdrARepository, cdr)
 	if err != nil {
+		<-sem
 		return
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrARepository.InsertDocs(calls); err != nil {
@@ -74,19 +76,18 @@ func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8
 		logger.Info("Elastic: items stored [%s, %v]", "Leg A", len(calls))
 		interactor.SqlCdrARepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
+	<-sem
 }
 
-func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8) {
+func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8, sem chan struct{}) {
 	cdr, err := interactor.SqlCdrBRepository.SelectPackByState(bulkCount, state, "stored")
 	if err != nil {
 		logger.Error(err.Error())
+		<-sem
 		return
 	}
 	if len(cdr) == 0 {
-		return
-	}
-	if err := interactor.SqlCdrBRepository.UpdateState(cdr, 1, 0, "stored"); err != nil {
-		logger.Error(err.Error())
+		<-sem
 		return
 	}
 	calls, err := getCalls(interactor.SqlCdrBRepository, cdr)
@@ -109,6 +110,7 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 		logger.Info("Elastic: items stored [%s, %v]", "Leg B", len(calls))
 		interactor.SqlCdrBRepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
 	}
+	<-sem
 }
 
 func getCalls(repo entity.SqlCdrRepository, cdr []entity.SqlCdr) ([]entity.ElasticCdr, error) {
