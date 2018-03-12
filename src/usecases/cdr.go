@@ -72,12 +72,15 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 	batch := make([]entity.Delivery, 0, size)
 	promise := time.Millisecond * time.Duration(interval)
 	tmr := time.NewTimer(promise)
+	maxGr := conf.MaxGoroutines()
+	sem := make(chan struct{}, maxGr)
 	for {
 		select {
 		case <-tmr.C:
 			{
 				if len(batch) > 0 {
-					go interactor.DeliveryProcess(batch, sqlProcess, key)
+					sem <- struct{}{}
+					go interactor.DeliveryProcess(batch, sqlProcess, key, sem)
 					batch = make([]entity.Delivery, 0, size)
 				}
 				tmr.Reset(promise)
@@ -86,14 +89,16 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 			{
 				if !ok {
 					if len(batch) > 0 && len(batch) != cap(batch) {
-						go interactor.DeliveryProcess(batch, sqlProcess, key)
+						sem <- struct{}{}
+						go interactor.DeliveryProcess(batch, sqlProcess, key, sem)
 					}
 					done <- fmt.Errorf("RabbitMQ: Deliveries channel closed [PUBLISHER]")
 					return
 				}
 				batch = append(batch, d)
 				if len(batch) == cap(batch) {
-					go interactor.DeliveryProcess(batch, sqlProcess, key)
+					sem <- struct{}{}
+					go interactor.DeliveryProcess(batch, sqlProcess, key, sem)
 					batch = make([]entity.Delivery, 0, size)
 					tmr.Reset(promise)
 				}
@@ -102,7 +107,7 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 	}
 }
 
-func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlProcess SqlProcess, key string) {
+func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlProcess SqlProcess, key string, sem chan struct{}) {
 	if err, countB := sqlProcess(batch); err != nil {
 		logger.Error("PostgreSQL: [%s] %s", key, err)
 		for i := 0; i < len(batch); i++ {
@@ -115,6 +120,7 @@ func (interactor *CdrInteractor) DeliveryProcess(batch []entity.Delivery, sqlPro
 		}
 		logger.Info("PostgreSQL: items stored [%s, %v]", key, len(batch)-countB)
 	}
+	<-sem
 }
 
 func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error, int) {
