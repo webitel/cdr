@@ -1,6 +1,7 @@
 {
   "isArchive": false,   
-  "maxGoroutines": 25,  
+  "maxGoroutines": 25, 
+  "insertGoroutines": 25,
   "pg": {
       "user": "webitel",
       "database": "webitel",

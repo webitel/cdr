@@ -72,7 +72,7 @@ func (interactor *CdrInteractor) ListenEvents(msgs <-chan entity.Delivery, size,
 	batch := make([]entity.Delivery, 0, size)
 	promise := time.Millisecond * time.Duration(interval)
 	tmr := time.NewTimer(promise)
-	maxGr := conf.MaxGoroutines()
+	maxGr := conf.InsertGoroutines()
 	sem := make(chan struct{}, maxGr)
 	for {
 		select {

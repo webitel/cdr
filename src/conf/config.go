@@ -10,12 +10,13 @@ import (
 )
 
 type Configuration struct {
-	ArchiveServer bool   `json:"isArchive" envconfig:"cdr:isArchive"`
-	MaxGoroutines uint32 `json:"maxGoroutines" envconfig:"cdr:maxGoroutines"`
-	Postgres      `json:"pg"`
-	Rabbit        `json:"broker"`
-	Elastic       `json:"elastic"`
-	Application   `json:"application"`
+	ArchiveServer    bool   `json:"isArchive" envconfig:"isArchive"`
+	MaxGoroutines    uint32 `json:"maxGoroutines" envconfig:"maxGoroutines"`
+	InsertGoroutines uint32 `json:"insertGoroutines" envconfig:"insertGoroutines"`
+	Postgres         `json:"pg"`
+	Rabbit           `json:"broker"`
+	Elastic          `json:"elastic"`
+	Application      `json:"application"`
 }
 
 type Application struct {
@@ -113,6 +114,10 @@ func IsArchive() bool {
 
 func MaxGoroutines() uint32 {
 	return config.MaxGoroutines
+}
+
+func InsertGoroutines() uint32 {
+	return config.InsertGoroutines
 }
 
 func GetListenerConfig() (uint32, uint32) {
@@ -304,16 +309,20 @@ func (conf *Configuration) readFromEnviroment() error {
 			conf.Rabbit.Account.Enable = false
 		}
 	}
-	if value := os.Getenv("cdr:isArchive"); value != "" {
+	if value := os.Getenv("isArchive"); value != "" {
 		if value == "1" || value == "true" {
 			conf.ArchiveServer = true
 		} else if value == "0" || value == "false" {
 			conf.ArchiveServer = false
 		}
 	}
-	if value := os.Getenv("cdr:maxGoroutines"); value != "" {
+	if value := os.Getenv("maxGoroutines"); value != "" {
 		i, _ := strconv.Atoi(value)
 		conf.MaxGoroutines = uint32(i)
+	}
+	if value := os.Getenv("insertGoroutines"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.InsertGoroutines = uint32(i)
 	}
 	if value := os.Getenv("application:loglevel"); value != "" {
 		conf.Application.LogLevel = value
