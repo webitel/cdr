@@ -27,7 +27,7 @@ const (
 								stored_at bigint,
 								archived_at bigint,
 								size integer,
-								event bytea,
+								event json,
 								stored_state smallint,
 								archived_state smallint,
 								CONSTRAINT #table#_pkey PRIMARY KEY (uuid)
@@ -57,7 +57,7 @@ const (
 							stored_at bigint,
 							archived_at bigint,
 							size integer,
-							event bytea,
+							event json,
 							stored_state smallint,
 							archived_state smallint,
 							CONSTRAINT #table#_pkey PRIMARY KEY (uuid)
