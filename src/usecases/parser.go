@@ -192,7 +192,7 @@ func getDomainName(variables map[string]interface{}) (domain_name string) {
 
 func getFromProfile(call, variables map[string]interface{}) (callerIdNumber, destinationNumber, callerIdName, source, networkAddr string) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
-		callflow, ok := c[len(c)-1].(map[string]interface{})["caller_profile"].(map[string]interface{})
+		callflow, ok := c[0].(map[string]interface{})["caller_profile"].(map[string]interface{})
 		if ok {
 			callerIdNumber, _ = callflow["caller_id_number"].(string)
 			callerIdName, _ = callflow["caller_id_name"].(string)
@@ -223,7 +223,7 @@ func getFromStats(call map[string]interface{}) (qualityPercentageAudio, qualityP
 
 func getFromTimes(call map[string]interface{}) (createdTime /*, progressTime, answeredTime, bridgedTime, hangupTime, transferTime*/ uint64) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
-		times, ok := c[len(c)-1].(map[string]interface{})["times"].(map[string]interface{})
+		times, ok := c[0].(map[string]interface{})["times"].(map[string]interface{})
 		if ok {
 			createdTime = getUintFromFloat64(times["created_time"]) / 1000 //sqlStr[0 : len(sqlStr)-3]
 			// progressTime = getUintFromFloat64(times["progress_time"]) / 1000
@@ -276,7 +276,7 @@ func getQueueHangup(variables, call map[string]interface{}) (queue_hangup uint64
 			queue_hangup, _ = strconv.ParseUint(t, 10, 64)
 			queue_hangup = queue_hangup * 1000
 		} else if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
-			times, ok := c[len(c)-1].(map[string]interface{})["times"].(map[string]interface{})
+			times, ok := c[0].(map[string]interface{})["times"].(map[string]interface{})
 			if ok {
 				queue_hangup = getUintFromFloat64(times["hangup_time"]) / 1000
 			}
