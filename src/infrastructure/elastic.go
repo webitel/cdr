@@ -111,6 +111,7 @@ func (handler *ElasticHandler) createTemplate(templateName, templateMap string) 
 
 func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
 	bulkRequest := handler.Client.Bulk()
+	leg := calls[0].Leg
 	for _, item := range calls {
 		var tmpDomain string
 		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
@@ -129,12 +130,12 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 		for _, item := range res.Items {
 			if item["update"].Error != nil {
 				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
-				logger.ErrorElastic("Elastic [Leg A]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
+				logger.ErrorElastic("Elastic [Leg "+leg+"]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
 			} else {
 				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
 			}
 		}
-		return fmt.Errorf("Leg A: Bad response. Request has errors."), errorCalls, successCalls
+		return fmt.Errorf("Elastic: Bad response. Request has errors."), errorCalls, successCalls
 	}
 	return nil, nil, nil
 }

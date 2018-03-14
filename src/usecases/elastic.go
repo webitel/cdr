@@ -3,9 +3,9 @@ package usecases
 import (
 	"time"
 
-	"github.com/webitel/cdr/src/conf"
-	"github.com/webitel/cdr/src/entity"
-	"github.com/webitel/cdr/src/logger"
+	"webitel.com/cdr_service/conf"
+	"webitel.com/cdr_service/entity"
+	"webitel.com/cdr_service/logger"
 )
 
 type CheckCalls func(bulkCount uint32, state uint8, sem chan struct{})
@@ -92,6 +92,7 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 	}
 	calls, err := getCalls(interactor.SqlCdrBRepository, cdr)
 	if err != nil {
+		<-sem
 		return
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrBRepository.InsertDocs(calls); err != nil {
