@@ -25,7 +25,7 @@ func getUint(i interface{}) (s uint32) {
 		}
 	case float64:
 		{
-			s = uint64(t)
+			s = uint32(t)
 			return
 		}
 	}
