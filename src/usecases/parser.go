@@ -16,10 +16,19 @@ func getString(i interface{}) (s string) {
 }
 
 func getUint(i interface{}) (s uint32) {
-	str, _ := i.(string)
-	integer, _ := strconv.Atoi(str)
-	s = uint32(integer)
-	return
+	switch t := i.(type) {
+	case string:
+		{
+			integer, _ := strconv.Atoi(t)
+			s = uint32(integer)
+			return
+		}
+	case float64:
+		{
+			s = uint64(t)
+			return
+		}
+	}
 }
 
 func getUintFromFloat64(i interface{}) (s uint64) {
