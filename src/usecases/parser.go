@@ -28,7 +28,46 @@ func getUint(i interface{}) (s uint32) {
 			s = uint32(t)
 			return
 		}
+	case int:
+		{
+			s = uint32(t)
+			return
+		}
+	case float32:
+		{
+			s = uint32(t)
+			return
+		}
 	}
+	return
+}
+
+func getStringP(i interface{}) (s string, ok bool) {
+	ok = true
+	switch t := i.(type) {
+	case string:
+		{
+			s = t
+			return
+		}
+	case float64:
+		{
+			s = fmt.Sprint(t)
+			return
+		}
+	case int:
+		{
+			s = strconv.Itoa(t)
+			return
+		}
+	case float32:
+		{
+			s = fmt.Sprint(t) //strconv.FormatFloat(float64(t), 'f', 2, 64)
+			return
+		}
+	}
+	ok = false
+	return
 }
 
 func getUintFromFloat64(i interface{}) (s uint64) {
@@ -173,12 +212,12 @@ func setMillis(cf *[]entity.Callflow) {
 }
 
 func getQueueName(variables map[string]interface{}) (queue_name string) {
-	if q, ok := variables["cc_queue"].(string); ok {
+	if q, ok := getStringP(variables["cc_queue"]); ok {
 		s := strings.Split(q, "@")
 		if len(s) > 0 {
 			queue_name = s[0]
 		}
-	} else if q, ok := variables["dlr_queue"].(string); ok {
+	} else if q, ok := getStringP(variables["dlr_queue"]); ok {
 		s := strings.Split(q, "@")
 		if len(s) > 0 {
 			queue_name = s[0]
@@ -188,9 +227,9 @@ func getQueueName(variables map[string]interface{}) (queue_name string) {
 }
 
 func getDomainName(variables map[string]interface{}) (domain_name string) {
-	if d, ok := variables["domain_name"].(string); ok {
+	if d, ok := getStringP(variables["domain_name"]); ok {
 		domain_name = d
-	} else if p, ok := variables["presence_id"].(string); ok {
+	} else if p, ok := getStringP(variables["presence_id"]); ok {
 		s := strings.Split(p, "@")
 		if len(s) > 0 {
 			domain_name = s[len(s)-1]
@@ -203,13 +242,13 @@ func getFromProfile(call, variables map[string]interface{}) (callerIdNumber, des
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
 		callflow, ok := c[0].(map[string]interface{})["caller_profile"].(map[string]interface{})
 		if ok {
-			callerIdNumber, _ = callflow["caller_id_number"].(string)
-			callerIdName, _ = callflow["caller_id_name"].(string)
-			destinationNumber, _ = callflow["destination_number"].(string)
-			source, _ = callflow["source"].(string)
-			networkAddr, _ = callflow["network_addr"].(string)
+			callerIdNumber, _ = getStringP(callflow["caller_id_number"])
+			callerIdName, _ = getStringP(callflow["caller_id_name"])
+			destinationNumber, _ = getStringP(callflow["destination_number"])
+			source, _ = getStringP(callflow["source"])
+			networkAddr, _ = getStringP(callflow["network_addr"])
 		} else {
-			destinationNumber, _ = variables["destination_number"].(string)
+			destinationNumber, _ = getStringP(variables["destination_number"])
 		}
 	}
 	return
@@ -219,11 +258,11 @@ func getFromStats(call map[string]interface{}) (qualityPercentageAudio, qualityP
 	if c, ok := call["callStats"].(map[string]interface{}); ok {
 		if audio, ok := c["audio"].(map[string]interface{}); ok {
 			if inbound, ok := audio["inbound"].(map[string]interface{}); ok {
-				qualityPercentageAudio = uint32(getUintFromFloat64(inbound["quality_percentage"]))
+				qualityPercentageAudio = getUint(inbound["quality_percentage"])
 			}
 		} else if video, ok := c["video"].(map[string]interface{}); ok {
 			if inbound, ok := video["inbound"].(map[string]interface{}); ok {
-				qualityPercentageVideo = uint32(getUintFromFloat64(inbound["quality_percentage"]))
+				qualityPercentageVideo = getUint(inbound["quality_percentage"])
 			}
 		}
 	}
@@ -246,17 +285,17 @@ func getFromTimes(call map[string]interface{}) (createdTime /*, progressTime, an
 }
 
 func getExtension(variables map[string]interface{}) (extension string) {
-	if a, ok := variables["cc_agent"].(string); ok {
+	if a, ok := getStringP(variables["cc_agent"]); ok {
 		s := strings.Split(a, "@")
 		if len(s) > 0 {
 			extension = s[0]
 		}
-	} else if u, ok := variables["presence_id"].(string); ok {
+	} else if u, ok := getStringP(variables["presence_id"]); ok {
 		s := strings.Split(u, "@")
 		if len(s) > 0 {
 			extension = s[0]
 		}
-	} else if u, ok := variables["dialer_user"].(string); ok {
+	} else if u, ok := getStringP(variables["dialer_user"]); ok {
 		s := strings.Split(u, "@")
 		if len(s) > 0 {
 			extension = s[0]
@@ -266,22 +305,22 @@ func getExtension(variables map[string]interface{}) (extension string) {
 }
 
 func getHangupDisposition(variables map[string]interface{}) (hangup_disposition string) {
-	if s, ok := variables["hangup_disposition"].(string); ok {
+	if s, ok := getStringP(variables["hangup_disposition"]); ok {
 		hangup_disposition = s
-	} else if s, ok := variables["sip_hangup_disposition"].(string); ok {
+	} else if s, ok := getStringP(variables["sip_hangup_disposition"]); ok {
 		hangup_disposition = s
-	} else if s, ok := variables["verto_hangup_disposition"].(string); ok {
+	} else if s, ok := getStringP(variables["verto_hangup_disposition"]); ok {
 		hangup_disposition = s
 	}
 	return
 }
 
 func getQueueHangup(variables, call map[string]interface{}) (queue_hangup uint64) {
-	if _, ok := variables["cc_queue"].(string); ok {
-		if c, ok := variables["cc_queue_canceled_epoch"].(string); ok && len(c) > 3 {
+	if _, ok := getStringP(variables["cc_queue"]); ok {
+		if c, ok := getStringP(variables["cc_queue_canceled_epoch"]); ok && len(c) > 3 {
 			queue_hangup, _ = strconv.ParseUint(c, 10, 64)
 			queue_hangup = queue_hangup * 1000
-		} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok && len(c) > 3 {
+		} else if t, ok := getStringP(variables["cc_queue_terminated_epoch"]); ok && len(c) > 3 {
 			queue_hangup, _ = strconv.ParseUint(t, 10, 64)
 			queue_hangup = queue_hangup * 1000
 		} else if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
@@ -295,14 +334,14 @@ func getQueueHangup(variables, call map[string]interface{}) (queue_hangup uint64
 }
 
 func getQueueAnswered(variables map[string]interface{}) (queue_answered_epoch uint64) {
-	if c, ok := variables["cc_queue_answered_epoch"].(string); ok && len(c) > 3 {
+	if c, ok := getStringP(variables["cc_queue_answered_epoch"]); ok && len(c) > 3 {
 		queue_answered_epoch, _ = strconv.ParseUint(c, 10, 64)
 	}
 	return
 }
 
 func getQueueJoined(variables map[string]interface{}) (queue_joined_epoch uint64) {
-	if c, ok := variables["cc_queue_joined_epoch"].(string); ok && len(c) > 3 {
+	if c, ok := getStringP(variables["cc_queue_joined_epoch"]); ok && len(c) > 3 {
 		queue_joined_epoch, _ = strconv.ParseUint(c, 10, 64)
 	}
 	return
@@ -310,17 +349,17 @@ func getQueueJoined(variables map[string]interface{}) (queue_joined_epoch uint64
 
 func getQueueWaiting(variables map[string]interface{}) (queue_waiting uint32) {
 	var first, second uint32
-	if a, ok := variables["cc_queue_answered_epoch"].(string); ok {
+	if a, ok := getStringP(variables["cc_queue_answered_epoch"]); ok {
 		first64, _ := strconv.ParseUint(a, 10, 32)
 		first = uint32(first64)
-	} else if c, ok := variables["cc_queue_canceled_epoch"].(string); ok {
+	} else if c, ok := getStringP(variables["cc_queue_canceled_epoch"]); ok {
 		first64, _ := strconv.ParseUint(c, 10, 32)
 		first = uint32(first64)
-	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok {
+	} else if t, ok := getStringP(variables["cc_queue_terminated_epoch"]); ok {
 		first64, _ := strconv.ParseUint(t, 10, 32)
 		first = uint32(first64)
 	}
-	if sec, ok := variables["cc_queue_joined_epoch"].(string); ok {
+	if sec, ok := getStringP(variables["cc_queue_joined_epoch"]); ok {
 		second64, _ := strconv.ParseUint(sec, 10, 32)
 		second = uint32(second64)
 	}
@@ -332,14 +371,14 @@ func getQueueWaiting(variables map[string]interface{}) (queue_waiting uint32) {
 
 func getQueueCallDuration(variables map[string]interface{}) (queue_call_duration uint32) {
 	var first, second uint32
-	if c, ok := variables["cc_queue_canceled_epoch"].(string); ok {
+	if c, ok := getStringP(variables["cc_queue_canceled_epoch"]); ok {
 		first64, _ := strconv.ParseUint(c, 10, 32)
 		first = uint32(first64)
-	} else if t, ok := variables["cc_queue_terminated_epoch"].(string); ok {
+	} else if t, ok := getStringP(variables["cc_queue_terminated_epoch"]); ok {
 		first64, _ := strconv.ParseUint(t, 10, 32)
 		first = uint32(first64)
 	}
-	if sec, ok := variables["cc_queue_joined_epoch"].(string); ok {
+	if sec, ok := getStringP(variables["cc_queue_joined_epoch"]); ok {
 		second64, _ := strconv.ParseUint(sec, 10, 32)
 		second = uint32(second64)
 	}
@@ -350,8 +389,8 @@ func getQueueCallDuration(variables map[string]interface{}) (queue_call_duration
 }
 
 func getQueueAnswerDelay(variables map[string]interface{}) (queue_answer_delay uint32) {
-	if a, ok := variables["cc_queue_answered_epoch"].(string); ok {
-		if b, ok := variables["cc_queue_joined_epoch"].(string); ok && a > b {
+	if a, ok := getStringP(variables["cc_queue_answered_epoch"]); ok {
+		if b, ok := getStringP(variables["cc_queue_joined_epoch"]); ok && a > b {
 			a64, _ := strconv.ParseUint(a, 10, 32)
 			b64, _ := strconv.ParseUint(b, 10, 32)
 			queue_answer_delay = uint32(a64 - b64)
