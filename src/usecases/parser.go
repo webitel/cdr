@@ -300,6 +300,13 @@ func getExtension(variables map[string]interface{}) (extension string) {
 		if len(s) > 0 {
 			extension = s[0]
 		}
+	} else if u := getUint(variables["bridge_epoch"]); u != 0 {
+		if h, ok := getStringP(variables["last_sent_callee_id_number"]); ok {
+			s := strings.Split(h, "@")
+			if len(s) > 0 {
+				extension = s[0]
+			}
+		}
 	}
 	return
 }
