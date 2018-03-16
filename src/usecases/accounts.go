@@ -42,12 +42,15 @@ func (interactor *CdrInteractor) ListenStatus(msgs <-chan entity.Delivery, size,
 	batch := make([]entity.Delivery, 0, size)
 	promise := time.Millisecond * time.Duration(interval)
 	tmr := time.NewTimer(promise)
+	maxGr := conf.MaxGoroutines()
+	sem := make(chan struct{}, maxGr)
 	for {
 		select {
 		case <-tmr.C:
 			{
 				if len(batch) > 0 {
-					go interactor.AccountProcess(batch)
+					sem <- struct{}{}
+					go interactor.AccountProcess(batch, sem)
 					batch = make([]entity.Delivery, 0, size)
 				}
 				tmr.Reset(promise)
@@ -56,14 +59,16 @@ func (interactor *CdrInteractor) ListenStatus(msgs <-chan entity.Delivery, size,
 			{
 				if !ok {
 					if len(batch) > 0 && len(batch) != cap(batch) {
-						go interactor.AccountProcess(batch)
+						sem <- struct{}{}
+						go interactor.AccountProcess(batch, sem)
 					}
 					done <- fmt.Errorf("RabbitMQ: Deliveries channel closed [ACCOUNTS]")
 					return
 				}
 				batch = append(batch, d)
 				if len(batch) == cap(batch) {
-					go interactor.AccountProcess(batch)
+					sem <- struct{}{}
+					go interactor.AccountProcess(batch, sem)
 					batch = make([]entity.Delivery, 0, size)
 					tmr.Reset(promise)
 				}
@@ -72,7 +77,7 @@ func (interactor *CdrInteractor) ListenStatus(msgs <-chan entity.Delivery, size,
 	}
 }
 
-func (interactor *CdrInteractor) AccountProcess(batch []entity.Delivery) {
+func (interactor *CdrInteractor) AccountProcess(batch []entity.Delivery, sem chan struct{}) {
 	if err, dResponse := interactor.AccountSend(batch); err != nil {
 		if dResponse != nil && len(dResponse) > 0 {
 			successCounter, errorCounter := 0, 0
@@ -100,6 +105,7 @@ func (interactor *CdrInteractor) AccountProcess(batch []entity.Delivery) {
 		}
 		logger.Info("Elastic: items stored [Accounts, %v]", len(batch))
 	}
+	<-sem
 }
 
 func (interactor *CdrInteractor) AccountSend(batch []entity.Delivery) (error, []DeliveryResponse) {
