@@ -10,9 +10,9 @@ import (
 )
 
 type Configuration struct {
-	ArchiveServer    bool   `json:"isArchive" envconfig:"isArchive"`
-	MaxGoroutines    uint32 `json:"maxGoroutines" envconfig:"maxGoroutines"`
-	InsertGoroutines uint32 `json:"insertGoroutines" envconfig:"insertGoroutines"`
+	ArchiveServer    bool   `json:"isArchive" envconfig:"cdr:isArchive"`
+	MaxGoroutines    uint32 `json:"maxGoroutines" envconfig:"cdr:maxGoroutines"`
+	InsertGoroutines uint32 `json:"insertGoroutines" envconfig:"cdr:insertGoroutines"`
 	Postgres         `json:"pg"`
 	Rabbit           `json:"broker"`
 	Elastic          `json:"elastic"`
@@ -48,6 +48,7 @@ type Postgres struct {
 	TableB   string `json:"cdrTableB" envconfig:"pg:tableB"`
 	Host     string `json:"host" envconfig:"pg:host"`
 	Port     int32  `json:"port" envconfig:"pg:port"`
+	Order    string `json:"orderBy"`
 }
 
 type Rabbit struct {
@@ -190,6 +191,9 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("pg:port"); value != "" {
 		i, _ := strconv.Atoi(value)
 		conf.Postgres.Port = int32(i)
+	}
+	if value := os.Getenv("pg:orderBy"); value != "" {
+		conf.Postgres.Order = value
 	}
 	if value := os.Getenv("elastic:enable"); value != "" {
 		if value == "1" || value == "true" {

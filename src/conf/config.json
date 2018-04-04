@@ -9,7 +9,8 @@
       "host": "postgres",
       "cdrTableA": "cdr_a",
       "cdrTableB": "cdr_b",
-      "port": 5432
+      "port": 5432,
+      "orderBy": "asc"
   },
   "broker":{
       "publisher": {
