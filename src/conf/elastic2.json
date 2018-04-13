@@ -115,6 +115,9 @@
             "holdsec": {
               "type": "long"
             },
+            "holdsec_b": {
+              "type": "long"
+            },
             "quality_percentage_audio": {
               "type": "long"
             },
