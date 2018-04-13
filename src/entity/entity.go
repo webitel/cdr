@@ -99,6 +99,7 @@ type ElasticCdr struct {
 	AnswerSeconds         uint32 `json:"answersec"`
 	WaitSeconds           uint32 `json:"waitsec"`
 	HoldAccumSeconds      uint32 `json:"holdsec"`
+	HoldSecB              uint32 `json:"holdsec_b,omitempty"`
 	///////
 	QualityPercentageAudio uint32                 `json:"quality_percentage_audio,omitempty"`
 	QualityPercentageVideo uint32                 `json:"quality_percentage_video,omitempty"`

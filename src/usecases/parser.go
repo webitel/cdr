@@ -76,17 +76,6 @@ func getUintFromFloat64(i interface{}) (s uint64) {
 	return
 }
 
-// func getUint64(i interface{}) (s uint64) {
-// 	s, _ = i.(uint64)
-// 	return
-// }
-
-// func getMapString(i interface{}) (s map[string]string) {
-// 	s = map[string]string(i.(map[string]interface{}))
-// 	fmt.Sprintf("%s", ok)
-// 	return
-// }
-
 func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 	var (
 		call, _                                                                     = callInterface.(map[string]interface{})
@@ -173,10 +162,10 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 	/////////////////////////////////
 	if e_entity.Parent_uuid == "" {
 		e_entity.Leg = "A"
+		e_entity.HoldSecB = getUint(variables["hold_b_accum_seconds"])
 	} else {
 		e_entity.Leg = "B"
 	}
-	//if e_entity.Parent_uuid == "" {
 	byteArr, _ := json.Marshal(call["callflow"])
 	var tmpCf []entity.Callflow
 	json.Unmarshal(byteArr, &tmpCf)
@@ -184,13 +173,6 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		e_entity.Callflow = &tmpCf
 		setMillis(e_entity.Callflow)
 	}
-	// } else {
-	// 	e_entity.BridgedTime = bridgedTime
-	// 	e_entity.CallAnswerTime = answeredTime
-	// 	e_entity.ProgressTime = progressTime
-	// 	e_entity.CallHangupTime = hangupTime
-	// 	e_entity.TransferTime = transferTime
-	// }
 	return e_entity, nil
 }
 
