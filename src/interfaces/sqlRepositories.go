@@ -9,39 +9,48 @@ import (
 )
 
 const (
-	cdrInsertQueryB         = "INSERT INTO #table#(uuid, parent_uuid, created_at, stored_at, archived_at, size, event, stored_state, archived_state) VALUES "
-	cdrInsertQueryA         = "INSERT INTO #table#(uuid, created_at, stored_at, archived_at, size, event, stored_state, archived_state) VALUES "
-	cdrValuesB              = "(%v, %v, %v, %v, %v, %v, %v, %v, %v),"
-	cdrValuesA              = "(%v, %v, %v, %v, %v, %v, %v, %v),"
-	cdrUpdateWithReturning  = "UPDATE #table# SET #state#_state = 1 WHERE uuid IN ( SELECT uuid FROM #table# WHERE #state#_state = $1 ORDER BY created_at #order# LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING uuid, event"
-	cdrUpdateWithReturningB = "UPDATE #table# SET #state#_state = 1 WHERE uuid IN ( SELECT uuid FROM #table# WHERE #state#_state = $1 AND parent_uuid != '' ORDER BY created_at #order# LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING uuid, event"
-	cdrJoin                 = "SELECT a.uuid as parent_uuid, b.event as event, b.uuid as uuid FROM #table_a# as a INNER JOIN #table_b# as b ON a.uuid = b.parent_uuid WHERE a.stored_state=$1 AND b.stored_state=$2 ORDER BY b.created_at ASC LIMIT $3"
-	cdrUpdateStateQuery     = "UPDATE #table# SET #state#_state=$1, #state#_at=$2 WHERE uuid IN (#values#)"
-	cdrCreateTableA         = `
-							CREATE TABLE IF NOT EXISTS #table#
+	cdrInsertQueryB        = "INSERT INTO #table#(uuid, parent_uuid, created_at, size, event) VALUES "
+	cdrInsertQueryA        = "INSERT INTO #table#(uuid, created_at, size, event) VALUES "
+	cdrInsertQueue         = "INSERT INTO #table#_#option#(uuid, created_at, event, state) VALUES "
+	cdrValuesB             = "(%v, %v, %v, %v, %v),"
+	cdrValuesA             = "(%v, %v, %v, %v),"
+	cdrValuesQueue         = "(%v, %v, %v),"
+	cdrUpdateWithReturning = "UPDATE #table#_#option# SET state = 1 WHERE id IN ( SELECT id FROM #table#_#option# WHERE state = $1 ORDER BY created_at #order# LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING id, uuid, event"
+	//cdrUpdateWithReturningB = "UPDATE #table#_#option# SET state = 1 WHERE id IN ( SELECT id FROM #table# WHERE #state#_state = $1 AND parent_uuid != '' ORDER BY created_at #order# LIMIT $2 FOR UPDATE SKIP LOCKED) RETURNING uuid, event"
+	// cdrJoin             = "SELECT a.uuid as parent_uuid, b.event as event, b.uuid as uuid FROM #table_a# as a INNER JOIN #table_b# as b ON a.uuid = b.parent_uuid WHERE a.stored_state=$1 AND b.stored_state=$2 ORDER BY b.created_at ASC LIMIT $3"
+	cdrUpdateStateQuery = "UPDATE #table#_#option# SET state=$1 WHERE uuid IN (#values#)"
+	cdrDeleteFromQuery  = "DELETE from #table#_#option# where uuid IN (#values#)"
+	cdrQueueTable       = `
+							CREATE TABLE IF NOT EXISTS #table#_#option#
 							(
-								id BIGSERIAL NOT NULL CONSTRAINT #table#_pkey PRIMARY KEY,
-								uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,								
-								created_at bigint,
-								stored_at bigint,
-								archived_at bigint,
-								size integer,
+								id BIGSERIAL NOT NULL CONSTRAINT #table#_#option#_pkey PRIMARY KEY,
+								uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,
 								event jsonb,
-								stored_state smallint,
-								archived_state smallint								
+								state smallint,
+								created_at bigint								
 							)
 							WITH (
 								OIDS = FALSE
 							)
 							TABLESPACE pg_default;
-								
-							create index if not exists #table#_created_at_stored_state_index
-								on #table# (created_at, stored_state)
+
+							create index if not exists #table#_#option#_created_at_state_index
+								on #table#_#option# (created_at, state)
 							;
-						
-							create index if not exists #table#_created_at_archived_state_index
-								on #table# (created_at, archived_state)
-							;
+	`
+	cdrCreateTableA = `
+							CREATE TABLE IF NOT EXISTS #table#
+							(
+								id BIGSERIAL NOT NULL CONSTRAINT #table#_pkey PRIMARY KEY,
+								uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,								
+								created_at bigint,								
+								size integer,
+								event jsonb														
+							)
+							WITH (
+								OIDS = FALSE
+							)
+							TABLESPACE pg_default;	
 						` //$1 - public.cdr $2 - webitel
 	cdrCreateTableB = `
 						CREATE TABLE IF NOT EXISTS #table#
@@ -50,25 +59,13 @@ const (
 							uuid character varying(255) COLLATE pg_catalog."default" NOT NULL,
 							parent_uuid character varying(255) COLLATE pg_catalog."default",
 							created_at bigint,
-							stored_at bigint,
-							archived_at bigint,
 							size integer,
-							event jsonb,
-							stored_state smallint,
-							archived_state smallint							
+							event jsonb													
 						)
 						WITH (
 							OIDS = FALSE
 						)
 						TABLESPACE pg_default;
-
-						create index if not exists #table#_created_at_stored_state_index
-							on #table# (created_at, stored_state)
-						;
-						
-						create index if not exists #table#_created_at_archived_state_index
-							on #table# (created_at, archived_state)
-						;
 					` //$1 - public.cdr $2 - webitel
 )
 
@@ -112,6 +109,19 @@ func NewDbCdrBRepo(dbHandlers map[string]DbHandler) *DbCdrBRepo {
 	return DbCdrBRepo
 }
 
+func (repo *DbCdrARepo) DeleteFromQueue(calls []entity.SqlCdr, option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrDeleteFromQuery, "#table#", config.TableA, -1), "#option#", option, -1)
+	vals := []interface{}{}
+	var strValues string
+	for i, row := range calls {
+		strValues += fmt.Sprintf("$%v, ", i+1)
+		vals = append(vals, row.Uuid)
+	}
+	strValues = strValues[0 : len(strValues)-2]
+	sqlStr = strings.Replace(sqlStr, "#values#", strValues, -1)
+	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
+}
+
 func (repo *DbCdrARepo) InsertPack(calls []entity.SqlCdr) error {
 	sqlStr := strings.Replace(cdrInsertQueryA, "#table#", config.TableA, -1)
 	vals := []interface{}{}
@@ -122,29 +132,44 @@ func (repo *DbCdrARepo) InsertPack(calls []entity.SqlCdr) error {
 			fmt.Sprintf("$%v", valCounter),
 			fmt.Sprintf("$%v", valCounter+1),
 			fmt.Sprintf("$%v", valCounter+2),
-			fmt.Sprintf("$%v", valCounter+3),
-			fmt.Sprintf("$%v", valCounter+4),
-			fmt.Sprintf("$%v", valCounter+5),
-			fmt.Sprintf("$%v", valCounter+6),
-			fmt.Sprintf("$%v", valCounter+7))
+			fmt.Sprintf("$%v", valCounter+3))
 		sqlStr += strValues
 		vals = append(vals,
 			row.Uuid,
 			row.Created_at,
-			row.Stored_at,
-			row.Archived_at,
 			row.Size,
-			row.Event,
-			row.Stored_state,
-			row.Archived_state)
-		valCounter = valCounter + 8
+			row.Event)
+		valCounter = valCounter + 4
 	}
 	sqlStr = sqlStr[0 : len(sqlStr)-1]
 	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
 }
 
-func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, stateName string) ([]entity.SqlCdr, error) {
-	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(strings.Replace(cdrUpdateWithReturning, "#table#", config.TableA, -1), "#state#", stateName, -1), "#order#", config.Order, -1), state, count)
+func (repo *DbCdrARepo) InsertIntoQueue(calls []entity.SqlCdr, option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrInsertQueue, "#table#", config.TableA, -1), "#option#", option, -1)
+	vals := []interface{}{}
+	var strValues string
+	valCounter := 1
+	for _, row := range calls {
+		strValues = fmt.Sprintf(cdrValuesA,
+			fmt.Sprintf("$%v", valCounter),
+			fmt.Sprintf("$%v", valCounter+1),
+			fmt.Sprintf("$%v", valCounter+2),
+			fmt.Sprintf("$%v", valCounter+3))
+		sqlStr += strValues
+		vals = append(vals,
+			row.Uuid,
+			row.Created_at,
+			row.Event,
+			0)
+		valCounter = valCounter + 4
+	}
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
+}
+
+func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, option string) ([]entity.SqlCdr, error) {
+	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(strings.Replace(cdrUpdateWithReturning, "#table#", config.TableA, -1), "#option#", option, -1), "#order#", config.Order, -1), state, count)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +177,7 @@ func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, stateName s
 	var cdr []entity.SqlCdr
 	var call entity.SqlCdr
 	for rows.Next() {
-		err = rows.Scan(&call.Uuid, &call.Event)
+		err = rows.Scan(&call.Id, &call.Uuid, &call.Event)
 		if err != nil {
 			return nil, err
 		}
@@ -161,22 +186,28 @@ func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, stateName s
 	return cdr, nil
 }
 
-func (repo *DbCdrARepo) JoinLegsPack(count uint32) ([]entity.SqlCdr, error) {
-	panic(count)
-}
-
-func (repo *DbCdrARepo) UpdateState(calls []entity.SqlCdr, state uint8, timestamp uint64, stateName string) error {
-	sqlStr := strings.Replace(strings.Replace(cdrUpdateStateQuery, "#table#", config.TableA, -1), "#state#", stateName, -1)
+func (repo *DbCdrARepo) UpdateState(calls []entity.SqlCdr, state uint8, option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrUpdateStateQuery, "#table#", config.TableA, -1), "#option#", option, -1)
 	vals := []interface{}{}
-	vals = append(vals, state, timestamp) //uint64(time.Now().UnixNano()/1000000)
+	vals = append(vals, state) //uint64(time.Now().UnixNano()/1000000)
 	var strValues string
 	for i, row := range calls {
-		strValues += fmt.Sprintf("$%v, ", i+3)
+		strValues += fmt.Sprintf("$%v, ", i+2)
 		vals = append(vals, row.Uuid)
 	}
 	strValues = strValues[0 : len(strValues)-2]
 	sqlStr = strings.Replace(sqlStr, "#values#", strValues, -1)
 	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
+}
+
+func (repo *DbCdrARepo) CreateTableIfNotExist() error {
+	sqlStr := strings.Replace(strings.Replace(cdrCreateTableA, "#table#", config.TableA, -1), "#user#", config.User, -1)
+	return repo.dbHandler.CreateTable(sqlStr)
+}
+
+func (repo *DbCdrARepo) CreateQueueTableIfNotExist(option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrQueueTable, "#table#", config.TableA, -1), "#option#", option, -1)
+	return repo.dbHandler.CreateTable(sqlStr)
 }
 
 func (repo *DbCdrBRepo) InsertPack(calls []entity.SqlCdr) error {
@@ -190,35 +221,45 @@ func (repo *DbCdrBRepo) InsertPack(calls []entity.SqlCdr) error {
 			fmt.Sprintf("$%v", valCounter+1),
 			fmt.Sprintf("$%v", valCounter+2),
 			fmt.Sprintf("$%v", valCounter+3),
-			fmt.Sprintf("$%v", valCounter+4),
-			fmt.Sprintf("$%v", valCounter+5),
-			fmt.Sprintf("$%v", valCounter+6),
-			fmt.Sprintf("$%v", valCounter+7),
-			fmt.Sprintf("$%v", valCounter+8))
+			fmt.Sprintf("$%v", valCounter+4))
 		sqlStr += strValues
 		vals = append(vals,
 			row.Uuid,
 			row.Parent_uuid,
 			row.Created_at,
-			row.Stored_at,
-			row.Archived_at,
 			row.Size,
-			row.Event,
-			row.Stored_state,
-			row.Archived_state)
-		valCounter = valCounter + 9
+			row.Event)
+		valCounter = valCounter + 5
 	}
 	sqlStr = sqlStr[0 : len(sqlStr)-1]
 	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
 }
 
-func (repo *DbCdrARepo) CreateTableIfNotExist() error {
-	sqlStr := strings.Replace(strings.Replace(cdrCreateTableA, "#table#", config.TableA, -1), "#user#", config.User, -1)
-	return repo.dbHandler.CreateTable(sqlStr)
+func (repo *DbCdrBRepo) InsertIntoQueue(calls []entity.SqlCdr, option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrInsertQueue, "#table#", config.TableB, -1), "#option#", option, -1)
+	vals := []interface{}{}
+	var strValues string
+	valCounter := 1
+	for _, row := range calls {
+		strValues = fmt.Sprintf(cdrValuesA,
+			fmt.Sprintf("$%v", valCounter),
+			fmt.Sprintf("$%v", valCounter+1),
+			fmt.Sprintf("$%v", valCounter+2),
+			fmt.Sprintf("$%v", valCounter+3))
+		sqlStr += strValues
+		vals = append(vals,
+			row.Uuid,
+			row.Created_at,
+			row.Event,
+			0)
+		valCounter = valCounter + 4
+	}
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
 }
 
-func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, stateName string) ([]entity.SqlCdr, error) {
-	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(strings.Replace(cdrUpdateWithReturningB, "#table#", config.TableB, -1), "#state#", stateName, -1), "#order#", config.Order, -1), state, count)
+func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, option string) ([]entity.SqlCdr, error) {
+	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(strings.Replace(cdrUpdateWithReturning, "#table#", config.TableB, -1), "#option#", option, -1), "#order#", config.Order, -1), state, count)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +267,7 @@ func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, stateName s
 	var cdr []entity.SqlCdr
 	var call entity.SqlCdr
 	for rows.Next() {
-		err = rows.Scan(&call.Uuid, &call.Event)
+		err = rows.Scan(&call.Id, &call.Uuid, &call.Event)
 		if err != nil {
 			return nil, err
 		}
@@ -235,30 +276,26 @@ func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, stateName s
 	return cdr, nil
 }
 
-func (repo *DbCdrBRepo) JoinLegsPack(count uint32) ([]entity.SqlCdr, error) {
-	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(cdrJoin, "#table_a#", config.TableA, -1), "#table_b#", config.TableB, -1), 2, 0, count)
-	if err != nil {
-		return nil, err
-	}
-	var cdr []entity.SqlCdr
-	var call entity.SqlCdr
-	for rows.Next() {
-		err = rows.Scan(&call.Parent_uuid, &call.Event, &call.Uuid)
-		if err != nil {
-			return nil, err
-		}
-		cdr = append(cdr, call)
-	}
-	return cdr, nil
-}
-
-func (repo *DbCdrBRepo) UpdateState(calls []entity.SqlCdr, state uint8, timestamp uint64, stateName string) error {
-	sqlStr := strings.Replace(strings.Replace(cdrUpdateStateQuery, "#table#", config.TableB, -1), "#state#", stateName, -1)
+func (repo *DbCdrBRepo) DeleteFromQueue(calls []entity.SqlCdr, option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrDeleteFromQuery, "#table#", config.TableB, -1), "#option#", option, -1)
 	vals := []interface{}{}
-	vals = append(vals, state, timestamp) //uint64(time.Now().UnixNano()/1000000)
 	var strValues string
 	for i, row := range calls {
-		strValues += fmt.Sprintf("$%v, ", i+3)
+		strValues += fmt.Sprintf("$%v, ", i+1)
+		vals = append(vals, row.Uuid)
+	}
+	strValues = strValues[0 : len(strValues)-2]
+	sqlStr = strings.Replace(sqlStr, "#values#", strValues, -1)
+	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
+}
+
+func (repo *DbCdrBRepo) UpdateState(calls []entity.SqlCdr, state uint8, option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrUpdateStateQuery, "#table#", config.TableB, -1), "#option#", option, -1)
+	vals := []interface{}{}
+	vals = append(vals, state) //uint64(time.Now().UnixNano()/1000000)
+	var strValues string
+	for i, row := range calls {
+		strValues += fmt.Sprintf("$%v, ", i+2)
 		vals = append(vals, row.Uuid)
 	}
 	strValues = strValues[0 : len(strValues)-2]
@@ -268,5 +305,10 @@ func (repo *DbCdrBRepo) UpdateState(calls []entity.SqlCdr, state uint8, timestam
 
 func (repo *DbCdrBRepo) CreateTableIfNotExist() error {
 	sqlStr := strings.Replace(strings.Replace(cdrCreateTableB, "#table#", config.TableB, -1), "#user#", config.User, -1)
+	return repo.dbHandler.CreateTable(sqlStr)
+}
+
+func (repo *DbCdrBRepo) CreateQueueTableIfNotExist(option string) error {
+	sqlStr := strings.Replace(strings.Replace(cdrQueueTable, "#table#", config.TableB, -1), "#option#", option, -1)
 	return repo.dbHandler.CreateTable(sqlStr)
 }

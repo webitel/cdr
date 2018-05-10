@@ -68,7 +68,7 @@ func (interactor *CdrInteractor) ArchiveListener(amqpRepo entity.AmqReceiverRepo
 }
 
 func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.AmqReceiverRepository, repo entity.SqlCdrRepository, bulkCount uint32, state uint8, exchName, routingKey string, errChan chan bool, ticker, errorTicker *time.Ticker, sem chan struct{}) {
-	cdr, err := repo.SelectPackByState(bulkCount, state, "archived")
+	cdr, err := repo.SelectPackByState(bulkCount, state, "archive")
 	if err != nil {
 		logger.Error(err.Error())
 		<-sem
@@ -82,20 +82,20 @@ func (interactor *CdrInteractor) CheckCallsFromSqlByArchived(amqpRepo entity.Amq
 		if amqpError, ok := err.(entity.AmqError); ok {
 			logger.ErrorResponse(fmt.Sprintf("Archive [%s]:", routingKey), amqpError.Code, amqpError.Reason)
 			if amqpError.Code >= 500 && amqpError.Code < 600 {
-				repo.UpdateState(cdr, 0, 0, "archived")
+				repo.UpdateState(cdr, 0, "archive")
 				ticker.Stop()
 				errorTicker.Stop()
 				errChan <- true
 			} else {
-				repo.UpdateState(cdr, 4, 0, "archived")
+				repo.UpdateState(cdr, 4, "archive")
 			}
 		} else {
 			logger.Error(err.Error())
-			repo.UpdateState(cdr, 4, 0, "archived")
+			repo.UpdateState(cdr, 4, "archive")
 		}
 	} else {
 		logger.Info("Archive: items stored [%s, %v]", routingKey, len(cdr))
-		repo.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "archived")
+		repo.DeleteFromQueue(cdr, "archive")
 	}
 	<-sem
 }

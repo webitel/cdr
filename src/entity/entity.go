@@ -1,13 +1,17 @@
 package entity
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type SqlCdrRepository interface {
 	InsertPack(calls []SqlCdr) error
-	SelectPackByState(count uint32, state uint8, stateName string) ([]SqlCdr, error)
-	UpdateState(calls []SqlCdr, state uint8, timestamp uint64, stateName string) error
-	JoinLegsPack(count uint32) ([]SqlCdr, error)
+	SelectPackByState(count uint32, state uint8, option string) ([]SqlCdr, error)
+	UpdateState(calls []SqlCdr, state uint8, option string) error
+	DeleteFromQueue(calls []SqlCdr, option string) error
+	InsertIntoQueue(calls []SqlCdr, option string) error
 	CreateTableIfNotExist() error
+	CreateQueueTableIfNotExist(option string) error
 }
 
 type SqlCdrARepository SqlCdrRepository
@@ -55,15 +59,13 @@ func (e AmqError) Error() string {
 }
 
 type SqlCdr struct {
-	Uuid           string
-	Parent_uuid    string
-	Created_at     uint64
-	Stored_at      uint64
-	Archived_at    uint64
-	Size           uint32
-	Stored_state   uint8
-	Archived_state uint8
-	Event          []byte
+	Id          uint64
+	Uuid        string
+	Parent_uuid string
+	Created_at  uint64
+	Size        uint32
+	Event       []byte
+	State       uint8
 }
 
 type ElasticCdr struct {

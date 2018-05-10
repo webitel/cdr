@@ -31,6 +31,22 @@ func (interactor *CdrInteractor) InitTables() error {
 	if err := interactor.SqlCdrBRepository.CreateTableIfNotExist(); err != nil {
 		return fmt.Errorf("PostgreSQL. Table B creating error: " + err.Error())
 	}
+	if conf.GetElastic().Enable {
+		if err := interactor.SqlCdrARepository.CreateQueueTableIfNotExist("elastic"); err != nil {
+			return fmt.Errorf("PostgreSQL. Archive table A creating error: " + err.Error())
+		}
+		if err := interactor.SqlCdrBRepository.CreateQueueTableIfNotExist("elastic"); err != nil {
+			return fmt.Errorf("PostgreSQL. Archive table B creating error: " + err.Error())
+		}
+	}
+	if conf.GetReceiver().Enable {
+		if err := interactor.SqlCdrARepository.CreateQueueTableIfNotExist("archive"); err != nil {
+			return fmt.Errorf("PostgreSQL. Archive table A creating error: " + err.Error())
+		}
+		if err := interactor.SqlCdrBRepository.CreateQueueTableIfNotExist("archive"); err != nil {
+			return fmt.Errorf("PostgreSQL. Archive table B creating error: " + err.Error())
+		}
+	}
 	return nil
 }
 
@@ -150,11 +166,32 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error,
 		}
 	}
 	if len(calls) > 0 {
+		if conf.GetElastic().Enable {
+			if err := interactor.SqlCdrARepository.InsertIntoQueue(calls, "elastic"); err != nil {
+				return err, 0
+			}
+		}
+		if conf.GetReceiver().Enable {
+			if err := interactor.SqlCdrARepository.InsertIntoQueue(calls, "archive"); err != nil {
+				return err, 0
+			}
+		}
 		if err := interactor.SqlCdrARepository.InsertPack(calls); err != nil {
 			return err, 0
 		}
 	}
 	if len(callsB) > 0 {
+
+		if conf.GetElastic().Enable {
+			if err := interactor.SqlCdrBRepository.InsertIntoQueue(calls, "elastic"); err != nil {
+				return err, 0
+			}
+		}
+		if conf.GetReceiver().Enable {
+			if err := interactor.SqlCdrBRepository.InsertIntoQueue(calls, "archive"); err != nil {
+				return err, 0
+			}
+		}
 		if err := interactor.SqlCdrBRepository.InsertPack(callsB); err != nil {
 			return err, 0
 		}
@@ -181,6 +218,16 @@ func (interactor *CdrInteractor) AddToSqlB(deliveries []entity.Delivery) (error,
 		}
 	}
 	if len(calls) > 0 {
+		if conf.GetElastic().Enable {
+			if err := interactor.SqlCdrBRepository.InsertIntoQueue(calls, "elastic"); err != nil {
+				return err, 0
+			}
+		}
+		if conf.GetReceiver().Enable {
+			if err := interactor.SqlCdrBRepository.InsertIntoQueue(calls, "archive"); err != nil {
+				return err, 0
+			}
+		}
 		if err := interactor.SqlCdrBRepository.InsertPack(calls); err != nil {
 			return err, 0
 		}
@@ -215,25 +262,21 @@ func getParentUuid(call interface{}) string {
 
 func parseToSqlA(body []byte, uuid string) (entity.SqlCdr, error) {
 	pg_call := entity.SqlCdr{
-		Uuid:           uuid,
-		Event:          body,
-		Size:           uint32(len(body)),
-		Created_at:     uint64(time.Now().UnixNano() / 1000000),
-		Stored_state:   0,
-		Archived_state: 0,
+		Uuid:       uuid,
+		Event:      body,
+		Size:       uint32(len(body)),
+		Created_at: uint64(time.Now().UnixNano() / 1000000),
 	}
 	return pg_call, nil
 }
 
 func parseToSqlB(body []byte, uuid string, parent string) (entity.SqlCdr, error) {
 	pg_call := entity.SqlCdr{
-		Uuid:           uuid,
-		Parent_uuid:    parent,
-		Event:          body,
-		Size:           uint32(len(body)),
-		Created_at:     uint64(time.Now().UnixNano() / 1000000),
-		Stored_state:   0,
-		Archived_state: 0,
+		Uuid:        uuid,
+		Parent_uuid: parent,
+		Event:       body,
+		Size:        uint32(len(body)),
+		Created_at:  uint64(time.Now().UnixNano() / 1000000),
 	}
 	return pg_call, nil
 }

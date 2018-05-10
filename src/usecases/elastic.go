@@ -45,7 +45,7 @@ func LegListener(checkCalls CheckCalls, timeout, bulkCount, maxGr uint32) {
 }
 
 func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8, sem chan struct{}) {
-	cdr, err := interactor.SqlCdrARepository.SelectPackByState(bulkCount, state, "stored")
+	cdr, err := interactor.SqlCdrARepository.SelectPackByState(bulkCount, state, "elastic")
 	if err != nil {
 		logger.Error(err.Error())
 		<-sem
@@ -62,25 +62,25 @@ func (interactor *CdrInteractor) CheckLegsAFromSql(bulkCount uint32, state uint8
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrARepository.InsertDocs(calls); err != nil {
 		if errCalls != nil && len(errCalls) > 0 {
-			interactor.SqlCdrARepository.UpdateState(errCalls, 4, 0, "stored")
+			interactor.SqlCdrARepository.UpdateState(errCalls, 4, "elastic")
 			if succCalls != nil && len(succCalls) > 0 {
-				interactor.SqlCdrARepository.UpdateState(succCalls, 2, uint64(time.Now().UnixNano()/1000000), "stored")
+				interactor.SqlCdrARepository.DeleteFromQueue(succCalls, "elastic")
 				logger.Info("Elastic: items stored [%s, %v]", "Leg A", len(succCalls))
 			}
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg A", len(errCalls))
 		} else {
-			interactor.SqlCdrARepository.UpdateState(cdr, 4, 0, "stored")
+			interactor.SqlCdrARepository.UpdateState(cdr, 4, "elastic")
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg A", len(calls))
 		}
 	} else {
 		logger.Info("Elastic: items stored [%s, %v]", "Leg A", len(calls))
-		interactor.SqlCdrARepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
+		interactor.SqlCdrARepository.DeleteFromQueue(cdr, "elastic")
 	}
 	<-sem
 }
 
 func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8, sem chan struct{}) {
-	cdr, err := interactor.SqlCdrBRepository.SelectPackByState(bulkCount, state, "stored")
+	cdr, err := interactor.SqlCdrBRepository.SelectPackByState(bulkCount, state, "elastic")
 	if err != nil {
 		logger.Error(err.Error())
 		<-sem
@@ -97,19 +97,19 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrBRepository.InsertDocs(calls); err != nil {
 		if errCalls != nil && len(errCalls) > 0 {
-			interactor.SqlCdrBRepository.UpdateState(errCalls, 4, 0, "stored")
+			interactor.SqlCdrBRepository.UpdateState(errCalls, 4, "elastic")
 			if succCalls != nil && len(succCalls) > 0 {
-				interactor.SqlCdrBRepository.UpdateState(succCalls, 2, uint64(time.Now().UnixNano()/1000000), "stored")
+				interactor.SqlCdrBRepository.DeleteFromQueue(succCalls, "elastic")
 				logger.Info("Elastic: items stored [%s, %v]", "Leg B", len(succCalls))
 			}
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg B", len(errCalls))
 		} else {
-			interactor.SqlCdrBRepository.UpdateState(cdr, 4, 0, "stored")
+			interactor.SqlCdrBRepository.UpdateState(cdr, 4, "elastic")
 			logger.Warning("Elastic: failed to store items [%s, %v]", "Leg A", len(calls))
 		}
 	} else {
 		logger.Info("Elastic: items stored [%s, %v]", "Leg B", len(calls))
-		interactor.SqlCdrBRepository.UpdateState(cdr, 2, uint64(time.Now().UnixNano()/1000000), "stored")
+		interactor.SqlCdrBRepository.DeleteFromQueue(cdr, "elastic")
 	}
 	<-sem
 }
@@ -124,13 +124,13 @@ func getCalls(repo entity.SqlCdrRepository, cdr []entity.SqlCdr) ([]entity.Elast
 	for _, item := range cdr {
 		iCall, err = readBytes(item.Event)
 		if err != nil {
-			repo.UpdateState(cdr, 4, 0, "stored")
+			repo.UpdateState(cdr, 4, "elastic")
 			logger.Error(err.Error())
 			return nil, err
 		}
 		eCall, err = ParseToCdr(iCall)
 		if err != nil {
-			repo.UpdateState(cdr, 4, 0, "stored")
+			repo.UpdateState(cdr, 4, "elastic")
 			logger.Error(err.Error())
 			return nil, err
 		}
