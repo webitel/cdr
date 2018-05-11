@@ -183,12 +183,12 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error,
 	if len(callsB) > 0 {
 
 		if conf.GetElastic().Enable {
-			if err := interactor.SqlCdrBRepository.InsertIntoQueue(calls, "elastic"); err != nil {
+			if err := interactor.SqlCdrBRepository.InsertIntoQueue(callsB, "elastic"); err != nil {
 				return err, 0
 			}
 		}
 		if conf.GetReceiver().Enable {
-			if err := interactor.SqlCdrBRepository.InsertIntoQueue(calls, "archive"); err != nil {
+			if err := interactor.SqlCdrBRepository.InsertIntoQueue(callsB, "archive"); err != nil {
 				return err, 0
 			}
 		}
