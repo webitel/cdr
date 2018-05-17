@@ -118,6 +118,9 @@
             "holdsec_b": {
               "type": "long"
             },
+            "talksec": {
+              "type": "long"
+            },
             "quality_percentage_audio": {
               "type": "long"
             },

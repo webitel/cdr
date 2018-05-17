@@ -83,7 +83,7 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		callerIdNumber, destinationNumber, callerIdName, source, networkAddr string = getFromProfile(call, variables)
 		qualityPercentageAudio, qualityPercentageVideo                       uint32 = getFromStats(call)
 		//createdTime, progressTime, answeredTime, bridgedTime, hangupTime, transferTime uint64 = getFromTimes(call)
-		createdTime          uint64 = getFromTimes(call)
+		createdTime, talksec        = getFromTimes(call)
 		domain_name          string = getDomainName(variables)
 		queue_name           string = getQueueName(variables)
 		extension            string = getExtension(variables)
@@ -121,6 +121,7 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		AnswerSeconds:         getUint(variables["answersec"]),
 		WaitSeconds:           getUint(variables["waitsec"]),
 		HoldAccumSeconds:      getUint(variables["hold_accum_seconds"]),
+		TalkSec:               talksec,
 		//
 		QualityPercentageAudio: qualityPercentageAudio,
 		QualityPercentageVideo: qualityPercentageVideo,
@@ -251,15 +252,17 @@ func getFromStats(call map[string]interface{}) (qualityPercentageAudio, qualityP
 	return
 }
 
-func getFromTimes(call map[string]interface{}) (createdTime /*, progressTime, answeredTime, bridgedTime, hangupTime, transferTime*/ uint64) {
+func getFromTimes(call map[string]interface{}) (createdTime /*, progressTime, answeredTime, bridgedTime, hangupTime, transferTime*/ uint64, talksec uint32) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
 		times, ok := c[0].(map[string]interface{})["times"].(map[string]interface{})
 		if ok {
 			createdTime = getUintFromFloat64(times["created_time"]) / 1000 //sqlStr[0 : len(sqlStr)-3]
+			var bridgedTime, hangupTime = getUintFromFloat64(times["bridged_time"]) / 1000000, getUintFromFloat64(times["hangup_time"]) / 1000000
+			if bridgedTime > 0 && hangupTime > 0 {
+				talksec = uint32(hangupTime - bridgedTime)
+			}
 			// progressTime = getUintFromFloat64(times["progress_time"]) / 1000
 			// answeredTime = getUintFromFloat64(times["answered_time"]) / 1000
-			// bridgedTime = getUintFromFloat64(times["bridged_time"]) / 1000
-			// hangupTime = getUintFromFloat64(times["hangup_time"]) / 1000
 			// transferTime = getUintFromFloat64(times["transfer_time"]) / 1000
 		}
 	}
