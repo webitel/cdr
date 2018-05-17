@@ -294,7 +294,6 @@ var (
 		"transfer_ringback",
 		"hangup_after_bridge",
 		"continue_on_fail",
-		"webitel_record_file_name",
 		"RECORD_MIN_SEC",
 		"RECORD_STEREO",
 		"RECORD_BRIDGE_REQ",
