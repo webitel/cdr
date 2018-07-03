@@ -9,7 +9,7 @@ type AmqpPublisherHandler interface {
 }
 type AmqpReceiverHandler interface {
 	InitRabbitConn(connectionString, exchangeName, exchangeType string)
-	PublishMessage(calls []entity.SqlCdr, routingKey, exchangeName string) error
+	PublishMessage(calls []*entity.SqlCdr, routingKey, exchangeName string) error
 	DeclareExchange(exchType, exchName string) error
 }
 
@@ -53,7 +53,7 @@ func (repo *ReceiverRepo) CreateAmqConnection(connectionString, exchangeName, ex
 	repo.amqpHandler.InitRabbitConn(connectionString, exchangeName, exchangeType)
 }
 
-func (repo *ReceiverRepo) SendMessage(calls []entity.SqlCdr, routingKey, exchangeName string) error {
+func (repo *ReceiverRepo) SendMessage(calls []*entity.SqlCdr, routingKey, exchangeName string) error {
 	return repo.amqpHandler.PublishMessage(calls, routingKey, exchangeName)
 }
 

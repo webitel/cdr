@@ -6,9 +6,9 @@ import (
 
 type SqlCdrRepository interface {
 	InsertPack(calls []SqlCdr) error
-	SelectPackByState(count uint32, state uint8, option string) ([]SqlCdr, error)
-	UpdateState(calls []SqlCdr, state uint8, option string) error
-	DeleteFromQueue(calls []SqlCdr, option string) error
+	SelectPackByState(count uint32, state uint8, option string) ([]*SqlCdr, error)
+	UpdateState(calls []*SqlCdr, state uint8, option string) error
+	DeleteFromQueue(calls []*SqlCdr, option string) error
 	InsertIntoQueue(calls []SqlCdr, option string) error
 	CreateTableIfNotExist() error
 	CreateQueueTableIfNotExist(option string) error
@@ -18,7 +18,7 @@ type SqlCdrARepository SqlCdrRepository
 type SqlCdrBRepository SqlCdrRepository
 
 type ElasticCdrRepository interface {
-	InsertDocs(calls []ElasticCdr) (error, []SqlCdr, []SqlCdr)
+	InsertDocs(calls []*ElasticCdr) (error, []*SqlCdr, []*SqlCdr)
 }
 
 type ElasticCdrARepository ElasticCdrRepository
@@ -36,7 +36,7 @@ type AmqPublisherRepository interface {
 
 type AmqReceiverRepository interface {
 	CreateAmqConnection(connectionString, exchangeName, exchangeType string)
-	SendMessage(calls []SqlCdr, routingKey, exchName string) error
+	SendMessage(calls []*SqlCdr, routingKey, exchName string) error
 	InitExchange(exchName, exchType string) error
 }
 

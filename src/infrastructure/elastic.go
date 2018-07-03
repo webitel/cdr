@@ -109,7 +109,7 @@ func (handler *ElasticHandler) createTemplate(templateName, templateMap string) 
 	return nil
 }
 
-func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
+func (handler *ElasticHandler) BulkInsert(calls []*entity.ElasticCdr) (error, []*entity.SqlCdr, []*entity.SqlCdr) {
 	bulkRequest := handler.Client.Bulk()
 	leg := calls[0].Leg
 	for _, item := range calls {
@@ -118,21 +118,27 @@ func (handler *ElasticHandler) BulkInsert(calls []entity.ElasticCdr) (error, []e
 			tmpDomain = "-" + item.DomainName
 		}
 		logger.DebugElastic("Elastic bulk item [Leg "+item.Leg+"]:", item.Uuid, item.DomainName)
-		req := elastic.NewBulkUpdateRequest().Index(strings.ToLower(fmt.Sprintf("%s-%s-%v%v", elasticConfig.IndexNameCdr, item.Leg, time.Now().UTC().Year(), tmpDomain))).Type("cdr").RetryOnConflict(5).Id(item.Uuid).DocAsUpsert(true).Doc(item)
-		bulkRequest = bulkRequest.Add(req)
+		req := elastic.NewBulkUpdateRequest().
+			Index(strings.ToLower(fmt.Sprintf("%s-%s-%v%v", elasticConfig.IndexNameCdr, item.Leg, time.Now().UTC().Year(), tmpDomain))).
+			Type("cdr").
+			RetryOnConflict(2).
+			Id(item.Uuid).
+			DocAsUpsert(true).
+			Doc(item)
+		bulkRequest = bulkRequest.Add(req)//.Refresh("false")
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
 	if err != nil {
 		return err, nil, nil
 	}
 	if res.Errors {
-		var successCalls, errorCalls []entity.SqlCdr
+		var successCalls, errorCalls []*entity.SqlCdr
 		for _, item := range res.Items {
 			if item["update"].Error != nil {
-				errorCalls = append(errorCalls, entity.SqlCdr{Uuid: item["update"].Id})
+				errorCalls = append(errorCalls, &entity.SqlCdr{Uuid: item["update"].Id})
 				logger.ErrorElastic("Elastic [Leg "+leg+"]", item["update"].Id, item["update"].Error.Type, item["update"].Index, item["update"].Error.Reason)
 			} else {
-				successCalls = append(successCalls, entity.SqlCdr{Uuid: item["update"].Id})
+				successCalls = append(successCalls, &entity.SqlCdr{Uuid: item["update"].Id})
 			}
 		}
 		return fmt.Errorf("Elastic: Bad response. Request has errors."), errorCalls, successCalls

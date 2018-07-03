@@ -3,7 +3,7 @@ package interfaces
 import "github.com/webitel/cdr/src/entity"
 
 type NosqlHandler interface {
-	BulkInsert(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr)
+	BulkInsert(calls []*entity.ElasticCdr) (error, []*entity.SqlCdr, []*entity.SqlCdr)
 	BulkStatus(calls []entity.Account) (error, []entity.Account, []entity.Account)
 	//BulkUpdateLegs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr)
 }
@@ -38,11 +38,11 @@ func NewDocCdrBRepo(nosqlHandlers map[string]NosqlHandler) *DocCdrBRepo {
 	return DocCdrBRepo
 }
 
-func (repo *DocCdrARepo) InsertDocs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
+func (repo *DocCdrARepo) InsertDocs(calls []*entity.ElasticCdr) (error, []*entity.SqlCdr, []*entity.SqlCdr) {
 	return repo.nosqlHandler.BulkInsert(calls)
 }
 
-func (repo *DocCdrBRepo) InsertDocs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr) {
+func (repo *DocCdrBRepo) InsertDocs(calls []*entity.ElasticCdr) (error, []*entity.SqlCdr, []*entity.SqlCdr) {
 	//return repo.nosqlHandler.BulkUpdateLegs(calls)
 	return repo.nosqlHandler.BulkInsert(calls)
 }

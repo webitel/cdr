@@ -113,7 +113,7 @@ func (interactor *CdrInteractor) ArchiveDeliveryProcess(batch []entity.Delivery,
 }
 
 func (interactor *CdrInteractor) AddToElasticA(deliveries []entity.Delivery) (error, []DeliveryResponse) {
-	var calls []entity.ElasticCdr
+	var calls []*entity.ElasticCdr
 	var deliveriesResponse []DeliveryResponse
 	for _, item := range deliveries {
 		call, err := readBytes(item.GetBody())
@@ -124,7 +124,7 @@ func (interactor *CdrInteractor) AddToElasticA(deliveries []entity.Delivery) (er
 		if err != nil {
 			return err, nil
 		}
-		calls = append(calls, eCall)
+		calls = append(calls, &eCall)
 		deliveriesResponse = append(deliveriesResponse, DeliveryResponse{Delivery: item, Uuid: eCall.Uuid})
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrARepository.InsertDocs(calls); err != nil {
@@ -145,7 +145,7 @@ func (interactor *CdrInteractor) AddToElasticA(deliveries []entity.Delivery) (er
 }
 
 func (interactor *CdrInteractor) AddToElasticB(deliveries []entity.Delivery) (error, []DeliveryResponse) {
-	var calls []entity.ElasticCdr
+	var calls []*entity.ElasticCdr
 	var deliveriesResponse []DeliveryResponse
 	for _, item := range deliveries {
 		call, err := readBytes(item.GetBody())
@@ -156,7 +156,7 @@ func (interactor *CdrInteractor) AddToElasticB(deliveries []entity.Delivery) (er
 		if err != nil {
 			return err, nil
 		}
-		calls = append(calls, eCall)
+		calls = append(calls, &eCall)
 		deliveriesResponse = append(deliveriesResponse, DeliveryResponse{Delivery: item, Uuid: eCall.Uuid})
 	}
 	if err, errCalls, succCalls := interactor.ElasticCdrBRepository.InsertDocs(calls); err != nil {

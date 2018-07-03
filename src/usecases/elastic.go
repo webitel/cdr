@@ -114,10 +114,10 @@ func (interactor *CdrInteractor) CheckLegsBFromSql(bulkCount uint32, state uint8
 	<-sem
 }
 
-func getCalls(repo entity.SqlCdrRepository, cdr []entity.SqlCdr) ([]entity.ElasticCdr, error) {
-	var calls []entity.ElasticCdr
+func getCalls(repo entity.SqlCdrRepository, cdr []*entity.SqlCdr) ([]*entity.ElasticCdr, error) {
+	var calls []*entity.ElasticCdr
 	var (
-		eCall entity.ElasticCdr
+		//eCall entity.ElasticCdr
 		iCall interface{}
 		err   error
 	)
@@ -128,13 +128,13 @@ func getCalls(repo entity.SqlCdrRepository, cdr []entity.SqlCdr) ([]entity.Elast
 			logger.Error(err.Error())
 			return nil, err
 		}
-		eCall, err = ParseToCdr(iCall)
+		eCall, err := ParseToCdr(iCall)
 		if err != nil {
 			repo.UpdateState(cdr, 4, "elastic")
 			logger.Error(err.Error())
 			return nil, err
 		}
-		calls = append(calls, eCall)
+		calls = append(calls, &eCall)
 	}
 	return calls, nil
 }

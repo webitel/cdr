@@ -77,7 +77,7 @@ func (handler *ReceiverHandler) InitRabbitConn(connectionString, exchangeName, e
 	}
 }
 
-func (handler *ReceiverHandler) PublishMessage(calls []entity.SqlCdr, routingKey, exchangeName string) error {
+func (handler *ReceiverHandler) PublishMessage(calls []*entity.SqlCdr, routingKey, exchangeName string) error {
 	if handler.Channel == nil {
 		return fmt.Errorf("Receive AMQ channel not connected")
 	}

@@ -109,7 +109,7 @@ func NewDbCdrBRepo(dbHandlers map[string]DbHandler) *DbCdrBRepo {
 	return DbCdrBRepo
 }
 
-func (repo *DbCdrARepo) DeleteFromQueue(calls []entity.SqlCdr, option string) error {
+func (repo *DbCdrARepo) DeleteFromQueue(calls []*entity.SqlCdr, option string) error {
 	sqlStr := strings.Replace(strings.Replace(cdrDeleteFromQuery, "#table#", config.TableA, -1), "#option#", option, -1)
 	vals := []interface{}{}
 	var strValues string
@@ -168,15 +168,16 @@ func (repo *DbCdrARepo) InsertIntoQueue(calls []entity.SqlCdr, option string) er
 	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
 }
 
-func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, option string) ([]entity.SqlCdr, error) {
+func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, option string) ([]*entity.SqlCdr, error) {
 	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(strings.Replace(cdrUpdateWithReturning, "#table#", config.TableA, -1), "#option#", option, -1), "#order#", config.Order, -1), state, count)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var cdr []entity.SqlCdr
-	var call entity.SqlCdr
+	cdr := make([]*entity.SqlCdr, 0, count)
+
 	for rows.Next() {
+		call := new(entity.SqlCdr)
 		err = rows.Scan(&call.Id, &call.Uuid, &call.Event)
 		if err != nil {
 			return nil, err
@@ -186,7 +187,7 @@ func (repo *DbCdrARepo) SelectPackByState(count uint32, state uint8, option stri
 	return cdr, nil
 }
 
-func (repo *DbCdrARepo) UpdateState(calls []entity.SqlCdr, state uint8, option string) error {
+func (repo *DbCdrARepo) UpdateState(calls []*entity.SqlCdr, state uint8, option string) error {
 	sqlStr := strings.Replace(strings.Replace(cdrUpdateStateQuery, "#table#", config.TableA, -1), "#option#", option, -1)
 	vals := []interface{}{}
 	vals = append(vals, state) //uint64(time.Now().UnixNano()/1000000)
@@ -258,15 +259,16 @@ func (repo *DbCdrBRepo) InsertIntoQueue(calls []entity.SqlCdr, option string) er
 	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
 }
 
-func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, option string) ([]entity.SqlCdr, error) {
+func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, option string) ([]*entity.SqlCdr, error) {
 	rows, err := repo.dbHandler.GetRows(strings.Replace(strings.Replace(strings.Replace(cdrUpdateWithReturning, "#table#", config.TableB, -1), "#option#", option, -1), "#order#", config.Order, -1), state, count)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var cdr []entity.SqlCdr
-	var call entity.SqlCdr
+	cdr := make([]*entity.SqlCdr, 0, count)
+
 	for rows.Next() {
+		call := new(entity.SqlCdr)
 		err = rows.Scan(&call.Id, &call.Uuid, &call.Event)
 		if err != nil {
 			return nil, err
@@ -276,7 +278,7 @@ func (repo *DbCdrBRepo) SelectPackByState(count uint32, state uint8, option stri
 	return cdr, nil
 }
 
-func (repo *DbCdrBRepo) DeleteFromQueue(calls []entity.SqlCdr, option string) error {
+func (repo *DbCdrBRepo) DeleteFromQueue(calls []*entity.SqlCdr, option string) error {
 	sqlStr := strings.Replace(strings.Replace(cdrDeleteFromQuery, "#table#", config.TableB, -1), "#option#", option, -1)
 	vals := []interface{}{}
 	var strValues string
@@ -289,7 +291,7 @@ func (repo *DbCdrBRepo) DeleteFromQueue(calls []entity.SqlCdr, option string) er
 	return repo.dbHandler.ExecuteQuery(sqlStr, vals...)
 }
 
-func (repo *DbCdrBRepo) UpdateState(calls []entity.SqlCdr, state uint8, option string) error {
+func (repo *DbCdrBRepo) UpdateState(calls []*entity.SqlCdr, state uint8, option string) error {
 	sqlStr := strings.Replace(strings.Replace(cdrUpdateStateQuery, "#table#", config.TableB, -1), "#option#", option, -1)
 	vals := []interface{}{}
 	vals = append(vals, state) //uint64(time.Now().UnixNano()/1000000)
