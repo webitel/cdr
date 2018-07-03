@@ -4,6 +4,7 @@ import "github.com/webitel/cdr/src/entity"
 
 type NosqlHandler interface {
 	BulkInsert(calls []*entity.ElasticCdr) (error, []*entity.SqlCdr, []*entity.SqlCdr)
+	//TODO bug
 	BulkStatus(calls []entity.Account) (error, []entity.Account, []entity.Account)
 	//BulkUpdateLegs(calls []entity.ElasticCdr) (error, []entity.SqlCdr, []entity.SqlCdr)
 }
