@@ -309,7 +309,6 @@ var (
 		"DIALSTATUS",
 		"last_bridge_to",
 		"bridge_channel",
-		"bridge_uuid",
 		"signal_bond",
 		"last_sent_callee_id_name",
 		"last_sent_callee_id_number",
