@@ -257,10 +257,31 @@ func getFromTimes(call map[string]interface{}) (createdTime /*, progressTime, an
 		times, ok := c[0].(map[string]interface{})["times"].(map[string]interface{})
 		if ok {
 			createdTime = getUintFromFloat64(times["created_time"]) / 1000 //sqlStr[0 : len(sqlStr)-3]
-			var bridgedTime, hangupTime = getUintFromFloat64(times["bridged_time"]) / 1000000, getUintFromFloat64(times["hangup_time"]) / 1000000
-			if bridgedTime > 0 && hangupTime > 0 {
-				talksec = uint32(hangupTime - bridgedTime)
+			var bridgedTime, hangupTime uint64
+			var m map[string]interface{}
+
+			for _, cfs := range c {
+				if m, ok = cfs.(map[string]interface{}); ok {
+					if _, ok = m["times"]; ok {
+						if times, ok = m["times"].(map[string]interface{}); ok {
+							bridgedTime = getUintFromFloat64(times["bridged_time"]) / 1000000
+							if bridgedTime == 0 {
+								continue
+							}
+
+							hangupTime = getUintFromFloat64(times["hangup_time"]) / 1000000
+							if hangupTime == 0 {
+								hangupTime = getUintFromFloat64(times["transfer_time"]) / 1000000
+							}
+
+							if hangupTime > 0 {
+								talksec += uint32(hangupTime - bridgedTime)
+							}
+						}
+					}
+				}
 			}
+
 			// progressTime = getUintFromFloat64(times["progress_time"]) / 1000
 			// answeredTime = getUintFromFloat64(times["answered_time"]) / 1000
 			// transferTime = getUintFromFloat64(times["transfer_time"]) / 1000
