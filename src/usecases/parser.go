@@ -8,7 +8,16 @@ import (
 	"strings"
 
 	"github.com/webitel/cdr/src/entity"
+	"regexp"
 )
+
+var (
+	VERTO_BAD_NUMBER_REG *regexp.Regexp
+)
+
+func init() {
+	VERTO_BAD_NUMBER_REG = regexp.MustCompile("^u:.{8}-.{4}-.{4}-.{4}-.{12}$")
+}
 
 func getString(i interface{}) (s string) {
 	s, _ = i.(string)
@@ -221,6 +230,14 @@ func getDomainName(variables map[string]interface{}) (domain_name string) {
 	return
 }
 
+func clearDomainDomainStr(str string) string {
+	s := strings.Index(str, "@")
+	if s > -1 {
+		return str[0:s]
+	}
+	return str
+}
+
 func getFromProfile(call, variables map[string]interface{}) (callerIdNumber, destinationNumber, callerIdName, source, networkAddr string) {
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
 		callflow, ok := c[0].(map[string]interface{})["caller_profile"].(map[string]interface{})
@@ -233,7 +250,15 @@ func getFromProfile(call, variables map[string]interface{}) (callerIdNumber, des
 		} else {
 			destinationNumber, _ = getStringP(variables["destination_number"])
 		}
+
+		if VERTO_BAD_NUMBER_REG.MatchString(destinationNumber) {
+			if _, ok = variables["verto_user"]; ok {
+				destinationNumber, _ = getStringP(variables["verto_user"])
+				destinationNumber = clearDomainDomainStr(destinationNumber)
+			}
+		}
 	}
+
 	return
 }
 
