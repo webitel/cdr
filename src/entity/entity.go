@@ -310,8 +310,6 @@ var (
 		"last_bridge_to",
 		"bridge_channel",
 		"signal_bond",
-		"last_sent_callee_id_name",
-		"last_sent_callee_id_number",
 		"switch_m_sdp",
 		"current_application_data",
 		"current_application",
