@@ -45,7 +45,15 @@ func (handler *ElasticHandler) Init() error {
 	}
 	ctx := context.Background()
 	for c := time.Tick(5 * time.Second); ; <-c {
-		eClient, err := elastic.NewClient(elastic.SetURL(elasticConfig.Url), elastic.SetSniff(false))
+		options := []elastic.ClientOptionFunc{
+			elastic.SetURL(elasticConfig.Url),
+			elastic.SetSniff(false),
+		}
+		if elasticConfig.BasicAuthLogin != "" {
+			options = append(options, elastic.SetBasicAuth(elasticConfig.BasicAuthLogin, elasticConfig.BasicAuthPassword))
+		}
+
+		eClient, err := elastic.NewClient(options...)
 		if err != nil {
 			logger.Error(err.Error())
 			continue
@@ -125,7 +133,7 @@ func (handler *ElasticHandler) BulkInsert(calls []*entity.ElasticCdr) (error, []
 			Id(item.Uuid).
 			DocAsUpsert(true).
 			Doc(item)
-		bulkRequest = bulkRequest.Add(req)//.Refresh("false")
+		bulkRequest = bulkRequest.Add(req) //.Refresh("false")
 	}
 	res, err := bulkRequest.Do(handler.Ctx)
 	if err != nil {
