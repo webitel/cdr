@@ -5,6 +5,10 @@
       "index_patterns": [
         "cdr-*"
       ],
+      "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 1
+      },
       "order": 2,
       "mappings": {
         "cdr": {
@@ -342,6 +346,10 @@
       "index_patterns": [
         "accounts-*"
       ],
+      "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 1
+      },
       "order": 3,
       "mappings": {
         "accounts": {
