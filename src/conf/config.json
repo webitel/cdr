@@ -45,6 +45,7 @@
   },
   "elastic":{
       "enable": true,
+      "httpAuth": "kibana:kibana",
       "deleteTemplate": true,
       "host": "http://elasticsearch:9200",    
       "intervalMillisec": 1000,
