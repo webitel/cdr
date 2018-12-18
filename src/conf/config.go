@@ -31,8 +31,7 @@ type Elastic struct {
 	Url               string          `json:"host" envconfig:"elastic:host"`
 	IndexNameCdr      string          `json:"indexNameCdr"`
 	IndexNameAccounts string          `json:"indexNameAccounts"`
-	BasicAuthLogin    string          `json:"basicAuthLogin" envconfig:"elastic:basicAuthLogin"`
-	BasicAuthPassword string          `json:"basicAuthPassword" envconfig:"elastic:basicAuthPassword"`
+	HttpAuth          string          `json:"httpAuth" envconfig:"elastic:httpAuth"`
 	CdrTemplate       ElasticTemplate `json:"cdr_template" ignored:"true"`
 	AccountsTemplate  ElasticTemplate `json:"accounts_template" ignored:"true"`
 }
@@ -228,11 +227,8 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("elastic:indexNameAccounts"); value != "" {
 		conf.Elastic.IndexNameCdr = value
 	}
-	if value := os.Getenv("elastic:basicAuthLogin"); value != "" {
-		conf.Elastic.BasicAuthLogin = value
-	}
-	if value := os.Getenv("elastic:basicAuthPassword"); value != "" {
-		conf.Elastic.BasicAuthPassword = value
+	if value := os.Getenv("elastic:httpAuth"); value != "" {
+		conf.Elastic.HttpAuth = value
 	}
 	if value := os.Getenv("broker:publisher:connectionString"); value != "" {
 		conf.Rabbit.Publisher.ConnectionString = value

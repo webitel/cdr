@@ -26,6 +26,17 @@ func NewElasticHandler() (*ElasticHandler, error) {
 	return elasticHandler, err
 }
 
+func getBaseAuthLoginAndPassword(confStr string) (login string, password string) {
+	res := strings.SplitN(confStr, ":", 2)
+	if len(res) > 0 {
+		login = res[0]
+	}
+	if len(res) > 1 {
+		password = res[1]
+	}
+	return
+}
+
 func (handler *ElasticHandler) Init() error {
 	elasticConfig = conf.GetElastic()
 	if !elasticConfig.Enable {
@@ -49,8 +60,8 @@ func (handler *ElasticHandler) Init() error {
 			elastic.SetURL(elasticConfig.Url),
 			elastic.SetSniff(false),
 		}
-		if elasticConfig.BasicAuthLogin != "" {
-			options = append(options, elastic.SetBasicAuth(elasticConfig.BasicAuthLogin, elasticConfig.BasicAuthPassword))
+		if elasticConfig.HttpAuth != "" {
+			options = append(options, elastic.SetBasicAuth(getBaseAuthLoginAndPassword(elasticConfig.HttpAuth)))
 		}
 
 		eClient, err := elastic.NewClient(options...)
