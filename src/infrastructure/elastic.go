@@ -7,10 +7,12 @@ import (
 	"strings"
 	"time"
 
-	elastic "github.com/olivere/elastic"
+	"github.com/kataras/iris/core/errors"
+	"github.com/olivere/elastic"
 	"github.com/webitel/cdr/src/conf"
 	"github.com/webitel/cdr/src/entity"
 	"github.com/webitel/cdr/src/logger"
+	"github.com/webitel/cdr/src/utils"
 )
 
 type ElasticHandler struct {
@@ -42,6 +44,13 @@ func (handler *ElasticHandler) Init() error {
 	if !elasticConfig.Enable {
 		return nil
 	}
+	if elasticConfig.IndexNameCdrTemplate == "" {
+		return errors.New("Config indexNameCdrTemplate is required")
+	}
+	if elasticConfig.IndexNameAccountsTemplate == "" {
+		return errors.New("Config indexNameAccountsTemplate is required")
+	}
+
 	var cdrTemplateMap string
 	if bytes, err := json.Marshal(elasticConfig.CdrTemplate.Body); err == nil {
 		cdrTemplateMap = string(bytes)
@@ -128,17 +137,30 @@ func (handler *ElasticHandler) createTemplate(templateName, templateMap string) 
 	return nil
 }
 
+func dropTimeFromTimestamp(time int64) int64 {
+	return (time - (time % 86400000)) / 1000
+}
+
 func (handler *ElasticHandler) BulkInsert(calls []*entity.ElasticCdr) (error, []*entity.SqlCdr, []*entity.SqlCdr) {
 	bulkRequest := handler.Client.Bulk()
 	leg := calls[0].Leg
 	for _, item := range calls {
 		var tmpDomain string
 		if item.DomainName != "" && !strings.ContainsAny(item.DomainName, ", & * & \\ & < & | & > & / & ?") {
-			tmpDomain = "-" + item.DomainName
+			tmpDomain = item.DomainName
 		}
-		logger.DebugElastic("Elastic bulk item [Leg "+item.Leg+"]:", item.Uuid, item.DomainName)
+
+		indexName := utils.GetIndexName(
+			elasticConfig.IndexNameCdrTemplate,
+			elasticConfig.IndexNameCdr,
+			tmpDomain,
+			item.Leg,
+			dropTimeFromTimestamp(int64(item.CallCreatedTime)),
+		)
+
+		logger.DebugElastic("Elastic bulk item [Leg "+item.Leg+" "+indexName+"]:", item.Uuid, item.DomainName)
 		req := elastic.NewBulkUpdateRequest().
-			Index(strings.ToLower(fmt.Sprintf("%s-%s-%v%v", elasticConfig.IndexNameCdr, item.Leg, time.Now().UTC().Year(), tmpDomain))).
+			Index(indexName).
 			Type("cdr").
 			RetryOnConflict(2).
 			Id(item.Uuid).
@@ -170,10 +192,24 @@ func (handler *ElasticHandler) BulkStatus(accounts []entity.Account) (error, []e
 	for _, item := range accounts {
 		var tmpDomain string
 		if item.Domain != "" && !strings.ContainsAny(item.Domain, ", & * & \\ & < & | & > & / & ?") {
-			tmpDomain = "-" + strings.ToLower(item.Domain)
+			tmpDomain = strings.ToLower(item.Domain)
 		}
-		logger.DebugAccount("Elastic bulk item [Accounts]:", item.DisplayStatus, item.Account, item.Domain)
-		req := elastic.NewBulkIndexRequest().Index(fmt.Sprintf("%s-%v%v", elasticConfig.IndexNameAccounts, time.Now().UTC().Year(), tmpDomain)).Type("accounts").RetryOnConflict(5).Id(item.Uuid).Doc(item)
+		indexName := utils.GetIndexName(
+			elasticConfig.IndexNameAccountsTemplate,
+			elasticConfig.IndexNameAccounts,
+			tmpDomain,
+			"",
+			dropTimeFromTimestamp(item.CreatedTime),
+		)
+
+		logger.DebugAccount("Elastic bulk item [Accounts "+indexName+"]:", item.DisplayStatus, item.Account, item.Domain)
+		req := elastic.NewBulkIndexRequest().
+			Index(indexName).
+			Type("accounts").
+			RetryOnConflict(5).
+			Id(item.Uuid).
+			Doc(item)
+
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(handler.Ctx)

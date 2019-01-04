@@ -24,16 +24,18 @@ type Application struct {
 }
 
 type Elastic struct {
-	Enable            bool            `json:"enable" envconfig:"elastic:enabled"`
-	DeleteTemplate    bool            `json:"deleteTemplate"`
-	BulkCount         uint32          `json:"bulkCount" envconfig:"elastic:bulkCount"`
-	RequestTimeout    uint32          `json:"intervalMillisec" envconfig:"elastic:intervalMillisec"`
-	Url               string          `json:"host" envconfig:"elastic:host"`
-	IndexNameCdr      string          `json:"indexNameCdr"`
-	IndexNameAccounts string          `json:"indexNameAccounts"`
-	HttpAuth          string          `json:"httpAuth" envconfig:"elastic:httpAuth"`
-	CdrTemplate       ElasticTemplate `json:"cdr_template" ignored:"true"`
-	AccountsTemplate  ElasticTemplate `json:"accounts_template" ignored:"true"`
+	Enable                    bool            `json:"enable" envconfig:"elastic:enabled"`
+	DeleteTemplate            bool            `json:"deleteTemplate"`
+	BulkCount                 uint32          `json:"bulkCount" envconfig:"elastic:bulkCount"`
+	RequestTimeout            uint32          `json:"intervalMillisec" envconfig:"elastic:intervalMillisec"`
+	Url                       string          `json:"host" envconfig:"elastic:host"`
+	IndexNameCdr              string          `json:"indexNameCdr"`
+	IndexNameCdrTemplate      string          `json:"indexNameCdrTemplate"`
+	IndexNameAccounts         string          `json:"indexNameAccounts"`
+	IndexNameAccountsTemplate string          `json:"indexNameAccountsTemplate"`
+	HttpAuth                  string          `json:"httpAuth" envconfig:"elastic:httpAuth"`
+	CdrTemplate               ElasticTemplate `json:"cdr_template" ignored:"true"`
+	AccountsTemplate          ElasticTemplate `json:"accounts_template" ignored:"true"`
 }
 
 type ElasticTemplate struct {
@@ -224,8 +226,14 @@ func (conf *Configuration) readFromEnviroment() error {
 	if value := os.Getenv("elastic:indexNameCdr"); value != "" {
 		conf.Elastic.IndexNameCdr = value
 	}
+	if value := os.Getenv("elastic:IndexNameCdrTemplate"); value != "" {
+		conf.Elastic.IndexNameCdrTemplate = value
+	}
 	if value := os.Getenv("elastic:indexNameAccounts"); value != "" {
-		conf.Elastic.IndexNameCdr = value
+		conf.Elastic.IndexNameAccounts = value
+	}
+	if value := os.Getenv("elastic:IndexNameAccountsTemplate"); value != "" {
+		conf.Elastic.IndexNameAccountsTemplate = value
 	}
 	if value := os.Getenv("elastic:httpAuth"); value != "" {
 		conf.Elastic.HttpAuth = value

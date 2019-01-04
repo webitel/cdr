@@ -176,7 +176,7 @@ type Account struct {
 	Description   string  `json:"description,omitempty"`
 	Online        bool    `json:"ws"`
 	CallCenter    bool    `json:"cc"`
-	CreatedTime   float64 `json:"created_time,omitempty"`
+	CreatedTime   int64   `json:"created_time,omitempty"`
 	EndTime       float64 `json:"end_time,omitempty"`
 	Duration      float64 `json:"duration,omitempty"`
 }

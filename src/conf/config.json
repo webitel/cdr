@@ -51,7 +51,9 @@
       "intervalMillisec": 1000,
       "bulkCount": 100,
       "indexNameCdr": "cdr",
-      "indexNameAccounts": "accounts"     
+      "indexNameCdrTemplate": "${INDEX}-${LEG}-${YEAR}-${MONTH}-${WEEK}-${DOMAIN}",
+      "indexNameAccounts": "accounts",
+      "indexNameAccountsTemplate": "${INDEX}-${YEAR}-${MONTH}-${WEEK}-${DOMAIN}"
   },
   "application": {
     "loglevel": "debug"
