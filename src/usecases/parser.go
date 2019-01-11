@@ -159,6 +159,10 @@ func ParseToCdr(callInterface interface{}) (entity.ElasticCdr, error) {
 		delete(e_entity.Variables, item)
 	}
 	for k, _ := range e_entity.Variables {
+		if strings.ContainsAny(k, ".") {
+			e_entity.Variables[strings.Replace(k, ".", "_", -1)] = e_entity.Variables[k]
+			delete(e_entity.Variables, k)
+		}
 		if strings.Index(k, "verto_") == 0 {
 			delete(e_entity.Variables, k)
 		}
