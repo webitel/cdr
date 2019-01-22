@@ -14,6 +14,11 @@ type SqlCdrRepository interface {
 	CreateQueueTableIfNotExist(option string) error
 }
 
+type SqlHelperRepository interface {
+	CreateTableIfNotExist() error
+	InsertBadEvent(uuid, leg string, event []byte) error
+}
+
 type SqlCdrARepository SqlCdrRepository
 type SqlCdrBRepository SqlCdrRepository
 

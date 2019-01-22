@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"time"
 
+	"errors"
 	"github.com/webitel/cdr/src/conf"
 	"github.com/webitel/cdr/src/entity"
 	"github.com/webitel/cdr/src/logger"
+	"unicode/utf8"
 )
 
 type CdrInteractor struct {
 	SqlCdrARepository         entity.SqlCdrARepository
 	SqlCdrBRepository         entity.SqlCdrBRepository
+	SqlHelperRepository       entity.SqlHelperRepository
 	ElasticCdrARepository     entity.ElasticCdrARepository
 	ElasticCdrBRepository     entity.ElasticCdrBRepository
 	AmqPublisherRepository    entity.AmqPublisherRepository
@@ -30,6 +33,9 @@ func (interactor *CdrInteractor) InitTables() error {
 	}
 	if err := interactor.SqlCdrBRepository.CreateTableIfNotExist(); err != nil {
 		return fmt.Errorf("PostgreSQL. Table B creating error: " + err.Error())
+	}
+	if err := interactor.SqlHelperRepository.CreateTableIfNotExist(); err != nil {
+		return fmt.Errorf("PostgreSQL. helper repository creating error: " + err.Error())
 	}
 	if conf.GetElastic().Enable {
 		if err := interactor.SqlCdrARepository.CreateQueueTableIfNotExist("elastic"); err != nil {
@@ -153,7 +159,12 @@ func (interactor *CdrInteractor) AddToSqlA(deliveries []entity.Delivery) (error,
 			if parent == "" {
 				sql_call, err := parseToSqlA(item.GetBody(), uuid)
 				if err != nil {
-					return err, 0
+					logger.Error("PostgreSQL: Skip store CDR %s by: %s, create dump", uuid, err.Error())
+					err = interactor.SqlHelperRepository.InsertBadEvent(uuid, "A", item.GetBody())
+					if err != nil {
+						return err, 0
+					}
+					continue
 				}
 				calls = append(calls, sql_call)
 			} else {
@@ -261,6 +272,11 @@ func getParentUuid(call interface{}) string {
 }
 
 func parseToSqlA(body []byte, uuid string) (entity.SqlCdr, error) {
+
+	if !utf8.Valid(body) {
+		return entity.SqlCdr{}, errors.New("Not valid utf8 data")
+	}
+
 	pg_call := entity.SqlCdr{
 		Uuid:       uuid,
 		Event:      body,

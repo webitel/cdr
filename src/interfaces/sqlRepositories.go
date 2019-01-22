@@ -67,6 +67,23 @@ const (
 						)
 						TABLESPACE pg_default;
 					` //$1 - public.cdr $2 - webitel
+
+	sqlCreateTableForBadEvents = `
+create table  IF NOT EXISTS cdr_bad_event
+(
+	id serial not null
+		constraint cdr_bad_event_pkey
+			primary key,
+	created_at integer default (date_part('epoch'::text, timezone('utc'::text, now())))::integer not null,
+	uuid varchar(50),
+	leg varchar(1),
+	event bytea not null
+)
+;
+
+create unique index  IF NOT EXISTS cdr_bad_event_id_uindex
+	on cdr_bad_event (id)
+;`
 )
 
 var config conf.Postgres
@@ -94,6 +111,7 @@ type DbRepo struct {
 
 type DbCdrARepo DbRepo
 type DbCdrBRepo DbRepo
+type DbHelper DbRepo
 
 func NewDbCdrARepo(dbHandlers map[string]DbHandler) *DbCdrARepo {
 	DbCdrARepo := new(DbCdrARepo)
@@ -107,6 +125,22 @@ func NewDbCdrBRepo(dbHandlers map[string]DbHandler) *DbCdrBRepo {
 	DbCdrBRepo.dbHandlers = dbHandlers
 	DbCdrBRepo.dbHandler = dbHandlers["DbCdrBRepo"]
 	return DbCdrBRepo
+}
+
+func NewDbHelperRepo(dbHandlers map[string]DbHandler) *DbHelper {
+	dbHelper := new(DbHelper)
+	dbHelper.dbHandlers = dbHandlers
+	dbHelper.dbHandler = dbHandlers["NewDbHelperRepo"]
+	return dbHelper
+}
+
+func (repo *DbHelper) CreateTableIfNotExist() error {
+	return repo.dbHandler.CreateTable(sqlCreateTableForBadEvents)
+}
+
+func (repo *DbHelper) InsertBadEvent(uuid, leg string, event []byte) error {
+	return repo.dbHandler.ExecuteQuery(`insert into cdr_bad_event(uuid, leg, event) 
+		values($1, $2, $3)`, uuid, leg, event)
 }
 
 func (repo *DbCdrARepo) DeleteFromQueue(calls []*entity.SqlCdr, option string) error {

@@ -53,8 +53,10 @@ func defaultServer() {
 	dbHandlers := make(map[string]interfaces.DbHandler)
 	dbHandlers["DbCdrARepo"] = dbHandler
 	dbHandlers["DbCdrBRepo"] = dbHandler
+	dbHandlers["NewDbHelperRepo"] = dbHandler
 	CdrInteractor.SqlCdrARepository = interfaces.NewDbCdrARepo(dbHandlers)
 	CdrInteractor.SqlCdrBRepository = interfaces.NewDbCdrBRepo(dbHandlers)
+	CdrInteractor.SqlHelperRepository = interfaces.NewDbHelperRepo(dbHandlers)
 	/*INIT TABLES IN PG*/
 	if err := CdrInteractor.InitTables(); err != nil {
 		logger.Fatal(err.Error())

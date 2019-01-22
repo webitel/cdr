@@ -45,9 +45,9 @@
   },
   "elastic":{
       "enable": true,
-      "httpAuth": "kibana:kibana",
+      "httpAuth": "",
       "deleteTemplate": true,
-      "host": "http://elasticsearch:9200",    
+      "host": "http://elasticsearch2:9200",
       "intervalMillisec": 1000,
       "bulkCount": 100,
       "indexNameCdr": "cdr",
