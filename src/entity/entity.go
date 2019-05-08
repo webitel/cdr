@@ -405,7 +405,6 @@ var (
 		"rtp_audio_in_mean_interval",
 		"rtp_audio_in_flaw_total",
 		"rtp_audio_in_quality_percentage",
-		"rtp_audio_in_mos",
 		"rtp_audio_out_raw_bytes",
 		"rtp_audio_out_media_bytes",
 		"rtp_audio_out_packet_count",
