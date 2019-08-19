@@ -1,6 +1,6 @@
 {
-  "isArchive": false,   
-  "maxGoroutines": 25, 
+  "isArchive": false,
+  "maxGoroutines": 25,
   "insertGoroutines": 25,
   "pg": {
       "user": "webitel",
@@ -38,16 +38,16 @@
           "connectionString": "amqp://webitel:secret@10.10.10.200:5672?heartbeat=0",
           "exchangeName": "Storage.Commands",
           "exchangeType": "topic",
-          "routingKey": "log.user.*.*.status",          
+          "routingKey": "log.user.*.*.status",
           "bulkCount": 100,
           "intervalMillisec": 1000
       }
   },
   "elastic":{
       "enable": true,
-      "httpAuth": "",
+      "httpAuth": "kibana:kibana",
       "deleteTemplate": true,
-      "host": "http://elasticsearch2:9200",
+      "host": "http://elasticsearch:9200",
       "intervalMillisec": 1000,
       "bulkCount": 100,
       "indexNameCdr": "cdr",
@@ -57,5 +57,5 @@
   },
   "application": {
     "loglevel": "debug"
-  }   
-}    
+  }
+}
