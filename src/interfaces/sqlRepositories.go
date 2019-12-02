@@ -226,7 +226,7 @@ func (repo *DbCdrARepo) InsertIntoQueue(calls []entity.SqlCdr, option string) er
 		vals = append(vals,
 			row.Uuid,
 			row.Created_at,
-			row.Event,
+			string(row.Event),
 			0)
 		valCounter = valCounter + 4
 	}
