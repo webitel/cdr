@@ -12,6 +12,7 @@ type SqlCdrRepository interface {
 	InsertIntoQueue(calls []SqlCdr, option string) error
 	CreateTableIfNotExist() error
 	CreateQueueTableIfNotExist(option string) error
+	CreateTrigger() error
 }
 
 type SqlHelperRepository interface {

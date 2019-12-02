@@ -53,6 +53,14 @@ func (interactor *CdrInteractor) InitTables() error {
 			return fmt.Errorf("PostgreSQL. Archive table B creating error: " + err.Error())
 		}
 	}
+
+	if err := interactor.SqlCdrARepository.CreateTrigger(); err != nil {
+		return err
+	}
+
+	if err := interactor.SqlCdrBRepository.CreateTrigger(); err != nil {
+		return err
+	}
 	return nil
 }
 

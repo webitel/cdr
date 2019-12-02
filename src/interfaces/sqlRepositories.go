@@ -51,7 +51,7 @@ const (
 								OIDS = FALSE
 							)
 							TABLESPACE pg_default;	
-						` //$1 - public.cdr $2 - webitel
+						`  //$1 - public.cdr $2 - webitel
 	cdrCreateTableB = `
 						CREATE TABLE IF NOT EXISTS #table#
 						(
@@ -66,7 +66,7 @@ const (
 							OIDS = FALSE
 						)
 						TABLESPACE pg_default;
-					` //$1 - public.cdr $2 - webitel
+					`  //$1 - public.cdr $2 - webitel
 
 	sqlCreateTableForBadEvents = `
 create table  IF NOT EXISTS cdr_bad_event
@@ -84,6 +84,38 @@ create table  IF NOT EXISTS cdr_bad_event
 create unique index  IF NOT EXISTS cdr_bad_event_id_uindex
 	on cdr_bad_event (id)
 ;`
+
+	sqlCreateTrigger = `CREATE OR REPLACE FUNCTION #table#_instead_insert()
+  RETURNS trigger AS
+$func$
+BEGIN
+   RETURN new;
+   EXCEPTION WHEN others THEN  -- or be more specific
+    raise notice 'error save cdr %', new.uuid;
+    RETURN NULL;   -- cancel row
+END
+$func$  LANGUAGE plpgsql;
+
+DO
+$$
+    BEGIN
+        IF NOT EXISTS(SELECT *
+                      FROM information_schema.triggers
+                      WHERE event_object_table = '#table#'
+                        AND trigger_name = '#table#_instead_insert_tg'
+            )
+        THEN
+            CREATE TRIGGER #table#_instead_insert_tg
+                BEFORE INSERT
+                ON #table#
+                FOR EACH ROW
+            EXECUTE PROCEDURE #table#_instead_insert();
+
+        END IF;
+
+    END;
+$$;
+`
 )
 
 var config conf.Postgres
@@ -238,6 +270,16 @@ func (repo *DbCdrARepo) UpdateState(calls []*entity.SqlCdr, state uint8, option 
 func (repo *DbCdrARepo) CreateTableIfNotExist() error {
 	sqlStr := strings.Replace(strings.Replace(cdrCreateTableA, "#table#", config.TableA, -1), "#user#", config.User, -1)
 	return repo.dbHandler.CreateTable(sqlStr)
+}
+
+func (repo *DbCdrARepo) CreateTrigger() error {
+	sql := strings.Replace(sqlCreateTrigger, "#table#", config.TableA, -1)
+	return repo.dbHandler.ExecuteQuery(sql)
+}
+
+func (repo *DbCdrBRepo) CreateTrigger() error {
+	sql := strings.Replace(sqlCreateTrigger, "#table#", config.TableB, -1)
+	return repo.dbHandler.ExecuteQuery(sql)
 }
 
 func (repo *DbCdrARepo) CreateQueueTableIfNotExist(option string) error {
