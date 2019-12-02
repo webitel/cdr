@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kataras/iris/core/errors"
+	"errors"
 	"github.com/olivere/elastic"
 	"github.com/webitel/cdr/src/conf"
 	"github.com/webitel/cdr/src/entity"
