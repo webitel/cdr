@@ -184,7 +184,8 @@ func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey strin
 					close(entries)
 					return
 				}
-				if msg.ContentType != "application/json" || msg.ContentEncoding != "" {
+
+				if (msg.ContentType != "application/json" && msg.ContentType != "text/json") || msg.ContentEncoding != "" {
 					fmt.Printf("error: %s %s", msg.ContentType, msg.ContentEncoding)
 					fmt.Println(string(msg.Body))
 				}
