@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"fmt"
+	"golang.org/x/exp/utf8string"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -177,6 +178,7 @@ func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey strin
 
 	entries := make(chan entity.Delivery, cap(msgs))
 	go func() {
+
 		for {
 			select {
 			case msg, ok := <-msgs:
@@ -185,10 +187,14 @@ func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey strin
 					return
 				}
 
-				if (msg.ContentType != "application/json" && msg.ContentType != "text/json") || msg.ContentEncoding != "" {
-					fmt.Printf("error: %s %s", msg.ContentType, msg.ContentEncoding)
-					fmt.Println(string(msg.Body))
+				utfStr := utf8string.NewString(string(msg.Body))
+				if utfStr == nil {
+					logger.Error("parse utf8 error.")
+					continue
 				}
+
+				msg.Body = []byte(utfStr.String())
+
 				wrupup := AmqpDelivery(msg)
 				entries <- &wrupup
 			}

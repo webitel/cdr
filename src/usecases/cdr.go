@@ -295,6 +295,9 @@ func parseToSqlA(body []byte, uuid string) (entity.SqlCdr, error) {
 }
 
 func parseToSqlB(body []byte, uuid string, parent string) (entity.SqlCdr, error) {
+	if !utf8.Valid(body) {
+		return entity.SqlCdr{}, errors.New("Not valid utf8 data")
+	}
 	pg_call := entity.SqlCdr{
 		Uuid:        uuid,
 		Parent_uuid: parent,
