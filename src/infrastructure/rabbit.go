@@ -2,13 +2,12 @@ package infrastructure
 
 import (
 	"fmt"
-	"strings"
-	"time"
-	"unicode"
-
 	"github.com/streadway/amqp"
 	"github.com/webitel/cdr/src/entity"
 	"github.com/webitel/cdr/src/logger"
+	"strings"
+	"time"
+	"unicode/utf8"
 )
 
 type RabbitHandler struct {
@@ -142,8 +141,8 @@ func putExchange(channel *amqp.Channel, exchType, exchName string) error {
 }
 
 func fixUtf(r rune) rune {
-	if r > unicode.MaxASCII {
-		logger.Error("fixUtf: skipped non UTF-8 rune")
+	if r > utf8.MaxRune {
+		logger.Error(fmt.Sprintf("fixUtf: skipped non UTF-8 rune %c", r))
 		return -1
 	}
 	return r
