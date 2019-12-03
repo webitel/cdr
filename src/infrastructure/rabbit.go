@@ -2,8 +2,9 @@ package infrastructure
 
 import (
 	"fmt"
-	"golang.org/x/exp/utf8string"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/streadway/amqp"
 	"github.com/webitel/cdr/src/entity"
@@ -140,6 +141,14 @@ func putExchange(channel *amqp.Channel, exchType, exchName string) error {
 	return nil
 }
 
+func fixUtf(r rune) rune {
+	if r > unicode.MaxASCII {
+		logger.Error("fixUtf: skipped non UTF-8 rune")
+		return -1
+	}
+	return r
+}
+
 func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey string) (<-chan entity.Delivery, error) {
 	q, err := handler.Channel.QueueDeclare(
 		routingKey, // name
@@ -187,13 +196,7 @@ func (handler *PublisherHandler) GetAmqpMsg(exchName, exchType, routingKey strin
 					return
 				}
 
-				utfStr := utf8string.NewString(string(msg.Body))
-				if utfStr == nil {
-					logger.Error("parse utf8 error.")
-					continue
-				}
-
-				msg.Body = []byte(utfStr.String())
+				msg.Body = []byte(strings.Map(fixUtf, string(msg.Body)))
 
 				wrupup := AmqpDelivery(msg)
 				entries <- &wrupup
