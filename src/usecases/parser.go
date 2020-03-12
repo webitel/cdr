@@ -242,7 +242,22 @@ func clearDomainDomainStr(str string) string {
 	return str
 }
 
+func isNoAnswer(vars map[string]interface{}) bool {
+	if s, ok := vars["answersec"]; ok {
+		return s == "0"
+	}
+
+	return false
+}
+
 func getFromProfile(call, variables map[string]interface{}) (callerIdNumber, destinationNumber, callerIdName, source, networkAddr string) {
+	if c, ok := variables["w_jsclient_originate_number"]; ok && isNoAnswer(variables) {
+		destinationNumber, _ = c.(string)
+		callerIdNumber, _ = variables["dialed_user"].(string)
+		callerIdName = callerIdNumber
+		return
+	}
+
 	if c, ok := call["callflow"].([]interface{}); ok && len(c) > 0 {
 		callflow, ok := c[0].(map[string]interface{})["caller_profile"].(map[string]interface{})
 		if ok {
